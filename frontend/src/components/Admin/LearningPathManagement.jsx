@@ -8,6 +8,13 @@ export default function LearningPathManagement() {
   const [topics, setTopics] = useState([])
   const [error, setError] = useState('')
 
+  const normalizeTopics = (rows = []) => rows.map((row, index) => ({
+    id: row._id,
+    order: row.order || index + 1,
+    name: row.topic,
+    status: row.status,
+  }))
+
   useEffect(() => {
     let active = true
     const load = async () => {
@@ -15,7 +22,7 @@ export default function LearningPathManagement() {
         const response = await getLearningPaths()
         const rows = response?.data?.data || []
         if (active) {
-          setTopics(rows.map((row) => ({ week: row.week, name: row.topic, status: row.status })))
+          setTopics(normalizeTopics(rows))
         }
       } catch (requestError) {
         if (active) setError(getErrorMessage(requestError))
@@ -30,14 +37,26 @@ export default function LearningPathManagement() {
   const addTopic = async () => {
     if (!topic.trim()) return
 
-    const nextWeek = topics.length + 1
+    const nextOrder = topics.length + 1
     const payload = {
-      week: nextWeek,
+      order: nextOrder,
+      topicId: topic.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''),
       topic,
       description: `${topic} topic plan`,
       difficulty: 'Intermediate',
       status: 'Active',
       estimatedDurationHours: 6,
+      explanation: `${topic} conceptual overview`,
+      javaSyntaxExample: `// ${topic} starter\nclass Demo {}`,
+      pseudocodeExplanation: `${topic} high-level pseudocode strategy`,
+      problems: [
+        {
+          title: `${topic} Core Problem`,
+          description: `Practice the primary ${topic} pattern.`,
+          pseudocode: '1. Initialize\n2. Iterate\n3. Return answer',
+          javaSolution: 'class Solution { int solve(){ return 0; } }'
+        }
+      ]
     }
 
     try {
@@ -45,7 +64,7 @@ export default function LearningPathManagement() {
       await createLearningPath(payload)
         const refreshed = await getLearningPaths()
         const rows = refreshed?.data?.data || []
-        setTopics(rows.map((row) => ({ week: row.week, name: row.topic, status: row.status })))
+        setTopics(normalizeTopics(rows))
       setTopic('')
     } catch (requestError) {
       setError(getErrorMessage(requestError))
@@ -56,7 +75,7 @@ export default function LearningPathManagement() {
     <section className="surface-panel fade-rise rounded-2xl p-6">
       <div className="rounded-xl border border-cyan-100 bg-gradient-to-r from-cyan-50 to-blue-50 p-4">
         <h1 className="text-2xl font-bold text-slate-900">Manage Learning Paths</h1>
-        <p className="mt-1 text-sm text-slate-600">Create and publish weekly learning topics for students.</p>
+        <p className="mt-1 text-sm text-slate-600">Create and publish topic-based learning roadmap entries for students.</p>
       </div>
 
       <div className="mt-4 flex flex-col gap-2 sm:flex-row">
@@ -67,8 +86,8 @@ export default function LearningPathManagement() {
 
       <ul className="mt-4 grid gap-3 text-sm md:grid-cols-2">
         {topics.map((item) => (
-          <li key={`${item.week}-${item.name}`} className="rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
-            <p className="text-xs uppercase tracking-wide text-cyan-600">Week {item.week}</p>
+          <li key={`${item.id || item.order}-${item.name}`} className="rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
+            <p className="text-xs uppercase tracking-wide text-cyan-600">Topic #{item.order}</p>
             <p className="mt-1 font-semibold text-slate-900">{item.name}</p>
             <p className="mt-1 text-xs text-slate-500">Status: {item.status}</p>
           </li>

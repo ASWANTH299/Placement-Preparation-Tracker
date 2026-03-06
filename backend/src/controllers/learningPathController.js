@@ -2,215 +2,315 @@ const LearningPath = require('../models/LearningPath');
 const StudentProgress = require('../models/StudentProgress');
 const { AppError } = require('../utils/errorHandler');
 
-// Get all learning paths
+const ensureStudentOrAdmin = (req, studentId) => {
+  if (req.user._id.toString() !== studentId && req.user.role !== 'admin') {
+    throw new AppError('You do not have permission to access this progress', 403, 'UNAUTHORIZED');
+  }
+};
+
+const progressSnapshot = (topic, progress) => {
+  const totalProblems = topic.problems?.length || 0;
+  const completedProblemIndexes = progress?.completedProblemIndexes || [];
+  const completedProblems = completedProblemIndexes.length;
+  const completionPercentage = totalProblems > 0
+    ? Math.round((completedProblems / totalProblems) * 100)
+    : 0;
+
+  return {
+    totalProblems,
+    completedProblems,
+    completedProblemIndexes,
+    completionPercentage,
+    isCompleted: totalProblems > 0 && completedProblems === totalProblems
+  };
+};
+
+// Get all learning topics (topic-based roadmap)
 exports.getAllLearningPaths = async (req, res, next) => {
   try {
-    const { page = 1, limit = 15, status, difficulty } = req.query;
-
+    const { status = 'Active', difficulty } = req.query;
     const query = {};
+
     if (status) query.status = status;
     if (difficulty) query.difficulty = difficulty;
 
-    const skip = (parseInt(page) - 1) * parseInt(limit);
+    const topics = await LearningPath.find(query)
+      .sort({ order: 1, week: 1, createdAt: 1 });
 
-    const paths = await LearningPath.find(query)
-      .skip(skip)
-      .limit(parseInt(limit))
-      .sort({ week: 1 });
+    let progressByTopic = new Map();
+    if (req.user?._id) {
+      const progressRows = await StudentProgress.find({
+        studentId: req.user._id,
+        topicId: { $in: topics.map((topic) => topic._id) }
+      });
+      progressByTopic = new Map(progressRows.map((row) => [row.topicId.toString(), row]));
+    }
 
-    const total = await LearningPath.countDocuments(query);
+    const data = topics.map((topic) => {
+      const progress = progressByTopic.get(topic._id.toString());
+      const snapshot = progressSnapshot(topic, progress);
+      return {
+        ...topic.toObject(),
+        ...snapshot,
+        statusLabel: snapshot.isCompleted ? 'Completed' : snapshot.completedProblems > 0 ? 'In Progress' : 'Not Started'
+      };
+    });
 
     res.status(200).json({
       success: true,
-      data: paths,
-      pagination: {
-        page: parseInt(page),
-        limit: parseInt(limit),
-        total,
-        pages: Math.ceil(total / parseInt(limit))
-      }
+      data
     });
   } catch (error) {
     next(error);
   }
 };
 
-// Get learning path by week ID
+// Get a topic by id (supports old week-id lookups for backward compatibility)
 exports.getLearningPathByWeek = async (req, res, next) => {
   try {
     const { weekId } = req.params;
 
-    const path = await LearningPath.findOne({ week: weekId });
+    const byObjectId = weekId.match(/^[0-9a-fA-F]{24}$/)
+      ? await LearningPath.findById(weekId)
+      : null;
 
-    if (!path) {
-      return next(new AppError('Learning path not found', 404, 'NOT_FOUND'));
+    const topic = byObjectId || await LearningPath.findOne({
+      $or: [
+        { topicId: String(weekId).toLowerCase() },
+        { week: Number(weekId) || -1 }
+      ]
+    });
+
+    if (!topic) {
+      return next(new AppError('Learning topic not found', 404, 'NOT_FOUND'));
+    }
+
+    let snapshot = {
+      totalProblems: topic.problems?.length || 0,
+      completedProblems: 0,
+      completedProblemIndexes: [],
+      completionPercentage: 0,
+      isCompleted: false
+    };
+
+    if (req.user?._id) {
+      const progress = await StudentProgress.findOne({
+        studentId: req.user._id,
+        topicId: topic._id
+      });
+      snapshot = progressSnapshot(topic, progress);
     }
 
     res.status(200).json({
       success: true,
-      data: path
+      data: {
+        ...topic.toObject(),
+        ...snapshot,
+        statusLabel: snapshot.isCompleted ? 'Completed' : snapshot.completedProblems > 0 ? 'In Progress' : 'Not Started'
+      }
     });
   } catch (error) {
     next(error);
   }
 };
 
-// Get student's learning progress
+// Get student roadmap progress summary
 exports.getStudentProgress = async (req, res, next) => {
   try {
     const { id } = req.params;
+    ensureStudentOrAdmin(req, id);
 
-    // Check authorization
-    if (req.user._id.toString() !== id && req.user.role !== 'admin') {
-      return next(new AppError('You do not have permission to view this progress', 403, 'UNAUTHORIZED'));
-    }
+    const [topics, progressRows] = await Promise.all([
+      LearningPath.find({ status: 'Active' }).sort({ order: 1, week: 1 }),
+      StudentProgress.find({ studentId: id })
+    ]);
 
-    const progress = await StudentProgress.find({ studentId: id })
-      .populate({
-        path: 'studentId',
-        select: 'name email'
-      });
+    const progressByTopic = new Map(
+      progressRows
+        .filter((row) => row.topicId)
+        .map((row) => [row.topicId.toString(), row])
+    );
+
+    const topicProgress = topics.map((topic) => {
+      const progress = progressByTopic.get(topic._id.toString());
+      return {
+        topicId: topic._id,
+        topic: topic.topic,
+        ...progressSnapshot(topic, progress)
+      };
+    });
+
+    const topicsCompleted = topicProgress.filter((row) => row.isCompleted).length;
+    const totalTopics = topicProgress.length;
+    const overallCompletionPercentage = totalTopics > 0
+      ? Math.round((topicsCompleted / totalTopics) * 100)
+      : 0;
 
     res.status(200).json({
       success: true,
-      data: progress
+      data: {
+        topicsCompleted,
+        totalTopics,
+        overallCompletionPercentage,
+        topics: topicProgress
+      }
     });
   } catch (error) {
     next(error);
   }
 };
 
-// Get progress for specific week
+// Keep legacy endpoint support by exposing topic progress under old shape
 exports.getWeekProgress = async (req, res, next) => {
   try {
     const { id, weekId } = req.params;
+    ensureStudentOrAdmin(req, id);
 
-    // Check authorization
-    if (req.user._id.toString() !== id && req.user.role !== 'admin') {
-      return next(new AppError('You do not have permission to view this progress', 403, 'UNAUTHORIZED'));
+    const topic = await LearningPath.findById(weekId)
+      || await LearningPath.findOne({
+        $or: [
+          { topicId: String(weekId).toLowerCase() },
+          { week: Number(weekId) || -1 }
+        ]
+      });
+
+    if (!topic) {
+      return next(new AppError('Learning topic not found', 404, 'NOT_FOUND'));
     }
 
-    const progress = await StudentProgress.findOne({
-      studentId: id,
-      weekId: parseInt(weekId)
-    });
-
-    if (!progress) {
-      return next(new AppError('Progress not found', 404, 'NOT_FOUND'));
-    }
+    const progress = await StudentProgress.findOne({ studentId: id, topicId: topic._id });
+    const snapshot = progressSnapshot(topic, progress);
 
     res.status(200).json({
       success: true,
-      data: progress
+      data: {
+        topicId: topic._id,
+        topic: topic.topic,
+        ...snapshot
+      }
     });
   } catch (error) {
     next(error);
   }
 };
 
-// Update progress for a week
+// Update completion state for a specific problem in a topic
 exports.updateWeekProgress = async (req, res, next) => {
   try {
     const { id, weekId } = req.params;
-    const { status, completionPercentage, notes } = req.body;
+    const { problemIndex, completed = true } = req.body;
+    ensureStudentOrAdmin(req, id);
 
-    // Check authorization
-    if (req.user._id.toString() !== id && req.user.role !== 'admin') {
-      return next(new AppError('You do not have permission to update this progress', 403, 'UNAUTHORIZED'));
+    const parsedIndex = Number(problemIndex);
+    if (Number.isNaN(parsedIndex) || parsedIndex < 0) {
+      return next(new AppError('A valid problemIndex is required', 400, 'VALIDATION_ERROR'));
     }
 
-    // Validate inputs
-    if (status && !['Not Started', 'In Progress', 'Completed'].includes(status)) {
-      return next(new AppError('Invalid status', 400, 'VALIDATION_ERROR'));
+    const topic = await LearningPath.findById(weekId)
+      || await LearningPath.findOne({
+        $or: [
+          { topicId: String(weekId).toLowerCase() },
+          { week: Number(weekId) || -1 }
+        ]
+      });
+
+    if (!topic) {
+      return next(new AppError('Learning topic not found', 404, 'NOT_FOUND'));
     }
 
-    if (completionPercentage !== undefined) {
-      if (completionPercentage < 0 || completionPercentage > 100) {
-        return next(new AppError('Completion percentage must be between 0-100', 400, 'VALIDATION_ERROR'));
-      }
+    if (parsedIndex >= (topic.problems?.length || 0)) {
+      return next(new AppError('Problem index is out of range for this topic', 400, 'VALIDATION_ERROR'));
     }
 
-    let progress = await StudentProgress.findOne({
-      studentId: id,
-      weekId: parseInt(weekId)
-    });
-
+    let progress = await StudentProgress.findOne({ studentId: id, topicId: topic._id });
     if (!progress) {
-      // Create new progress record
       progress = new StudentProgress({
         studentId: id,
-        weekId: parseInt(weekId),
-        status: status || 'Not Started',
-        completionPercentage: completionPercentage || 0
+        topicId: topic._id,
+        weekId: topic.week,
+        status: 'Not Started',
+        completionPercentage: 0,
+        completedProblemIndexes: []
       });
     }
 
-    // Update fields
-    if (status) {
-      if (status !== 'Not Started' && !progress.startedAt) {
-        progress.startedAt = new Date();
-      }
-      if (status === 'Completed' && !progress.completedAt) {
-        progress.completedAt = new Date();
-      }
-      progress.status = status;
-    }
+    const updatedSet = new Set(progress.completedProblemIndexes || []);
+    if (completed) updatedSet.add(parsedIndex);
+    else updatedSet.delete(parsedIndex);
+    progress.completedProblemIndexes = Array.from(updatedSet).sort((a, b) => a - b);
 
-    if (completionPercentage !== undefined) {
-      progress.completionPercentage = completionPercentage;
-    }
+    const snapshot = progressSnapshot(topic, progress);
+    progress.completionPercentage = snapshot.completionPercentage;
+    progress.status = snapshot.isCompleted
+      ? 'Completed'
+      : snapshot.completedProblems > 0
+        ? 'In Progress'
+        : 'Not Started';
 
-    if (notes) {
-      progress.notes.push({
-        content: notes,
-        createdAt: new Date()
-      });
+    if (progress.status !== 'Not Started' && !progress.startedAt) {
+      progress.startedAt = new Date();
+    }
+    if (progress.status === 'Completed' && !progress.completedAt) {
+      progress.completedAt = new Date();
+    }
+    if (progress.status !== 'Completed') {
+      progress.completedAt = null;
     }
 
     await progress.save();
 
     res.status(200).json({
       success: true,
-      data: progress,
-      message: 'Progress updated successfully'
+      data: {
+        topicId: topic._id,
+        topic: topic.topic,
+        ...snapshot,
+        status: progress.status
+      },
+      message: snapshot.isCompleted
+        ? 'Topic completed successfully'
+        : 'Topic progress updated successfully'
     });
   } catch (error) {
     next(error);
   }
 };
 
-// Add note to week
+// Legacy note endpoint retained for compatibility
 exports.addNote = async (req, res, next) => {
   try {
     const { id, weekId } = req.params;
     const { content } = req.body;
-
-    // Check authorization
-    if (req.user._id.toString() !== id && req.user.role !== 'admin') {
-      return next(new AppError('You do not have permission to add notes', 403, 'UNAUTHORIZED'));
-    }
+    ensureStudentOrAdmin(req, id);
 
     if (!content || content.length > 1000) {
       return next(new AppError('Note must be between 1-1000 characters', 400, 'VALIDATION_ERROR'));
     }
 
-    let progress = await StudentProgress.findOne({
-      studentId: id,
-      weekId: parseInt(weekId)
-    });
+    const topic = await LearningPath.findById(weekId)
+      || await LearningPath.findOne({
+        $or: [
+          { topicId: String(weekId).toLowerCase() },
+          { week: Number(weekId) || -1 }
+        ]
+      });
 
+    if (!topic) {
+      return next(new AppError('Learning topic not found', 404, 'NOT_FOUND'));
+    }
+
+    let progress = await StudentProgress.findOne({ studentId: id, topicId: topic._id });
     if (!progress) {
       progress = new StudentProgress({
         studentId: id,
-        weekId: parseInt(weekId)
+        topicId: topic._id,
+        weekId: topic.week,
+        status: 'Not Started',
+        completionPercentage: 0
       });
     }
 
-    const note = {
-      content,
-      createdAt: new Date()
-    };
-
+    const note = { content, createdAt: new Date() };
     progress.notes.push(note);
     await progress.save();
 

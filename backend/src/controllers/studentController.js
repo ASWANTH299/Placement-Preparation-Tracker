@@ -154,21 +154,27 @@ exports.getCurrentLearningPath = async (req, res, next) => {
     const { id } = req.params;
     ensureStudentOrAdmin(req, id, 'view learning path');
 
-    const [nextProgress, nextPath] = await Promise.all([
-      StudentProgress.findOne({ studentId: id, status: { $ne: 'Completed' } }).sort({ weekId: 1 }),
-      LearningPath.findOne({ status: 'Active' }).sort({ week: 1 }),
-    ]);
+    const activeTopics = await LearningPath.find({ status: 'Active' }).sort({ order: 1, week: 1, createdAt: 1 });
+    const progressRows = await StudentProgress.find({ studentId: id, topicId: { $in: activeTopics.map((row) => row._id) } });
 
-    const weekId = nextProgress?.weekId || nextPath?.week;
-    const path = weekId ? await LearningPath.findOne({ week: weekId }) : null;
-    const upcoming = weekId ? await LearningPath.findOne({ week: weekId + 1 }) : null;
+    const progressByTopicId = new Map(progressRows.map((row) => [row.topicId?.toString(), row]));
+    const currentTopicIndex = activeTopics.findIndex((topic) => {
+      const row = progressByTopicId.get(topic._id.toString());
+      return !row || row.status !== 'Completed';
+    });
+
+    const selectedIndex = currentTopicIndex === -1 ? 0 : currentTopicIndex;
+    const path = activeTopics[selectedIndex] || null;
+    const progress = path ? progressByTopicId.get(path._id.toString()) : null;
+    const upcoming = activeTopics[selectedIndex + 1] || null;
 
     res.status(200).json({
       success: true,
       data: {
         currentWeek: path?.week ?? null,
+        currentTopicId: path?._id ?? null,
         topic: path?.topic ?? null,
-        progressPercentage: nextProgress?.completionPercentage ?? 0,
+        progressPercentage: progress?.completionPercentage ?? 0,
         nextTopic: upcoming?.topic ?? null,
       },
     });
@@ -219,7 +225,7 @@ exports.getProfile = async (req, res, next) => {
 exports.updateProfile = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const { name, bio, avatar, university, graduationYear, department, githubProfile, linkedinProfile, portfolioLink } = req.body;
+    const { name, email, bio, avatar, university, graduationYear, department, githubProfile, linkedinProfile, portfolioLink } = req.body;
 
     // Check authorization
     if (req.user._id.toString() !== id && req.user.role !== 'admin') {
@@ -235,6 +241,18 @@ exports.updateProfile = async (req, res, next) => {
     // Validate inputs
     if (name && !validateName(name)) {
       return next(new AppError('Name must be between 2-100 characters', 400, 'VALIDATION_ERROR'));
+    }
+
+    if (email && !validateEmail(email)) {
+      return next(new AppError('Invalid email format', 400, 'VALIDATION_ERROR'));
+    }
+
+    if (email && email.toLowerCase() !== user.email.toLowerCase()) {
+      const existingUser = await User.findOne({ email: email.toLowerCase() });
+      if (existingUser) {
+        return next(new AppError('Email already in use', 409, 'DUPLICATE_ENTRY'));
+      }
+      user.email = email.toLowerCase().trim();
     }
 
     if (bio && bio.length > 500) {
@@ -393,6 +411,38 @@ exports.updateProfileLinks = async (req, res, next) => {
         portfolioLink: user.portfolioLink
       },
       message: 'Profile links updated successfully'
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Upload profile avatar (stored locally via multer)
+exports.uploadProfileAvatar = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+
+    if (req.user._id.toString() !== id && req.user.role !== 'admin') {
+      return next(new AppError('You do not have permission to update this profile picture', 403, 'UNAUTHORIZED'));
+    }
+
+    if (!req.file) {
+      return next(new AppError('No avatar file uploaded', 400, 'VALIDATION_ERROR'));
+    }
+
+    const user = await User.findById(id);
+    if (!user) {
+      return next(new AppError('User not found', 404, 'USER_NOT_FOUND'));
+    }
+
+    const avatarUrl = `/uploads/${req.file.filename}`;
+    user.avatar = avatarUrl;
+    await user.save();
+
+    res.status(200).json({
+      success: true,
+      data: { avatar: avatarUrl },
+      message: 'Profile picture uploaded successfully'
     });
   } catch (error) {
     next(error);

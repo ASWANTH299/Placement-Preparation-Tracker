@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import useAuth from '../hooks/useAuth'
 import useForm from '../hooks/useForm'
 import useLocalStorage from '../hooks/useLocalStorage'
@@ -9,10 +9,12 @@ import { isValidEmail } from '../utils/validators'
 
 export default function LoginPage() {
   const navigate = useNavigate()
+  const location = useLocation()
   const { login } = useAuth()
   const [rememberedEmail, setRememberedEmail] = useLocalStorage('rememberedEmail', '')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState('')
+  const sessionExpired = new URLSearchParams(location.search).get('reason') === 'session-expired'
   const { values, onChange } = useForm({
     email: rememberedEmail,
     password: '',
@@ -72,7 +74,7 @@ export default function LoginPage() {
             <h1 className="mt-5 text-3xl font-bold leading-tight">Ship your preparation plan with momentum.</h1>
             <p className="mt-4 text-sm text-orange-50">Track streaks, questions, interviews, notes, and resume updates in one dashboard.</p>
             <div className="mt-8 space-y-2 text-sm text-orange-50">
-              <p>- Structured weekly roadmap</p>
+              <p>- Structured topic-based roadmap</p>
               <p>- Interview progress analytics</p>
               <p>- Role-based student/admin access</p>
             </div>
@@ -82,6 +84,12 @@ export default function LoginPage() {
             <p className="mb-2 text-sm font-semibold uppercase tracking-wide text-orange-600">Placement Preparation Tracker</p>
             <h2 className="mb-1 text-2xl font-bold text-slate-900">Welcome Back</h2>
             <p className="mb-6 text-sm text-slate-600">Login to continue your preparation journey.</p>
+
+            {sessionExpired && (
+              <p className="mb-4 rounded border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-700">
+                Your session expired. Please log in again.
+              </p>
+            )}
 
             <form onSubmit={handleSubmit} className="space-y-4">
           {error && <p className="rounded border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}

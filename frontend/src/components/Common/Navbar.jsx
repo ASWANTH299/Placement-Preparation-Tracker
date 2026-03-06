@@ -1,20 +1,32 @@
 import { Link, NavLink, useNavigate } from 'react-router-dom'
+import { useEffect, useState } from 'react'
 import useAuth from '../../hooks/useAuth'
 
 const navItems = [
   { label: 'Dashboard', to: '/dashboard' },
   { label: 'Learning Path', to: '/learning-path' },
-  { label: 'Company Questions', to: '/company-questions' },
-  { label: 'Practice', to: '/company-questions' },
+  { label: 'Questions & Practice', to: '/company-questions' },
   { label: 'Resume', to: '/resume-tracker' },
   { label: 'Notes', to: '/notes' },
   { label: 'Leaderboard', to: '/leaderboard' },
   { label: 'Coding Profiles', to: '/coding-profiles' },
+  { label: 'Profile', to: '/profile' },
 ]
 
 export default function Navbar() {
   const navigate = useNavigate()
   const { logout } = useAuth()
+  const [isDark, setIsDark] = useState(() => {
+    const saved = localStorage.getItem('theme')
+    if (saved === 'dark') return true
+    if (saved === 'light') return false
+    return false
+  })
+
+  useEffect(() => {
+    document.documentElement.classList.toggle('dark', isDark)
+    localStorage.setItem('theme', isDark ? 'dark' : 'light')
+  }, [isDark])
 
   const handleLogout = () => {
     logout()
@@ -22,9 +34,16 @@ export default function Navbar() {
   }
 
   return (
-    <header className="sticky top-0 z-40 border-b border-orange-100 bg-white/90 backdrop-blur" role="banner">
+    <header
+      className={`sticky top-0 z-40 border-b backdrop-blur-xl ${
+        isDark
+          ? 'border-slate-800 bg-slate-950/80'
+          : 'border-slate-200 bg-white/95'
+      }`}
+      role="banner"
+    >
       <div className="mx-auto flex w-full max-w-7xl items-center gap-3 px-4 py-3 sm:px-6 lg:px-8">
-        <Link to="/dashboard" className="text-base font-semibold text-orange-700 sm:text-lg">
+        <Link to="/dashboard" className={`text-base font-semibold tracking-tight sm:text-lg ${isDark ? 'text-blue-300' : 'text-slate-900'}`}>
           Placement Tracker
         </Link>
 
@@ -34,8 +53,10 @@ export default function Navbar() {
               key={item.to}
               to={item.to}
               className={({ isActive }) =>
-                `rounded-md px-3 py-2 text-sm font-medium transition ${
-                  isActive ? 'bg-orange-600 text-white shadow-sm' : 'text-slate-600 hover:bg-orange-50 hover:text-orange-700'
+                `nav-link-base ${
+                  isActive
+                    ? 'nav-link-active'
+                    : 'nav-link-idle'
                 }`
               }
             >
@@ -46,9 +67,18 @@ export default function Navbar() {
 
         <button
           type="button"
+          aria-label="Toggle theme"
+          onClick={() => setIsDark((prev) => !prev)}
+          className="ui-button ui-button-ghost shrink-0 px-3 py-2 text-sm"
+        >
+          {isDark ? 'Light' : 'Dark'}
+        </button>
+
+        <button
+          type="button"
           onClick={handleLogout}
           aria-label="Logout"
-          className="shrink-0 rounded-md border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100"
+          className="ui-button ui-button-ghost shrink-0 px-3 py-2 text-sm font-medium"
         >
           Logout
         </button>

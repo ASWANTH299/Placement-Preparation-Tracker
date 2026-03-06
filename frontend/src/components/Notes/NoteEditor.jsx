@@ -2,18 +2,25 @@ import { useEffect, useState } from 'react'
 
 const draftKey = 'note-draft'
 
-export default function NoteEditor() {
-  const [title, setTitle] = useState('')
-  const [content, setContent] = useState('')
-  const [saved, setSaved] = useState(false)
-
-  useEffect(() => {
+const getInitialDraft = () => {
+  try {
     const draft = localStorage.getItem(draftKey)
-    if (!draft) return
+    if (!draft) return { title: '', content: '' }
     const parsed = JSON.parse(draft)
-    setTitle(parsed.title || '')
-    setContent(parsed.content || '')
-  }, [])
+    return {
+      title: parsed.title || '',
+      content: parsed.content || ''
+    }
+  } catch {
+    return { title: '', content: '' }
+  }
+}
+
+export default function NoteEditor() {
+  const initialDraft = getInitialDraft()
+  const [title, setTitle] = useState(initialDraft.title)
+  const [content, setContent] = useState(initialDraft.content)
+  const [saved, setSaved] = useState(false)
 
   useEffect(() => {
     const timer = setTimeout(() => {

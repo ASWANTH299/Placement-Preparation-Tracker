@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
+const path = require('path');
 require('dotenv').config();
 
 const authMiddleware = require('./middlewares/authMiddleware');
@@ -10,6 +11,8 @@ const errorHandler = require('./middlewares/errorHandler');
 const authRoutes = require('./routes/authRoutes');
 const studentRoutes = require('./routes/studentRoutes');
 const adminRoutes = require('./routes/adminRoutes');
+const seedDefaultContent = require('./utils/seedDefaultContent');
+const ensureResumeIndexes = require('./utils/ensureResumeIndexes');
 
 const app = express();
 
@@ -17,6 +20,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use('/uploads', express.static(path.resolve('uploads')));
 
 // Database Connection
 const connectDB = async () => {
@@ -29,6 +33,9 @@ const connectDB = async () => {
       useNewUrlParser: true,
       useUnifiedTopology: true
     });
+
+    await ensureResumeIndexes();
+    await seedDefaultContent();
 
     console.log('MongoDB connected successfully');
   } catch (error) {

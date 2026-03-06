@@ -1,6 +1,30 @@
 const CompanyQuestion = require('../models/CompanyQuestion');
 const QuestionProgress = require('../models/QuestionProgress');
 const { AppError } = require('../utils/errorHandler');
+const { executeCode, SUPPORTED_LANGUAGES } = require('../utils/codeExecutor');
+
+const markAttemptProgress = async (studentId, questionId) => {
+  if (!studentId || !questionId) return;
+
+  let progress = await QuestionProgress.findOne({
+    studentId,
+    questionId
+  });
+
+  if (!progress) {
+    progress = new QuestionProgress({
+      studentId,
+      questionId
+    });
+  }
+
+  progress.status = 'Attempted';
+  progress.attemptCount += 1;
+  progress.lastAttemptDate = new Date();
+  if (!progress.firstAttemptDate) progress.firstAttemptDate = new Date();
+
+  await progress.save();
+};
 
 // Get filtered questions
 exports.getQuestions = async (req, res, next) => {
@@ -14,7 +38,8 @@ exports.getQuestions = async (req, res, next) => {
     if (search) {
       query.$or = [
         { title: { $regex: search, $options: 'i' } },
-        { description: { $regex: search, $options: 'i' } }
+        { description: { $regex: search, $options: 'i' } },
+        { topics: { $elemMatch: { $regex: search, $options: 'i' } } }
       ];
     }
 
@@ -44,6 +69,7 @@ exports.getQuestions = async (req, res, next) => {
           });
           return {
             ...q.toObject(),
+            topic: q.topics?.[0] || 'General',
             userStatus: progress ? {
               isSolved: progress.isSolved,
               isBookmarked: progress.isBookmarked,
@@ -97,6 +123,7 @@ exports.getQuestionDetail = async (req, res, next) => {
       success: true,
       data: {
         ...question.toObject(),
+        topic: question.topics?.[0] || 'General',
         userProgress: userProgress || null
       }
     });
@@ -225,6 +252,81 @@ exports.toggleBookmark = async (req, res, next) => {
     res.status(200).json({
       success: true,
       data: { isBookmarked }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Compile and run code
+exports.runCode = async (req, res, next) => {
+  try {
+    const { language, code, input = '' } = req.body;
+
+    if (!language || !code) {
+      return next(new AppError('language and code are required', 400, 'VALIDATION_ERROR'));
+    }
+
+    if (!SUPPORTED_LANGUAGES.includes(language)) {
+      return next(new AppError(`Unsupported language. Use one of: ${SUPPORTED_LANGUAGES.join(', ')}`, 400, 'VALIDATION_ERROR'));
+    }
+
+    const result = await executeCode({
+      language,
+      code,
+      input,
+      timeoutMs: 7000
+    });
+
+    res.status(200).json({
+      success: true,
+      data: {
+        language,
+        ...result
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Submit code (runs compiler/runtime checks + marks attempted when questionId is valid)
+exports.submitCode = async (req, res, next) => {
+  try {
+    const { questionId, language, code, input = '' } = req.body;
+
+    if (!language || !code) {
+      return next(new AppError('language and code are required', 400, 'VALIDATION_ERROR'));
+    }
+
+    if (!SUPPORTED_LANGUAGES.includes(language)) {
+      return next(new AppError(`Unsupported language. Use one of: ${SUPPORTED_LANGUAGES.join(', ')}`, 400, 'VALIDATION_ERROR'));
+    }
+
+    const result = await executeCode({
+      language,
+      code,
+      input,
+      timeoutMs: 7000
+    });
+
+    let attemptMarked = false;
+    const isValidQuestionId = typeof questionId === 'string' && /^[0-9a-fA-F]{24}$/.test(questionId);
+    if (isValidQuestionId && req.user?._id) {
+      const question = await CompanyQuestion.findById(questionId);
+      if (question) {
+        await markAttemptProgress(req.user._id, questionId);
+        attemptMarked = true;
+      }
+    }
+
+    res.status(200).json({
+      success: true,
+      data: {
+        language,
+        attemptMarked,
+        ...result
+      }
     });
   } catch (error) {
     next(error);

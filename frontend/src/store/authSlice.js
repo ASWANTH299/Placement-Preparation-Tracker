@@ -1,9 +1,22 @@
 import { createSlice } from '@reduxjs/toolkit'
 
+const normalizeUser = (user) => {
+  if (!user) return null
+  return {
+    ...user,
+    id: user.id || user._id || null,
+  }
+}
+
+const storedUser = normalizeUser(JSON.parse(localStorage.getItem('user') || 'null'))
+if (storedUser) {
+  localStorage.setItem('user', JSON.stringify(storedUser))
+}
+
 const initialState = {
   token: localStorage.getItem('token') || null,
   role: localStorage.getItem('role') || null,
-  user: JSON.parse(localStorage.getItem('user') || 'null'),
+  user: storedUser,
 }
 
 const authSlice = createSlice({
@@ -12,13 +25,14 @@ const authSlice = createSlice({
   reducers: {
     setCredentials: (state, action) => {
       const { token, role, user } = action.payload
+      const normalizedUser = normalizeUser(user)
       state.token = token
       state.role = role
-      state.user = user || null
+      state.user = normalizedUser
       localStorage.setItem('token', token)
       localStorage.setItem('role', role)
-      if (user) {
-        localStorage.setItem('user', JSON.stringify(user))
+      if (normalizedUser) {
+        localStorage.setItem('user', JSON.stringify(normalizedUser))
       }
     },
     clearCredentials: (state) => {

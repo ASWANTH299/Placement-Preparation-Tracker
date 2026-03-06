@@ -1,6 +1,27 @@
 const CodingProfile = require('../models/CodingProfile');
 const { AppError } = require('../utils/errorHandler');
 
+const platformUrlBuilders = {
+  LeetCode: (username) => `https://leetcode.com/${username}`,
+  CodeChef: (username) => `https://codechef.com/users/${username}`,
+  HackerRank: (username) => `https://hackerrank.com/${username}`,
+  Codeforces: (username) => `https://codeforces.com/profile/${username}`
+};
+
+const extractUsername = (raw = '') => {
+  const value = String(raw || '').trim();
+  if (!value) return '';
+
+  const parts = value.split('/').filter(Boolean);
+  return (parts[parts.length - 1] || '').replace(/\?.*$/, '').replace(/#.*$/, '').trim();
+};
+
+const canonicalizeUrl = (platform, username) => {
+  const builder = platformUrlBuilders[platform];
+  if (!builder || !username) return '';
+  return builder(username);
+};
+
 // Get all coding profiles
 exports.getCodingProfiles = async (req, res, next) => {
   try {
@@ -13,9 +34,27 @@ exports.getCodingProfiles = async (req, res, next) => {
 
     const profiles = await CodingProfile.find({ studentId: id });
 
+    const normalizedProfiles = await Promise.all(profiles.map(async (profile) => {
+      const profileObj = profile.toObject();
+      const canonicalUsername = extractUsername(profileObj.username || profileObj.profileUrl || '');
+      const canonicalUrl = canonicalizeUrl(profileObj.platform, canonicalUsername);
+
+      if (canonicalUsername && (profile.username !== canonicalUsername || profile.profileUrl !== canonicalUrl)) {
+        profile.username = canonicalUsername;
+        profile.profileUrl = canonicalUrl;
+        await profile.save();
+      }
+
+      return {
+        ...profileObj,
+        username: canonicalUsername || profileObj.username,
+        profileUrl: canonicalUrl || profileObj.profileUrl
+      };
+    }));
+
     res.status(200).json({
       success: true,
-      data: profiles
+      data: normalizedProfiles
     });
   } catch (error) {
     next(error);
@@ -26,7 +65,7 @@ exports.getCodingProfiles = async (req, res, next) => {
 exports.linkProfile = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const { platform, username } = req.body;
+    const { platform, username, profileUrl } = req.body;
 
     // Check authorization
     if (req.user._id.toString() !== id && req.user.role !== 'admin') {
@@ -39,7 +78,10 @@ exports.linkProfile = async (req, res, next) => {
       return next(new AppError('Invalid platform', 400, 'VALIDATION_ERROR'));
     }
 
-    if (!username || username.length > 50) {
+    const normalizedInput = String(profileUrl || username || '').trim();
+    const extracted = extractUsername(normalizedInput);
+
+    if (!extracted || extracted.length > 50) {
       return next(new AppError('Username must be between 1-50 characters', 400, 'VALIDATION_ERROR'));
     }
 
@@ -49,19 +91,14 @@ exports.linkProfile = async (req, res, next) => {
       return next(new AppError('Profile already exists for this platform', 409, 'DUPLICATE_ENTRY'));
     }
 
-    // Generate profile URL
-    const profileUrls = {
-      'LeetCode': `https://leetcode.com/${username}`,
-      'CodeChef': `https://www.codechef.com/users/${username}`,
-      'HackerRank': `https://www.hackerrank.com/${username}`,
-      'Codeforces': `https://codeforces.com/profile/${username}`
-    };
+    const canonicalUsername = extracted.replace(/\/$/, '');
+    const canonicalUrl = canonicalizeUrl(platform, canonicalUsername);
 
     const profile = new CodingProfile({
       studentId: id,
       platform,
-      username,
-      profileUrl: profileUrls[platform]
+      username: canonicalUsername,
+      profileUrl: canonicalUrl
     });
 
     await profile.save();

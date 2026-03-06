@@ -1,8 +1,15 @@
 :root {
-  color: #1f2937;
-  background-color: #f9fafb;
+  color: var(--text-primary);
+  background-color: var(--background);
 }
 
 a {
   color: inherit;
+}
+
+body,
+main,
+section,
+article {
+  transition: background-color 240ms ease, color 240ms ease, border-color 240ms ease;
 }

@@ -7,9 +7,18 @@ const studentProgressSchema = new mongoose.Schema(
       ref: 'User',
       required: true
     },
+    topicId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'LearningPath',
+      required: false
+    },
     weekId: {
       type: Number,
-      required: true
+      required: false
+    },
+    completedProblemIndexes: {
+      type: [Number],
+      default: []
     },
     status: {
       type: String,
@@ -43,7 +52,8 @@ const studentProgressSchema = new mongoose.Schema(
 );
 
 // Compound index for unique constraint
-studentProgressSchema.index({ studentId: 1, weekId: 1 }, { unique: true });
+studentProgressSchema.index({ studentId: 1, weekId: 1 }, { unique: true, sparse: true });
+studentProgressSchema.index({ studentId: 1, topicId: 1 }, { unique: true, sparse: true });
 studentProgressSchema.index({ studentId: 1 });
 studentProgressSchema.index({ status: 1 });
 

@@ -18,6 +18,7 @@ export default function SettingsPage() {
         const profile = response?.data?.data
         setSettings((prev) => ({ ...prev, publicProfile: Boolean(profile?.portfolioLink) }))
       } catch {
+        setSettings((prev) => ({ ...prev, publicProfile: false }))
       }
     }
     load()

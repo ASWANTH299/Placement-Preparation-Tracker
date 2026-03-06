@@ -2,16 +2,17 @@
 @import "tailwindcss";
 
 :root {
-  --primary: #ea580c;
+  --primary: #2563eb;
   --secondary: #0f766e;
   --success: #16a34a;
   --warning: #d97706;
   --danger: #dc2626;
-  --text-primary: #1c1917;
-  --text-secondary: #57534e;
-  --background: #fffdf8;
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --background: #f8fafc;
   --panel: #ffffff;
-  --line: #e7d6c9;
+  --line: #dbeafe;
+  --ring: rgba(37, 99, 235, 0.25);
 
   font-family: 'IBM Plex Sans', 'Segoe UI', sans-serif;
   font-synthesis: none;
@@ -28,7 +29,7 @@ body {
   margin: 0;
   min-width: 320px;
   color: var(--text-primary);
-  background-color: #000;
+  background-color: var(--background);
   overflow-x: hidden;
 }
 
@@ -37,7 +38,9 @@ body {
   inset: 0;
   pointer-events: none;
   z-index: 0;
-  background-color: #000;
+  background: radial-gradient(circle at 18% 10%, rgba(59, 130, 246, 0.08), transparent 28%),
+    radial-gradient(circle at 82% 14%, rgba(6, 182, 212, 0.06), transparent 28%),
+    linear-gradient(180deg, #f8fafc 0%, #f1f5f9 55%, #eef2f7 100%);
 }
 
 .app-animated-bg::before,
@@ -49,25 +52,25 @@ body {
 
 .app-animated-bg::before {
   background-image:
-    radial-gradient(2px 2px at 12% 24%, rgba(255, 255, 255, 0.9), transparent 60%),
-    radial-gradient(1.8px 1.8px at 30% 72%, rgba(255, 255, 255, 0.7), transparent 60%),
-    radial-gradient(2.2px 2.2px at 54% 16%, rgba(255, 255, 255, 0.95), transparent 60%),
-    radial-gradient(1.6px 1.6px at 76% 64%, rgba(255, 255, 255, 0.75), transparent 60%),
-    radial-gradient(2px 2px at 88% 38%, rgba(255, 255, 255, 0.85), transparent 60%),
-    radial-gradient(1.7px 1.7px at 44% 46%, rgba(255, 255, 255, 0.7), transparent 60%);
+    radial-gradient(2px 2px at 12% 24%, rgba(59, 130, 246, 0.18), transparent 60%),
+    radial-gradient(1.8px 1.8px at 30% 72%, rgba(6, 182, 212, 0.14), transparent 60%),
+    radial-gradient(2.2px 2.2px at 54% 16%, rgba(59, 130, 246, 0.16), transparent 60%),
+    radial-gradient(1.6px 1.6px at 76% 64%, rgba(14, 165, 233, 0.14), transparent 60%),
+    radial-gradient(2px 2px at 88% 38%, rgba(59, 130, 246, 0.14), transparent 60%),
+    radial-gradient(1.7px 1.7px at 44% 46%, rgba(8, 145, 178, 0.12), transparent 60%);
   animation: driftDotsSlow 26s linear infinite;
 }
 
 .app-animated-bg::after {
   background-image:
-    radial-gradient(1.6px 1.6px at 18% 84%, rgba(255, 255, 255, 0.7), transparent 60%),
-    radial-gradient(2px 2px at 36% 30%, rgba(255, 255, 255, 0.85), transparent 60%),
-    radial-gradient(1.5px 1.5px at 62% 78%, rgba(255, 255, 255, 0.6), transparent 60%),
-    radial-gradient(2.1px 2.1px at 82% 20%, rgba(255, 255, 255, 0.95), transparent 60%),
-    radial-gradient(1.7px 1.7px at 92% 56%, rgba(255, 255, 255, 0.7), transparent 60%),
-    radial-gradient(1.4px 1.4px at 50% 90%, rgba(255, 255, 255, 0.55), transparent 60%);
+    radial-gradient(1.6px 1.6px at 18% 84%, rgba(59, 130, 246, 0.13), transparent 60%),
+    radial-gradient(2px 2px at 36% 30%, rgba(14, 165, 233, 0.14), transparent 60%),
+    radial-gradient(1.5px 1.5px at 62% 78%, rgba(8, 145, 178, 0.12), transparent 60%),
+    radial-gradient(2.1px 2.1px at 82% 20%, rgba(59, 130, 246, 0.14), transparent 60%),
+    radial-gradient(1.7px 1.7px at 92% 56%, rgba(14, 116, 144, 0.12), transparent 60%),
+    radial-gradient(1.4px 1.4px at 50% 90%, rgba(14, 165, 233, 0.1), transparent 60%);
   animation: driftDotsFast 18s linear infinite;
-  opacity: 0.8;
+  opacity: 0.7;
 }
 
 #root {
@@ -85,9 +88,101 @@ h4 {
 }
 
 .surface-panel {
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(255, 250, 245, 0.95) 100%);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(247, 251, 255, 0.95) 100%);
   border: 1px solid var(--line);
-  box-shadow: 0 20px 45px rgba(28, 25, 23, 0.1);
+  box-shadow: 0 14px 36px rgba(15, 23, 42, 0.12);
+}
+
+.ui-card {
+  border: 1px solid var(--line);
+  border-radius: 1rem;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.96) 0%, rgba(248, 251, 255, 0.94) 100%);
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.08);
+  transition: transform 220ms ease, box-shadow 220ms ease, border-color 220ms ease;
+}
+
+.ui-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(37, 99, 235, 0.35);
+  box-shadow: 0 18px 34px rgba(30, 64, 175, 0.18);
+}
+
+.ui-button {
+  border-radius: 0.75rem;
+  font-weight: 600;
+  transition: transform 180ms ease, box-shadow 220ms ease, background-color 220ms ease, color 220ms ease;
+}
+
+.ui-button:hover {
+  transform: translateY(-1px);
+}
+
+.ui-button:active {
+  transform: translateY(0);
+}
+
+.ui-button-primary {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  color: #fff;
+  box-shadow: 0 8px 20px rgba(37, 99, 235, 0.35);
+}
+
+.ui-button-primary:hover {
+  box-shadow: 0 12px 24px rgba(37, 99, 235, 0.45);
+}
+
+.ui-button-ghost {
+  border: 1px solid rgba(148, 163, 184, 0.45);
+  background: rgba(255, 255, 255, 0.7);
+  color: #1f2937;
+}
+
+.nav-link-base {
+  border-radius: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  transition: background-color 200ms ease, color 200ms ease, transform 180ms ease;
+}
+
+.nav-link-base:hover {
+  transform: translateY(-1px);
+}
+
+.nav-link-idle {
+  color: #1e293b;
+}
+
+.nav-link-idle:hover {
+  background: rgba(37, 99, 235, 0.14);
+  color: #1e40af;
+}
+
+.nav-link-active {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  color: #ffffff;
+  box-shadow: 0 10px 24px rgba(37, 99, 235, 0.35);
+}
+
+.loading-shimmer {
+  position: relative;
+  overflow: hidden;
+  background: #e5ecf7;
+}
+
+.loading-shimmer::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.62), transparent);
+  animation: shimmer 1.25s infinite;
+}
+
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
 }
 
 .auth-stage {
@@ -153,5 +248,69 @@ h4 {
   }
   100% {
     transform: translate3d(0, 0, 0);
+  }
+}
+
+.dark {
+  --text-primary: #e2e8f0;
+  --text-secondary: #94a3b8;
+  --background: #020617;
+  --panel: #0f172a;
+  --line: #1e293b;
+  --ring: rgba(56, 189, 248, 0.3);
+}
+
+.dark .app-animated-bg {
+  background: radial-gradient(circle at 20% 15%, rgba(14, 165, 233, 0.2), transparent 34%),
+    radial-gradient(circle at 80% 8%, rgba(37, 99, 235, 0.2), transparent 30%),
+    radial-gradient(circle at 18% 85%, rgba(45, 212, 191, 0.15), transparent 34%),
+    linear-gradient(180deg, #020617 0%, #0f172a 48%, #111827 100%);
+}
+
+.dark .surface-panel,
+.dark .ui-card {
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.95) 0%, rgba(2, 6, 23, 0.9) 100%);
+  border-color: #1e293b;
+  box-shadow: 0 16px 32px rgba(0, 0, 0, 0.45);
+}
+
+.dark .ui-button-ghost {
+  background: rgba(15, 23, 42, 0.75);
+  border-color: rgba(71, 85, 105, 0.55);
+  color: #e2e8f0;
+}
+
+.dark .loading-shimmer {
+  background: #1e293b;
+}
+
+.dark .loading-shimmer::after {
+  background: linear-gradient(90deg, transparent, rgba(148, 163, 184, 0.24), transparent);
+}
+
+.dark .nav-link-idle {
+  color: #cbd5e1;
+}
+
+.dark .nav-link-idle:hover {
+  background: rgba(56, 189, 248, 0.16);
+  color: #7dd3fc;
+}
+
+/* Dark mode utility overrides for existing Tailwind class usage */
+.dark .text-slate-900 { color: #f1f5f9 !important; }
+.dark .text-slate-800 { color: #e2e8f0 !important; }
+.dark .text-slate-700 { color: #cbd5e1 !important; }
+.dark .text-slate-600 { color: #94a3b8 !important; }
+.dark .text-slate-500 { color: #94a3b8 !important; }
+.dark .bg-white { background-color: #0f172a !important; }
+.dark .bg-slate-50 { background-color: #0b1220 !important; }
+.dark .border-slate-200 { border-color: #1e293b !important; }
+.dark .border-slate-300 { border-color: #334155 !important; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation: none !important;
+    transition: none !important;
   }
 }

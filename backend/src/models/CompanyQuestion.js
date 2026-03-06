@@ -28,8 +28,20 @@ const companyQuestionSchema = new mongoose.Schema(
     },
     exampleInput: String,
     exampleOutput: String,
+    inputOutputExamples: [
+      {
+        input: String,
+        output: String,
+        explanation: String
+      }
+    ],
     constraints: String,
     hints: String,
+    pseudocode: String,
+    javaSolution: String,
+    explanation: String,
+    timeComplexity: String,
+    spaceComplexity: String,
     solutionApproach: String,
     solutionCode: String,
     tags: [String],

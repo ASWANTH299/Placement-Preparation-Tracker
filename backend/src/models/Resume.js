@@ -21,7 +21,7 @@ const resumeSchema = new mongoose.Schema(
     },
     fileType: {
       type: String,
-      enum: ['pdf', 'doc', 'docx'],
+      enum: ['pdf', 'docx'],
       required: true
     },
     isActive: {
@@ -41,6 +41,12 @@ const resumeSchema = new mongoose.Schema(
 // Indexes
 resumeSchema.index({ studentId: 1 });
 resumeSchema.index({ isActive: 1 });
-resumeSchema.index({ studentId: 1, isActive: 1 }, { unique: true, sparse: true });
+resumeSchema.index(
+  { studentId: 1, isActive: 1 },
+  {
+    unique: true,
+    partialFilterExpression: { isActive: true }
+  }
+);
 
 module.exports = mongoose.model('Resume', resumeSchema);

@@ -17,6 +17,7 @@ import NoteDetailPage from './pages/NoteDetailPage'
 import NotesPage from './pages/NotesPage'
 import NotFoundPage from './pages/NotFoundPage'
 import ProfilePage from './pages/ProfilePage'
+import PracticePage from './pages/PracticePage'
 import QuestionDetailPage from './pages/QuestionDetailPage'
 import RecordInterviewPage from './pages/RecordInterviewPage'
 import RegisterPage from './pages/RegisterPage'
@@ -61,7 +62,7 @@ function AppLayout() {
         Skip to main content
       </a>
       {showNavbar && (isAdminPath || role === 'admin' ? <AdminNavbar /> : <Navbar />)}
-      <main id="main-content" className={showNavbar ? 'relative z-10 mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8' : 'relative z-10'}>
+      <main id="main-content" className={showNavbar ? 'fade-rise relative z-10 mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8' : 'fade-rise relative z-10'}>
         <Routes>
           <Route path="/" element={<Navigate to="/login" replace />} />
           <Route path="/login" element={<LoginPage />} />
@@ -71,9 +72,11 @@ function AppLayout() {
 
           <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
           <Route path="/learning-path" element={<ProtectedRoute><LearningPathPage /></ProtectedRoute>} />
-          <Route path="/learning-path/:weekId" element={<ProtectedRoute><LearningPathDetailPage /></ProtectedRoute>} />
+          <Route path="/learning-path/:topicId" element={<ProtectedRoute><LearningPathDetailPage /></ProtectedRoute>} />
           <Route path="/company-questions" element={<ProtectedRoute><CompanyQuestionsPage /></ProtectedRoute>} />
           <Route path="/company-questions/:questionId" element={<ProtectedRoute><QuestionDetailPage /></ProtectedRoute>} />
+          <Route path="/questions/:questionId" element={<ProtectedRoute><QuestionDetailPage /></ProtectedRoute>} />
+          <Route path="/practice/:questionId" element={<ProtectedRoute><PracticePage /></ProtectedRoute>} />
           <Route path="/mock-interviews" element={<ProtectedRoute><MockInterviewsPage /></ProtectedRoute>} />
           <Route path="/mock-interviews/new" element={<ProtectedRoute><RecordInterviewPage /></ProtectedRoute>} />
           <Route path="/mock-interviews/:interviewId" element={<ProtectedRoute><MockInterviewDetailPage /></ProtectedRoute>} />

@@ -5,3 +5,5 @@ export const getQuestionDetail = (questionId) => api.get(`/company-questions/${q
 export const markQuestionSolved = (questionId, payload = {}) => api.post(`/company-questions/${questionId}/mark-solved`, payload)
 export const markQuestionAttempted = (questionId) => api.post(`/company-questions/${questionId}/mark-attempted`)
 export const toggleQuestionBookmark = (questionId, isBookmarked) => api.post(`/company-questions/${questionId}/bookmark`, { isBookmarked })
+export const runPracticeCode = (payload) => api.post('/practice/run-code', payload)
+export const submitPracticeCode = (payload) => api.post('/practice/submit-code', payload)

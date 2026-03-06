@@ -7,37 +7,32 @@ exports.getNotes = async (req, res, next) => {
     const { id } = req.params;
     const { page = 1, limit = 12, visibility, topic, company, search, sortBy = 'newest' } = req.query;
 
-    const query = {};
+    const conditions = [];
 
-    // Filter by visibility
     if (visibility && visibility !== 'All') {
-      query.visibility = visibility;
-    } else {
-      // Show own notes or public notes
-      query.$or = [
-        { studentId: id },
-        { visibility: 'Public' }
-      ];
-    }
-
-    // If searching for specific student's notes only
-    if (!visibility || visibility === 'All') {
-      if (req.user._id.toString() === id) {
-        // Can see own notes
+      if (visibility === 'Private') {
+        conditions.push({ studentId: id });
       } else {
-        // Can only see public notes
-        query.visibility = 'Public';
+        conditions.push({ visibility: 'Public' });
       }
+    } else if (req.user._id.toString() === id) {
+      conditions.push({ $or: [{ studentId: id }, { visibility: 'Public' }] });
+    } else {
+      conditions.push({ visibility: 'Public' });
     }
 
-    if (topic) query.topics = topic;
-    if (company) query.companies = company;
+    if (topic) conditions.push({ topics: topic });
+    if (company) conditions.push({ companies: company });
     if (search) {
-      query.$or = [
-        { title: { $regex: search, $options: 'i' } },
-        { content: { $regex: search, $options: 'i' } }
-      ];
+      conditions.push({
+        $or: [
+          { title: { $regex: search, $options: 'i' } },
+          { content: { $regex: search, $options: 'i' } }
+        ]
+      });
     }
+
+    const query = conditions.length ? { $and: conditions } : {};
 
     const skip = (parseInt(page) - 1) * parseInt(limit);
     const sortObj =  sortBy === 'oldest' ? { createdAt: 1 } : sortBy === 'mostViewed' ? { viewCount: -1 } : { createdAt: -1 };
@@ -53,7 +48,7 @@ exports.getNotes = async (req, res, next) => {
     // Add isOwnNote flag
     const enrichedNotes = notes.map(note => ({
       ...note.toObject(),
-      isOwnNote: note.studentId._id.toString() === req.user._id.toString()
+      isOwnNote: note.studentId ? note.studentId._id.toString() === req.user._id.toString() : false
     }));
 
     res.status(200).json({
