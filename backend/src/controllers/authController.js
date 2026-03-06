@@ -7,7 +7,7 @@ const crypto = require('crypto');
 // Register
 exports.register = async (req, res, next) => {
   try {
-    const { name, email, password, confirmPassword } = req.body;
+    const { name, email, password, confirmPassword, role = 'student' } = req.body;
 
     // Validation
     if (!validateName(name)) {
@@ -26,6 +26,10 @@ exports.register = async (req, res, next) => {
       return next(new AppError('Passwords do not match', 400, 'VALIDATION_ERROR'));
     }
 
+    if (!['student', 'admin'].includes(role)) {
+      return next(new AppError('Role must be either student or admin', 400, 'VALIDATION_ERROR'));
+    }
+
     // Check if email exists
     const existingUser = await User.findOne({ email: email.toLowerCase() });
     if (existingUser) {
@@ -37,7 +41,7 @@ exports.register = async (req, res, next) => {
       name: name.trim(),
       email: email.toLowerCase(),
       password,
-      role: 'student'
+      role
     });
 
     await user.save();

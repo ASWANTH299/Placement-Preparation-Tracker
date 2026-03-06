@@ -81,7 +81,7 @@ app.use('/api/v1', authMiddleware);
 app.use('/api/v1', studentRoutes);
 
 // Admin routes - require admin role
-app.use('/api/v1/admin', roleMiddleware(['admin']), adminRoutes);
+app.use('/api/v1/admin', authMiddleware, roleMiddleware(['admin']), adminRoutes);
 
 // 404 handler
 app.use((req, res) => {

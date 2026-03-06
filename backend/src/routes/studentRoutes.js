@@ -41,6 +41,13 @@ router.get('/students/:id/profile', studentController.getProfile);
 router.put('/students/:id/profile', studentController.updateProfile);
 router.post('/students/:id/change-password', studentController.changePassword);
 
+// Student dashboard routes
+router.get('/students/:id/progress', studentController.getDashboardProgress);
+router.get('/students/:id/streak', studentController.getStudyStreak);
+router.get('/students/:id/activity', studentController.getTodayActivity);
+router.post('/students/:id/activity', studentController.logTodayActivity);
+router.get('/students/:id/learning-path', studentController.getCurrentLearningPath);
+
 // Student Profile Links Routes (GitHub, LinkedIn, Portfolio)
 router.get('/students/:id/profiles', studentController.getProfileLinks);
 router.put('/students/:id/profiles', studentController.updateProfileLinks);
