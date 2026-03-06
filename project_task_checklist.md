@@ -45,6 +45,8 @@
 | GET /api/v1/students/:id/profile | ✅ Done | Retrieve student profile information |
 | PUT /api/v1/students/:id/profile | ✅ Done | Update profile (name, bio, university, etc) |
 | POST /api/v1/students/:id/change-password | ✅ Done | Change password with current password verification |
+| GET /api/v1/students/:id/profiles | ✅ Done | Get GitHub, LinkedIn, Portfolio profile links |
+| PUT /api/v1/students/:id/profiles | ✅ Done | Update GitHub, LinkedIn, Portfolio profile links |
 
 ---
 
@@ -175,7 +177,7 @@
 | Question Solved Count | ✅ Done | Tracks global and per-student counts |
 | Resume Active Status | ✅ Done | Only 1 active resume per student |
 | Public Notes Sharing | ✅ Done | Students can share notes with visibility control |
-| Profile Links (GitHub, LinkedIn, Portfolio) | ⚠️ Partial | Fields not yet added to User model |
+| Profile Links (GitHub, LinkedIn, Portfolio) | ✅ Done | GET /api/v1/students/:id/profiles and PUT endpoints implemented |
 | Admin Invite System | ❌ Missing | Invitation token and email system not implemented |
 | Email Service Integration | ❌ Missing | Forgot password, invite emails not implemented |
 
@@ -214,20 +216,15 @@
 | Metric | Count |
 |--------|-------|
 | **Total Components** | **56** |
-| **✅ Completed** | **54** |
-| **⚠️ Partial** | **1** |
+| **✅ Completed** | **55** |
+| **⚠️ Partial** | **0** |
 | **❌ Missing** | **1** |
 
-**Completion Rate**: **96.4%**
+**Completion Rate**: **98.2%**
 
 ---
 
 ## MISSING/PARTIAL COMPONENTS
-
-### ⚠️ Partial Implementation
-1. **Profile Links (GitHub, LinkedIn, Portfolio)** 
-   - Endpoints defined but User model needs extension with these fields
-   - Action: Add `githubProfile`, `linkedinProfile`, `portfolioLink` to User schema
 
 ### ❌ Not Implemented
 1. **Admin Invite System**
@@ -269,5 +266,5 @@
 
 ---
 
-**Status**: ✅ **PRODUCTION READY** - 96% complete, ready for frontend integration
+**Status**: ✅ **PRODUCTION READY** - 98.2% complete, only email service and admin invites remaining
 
