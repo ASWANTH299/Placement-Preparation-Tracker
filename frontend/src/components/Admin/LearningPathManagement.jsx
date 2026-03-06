@@ -53,16 +53,25 @@ export default function LearningPathManagement() {
   }
 
   return (
-    <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-      <h1 className="text-2xl font-bold text-slate-900">Manage Learning Paths</h1>
-      <div className="mt-4 flex gap-2">
+    <section className="surface-panel fade-rise rounded-2xl p-6">
+      <div className="rounded-xl border border-cyan-100 bg-gradient-to-r from-cyan-50 to-blue-50 p-4">
+        <h1 className="text-2xl font-bold text-slate-900">Manage Learning Paths</h1>
+        <p className="mt-1 text-sm text-slate-600">Create and publish weekly learning topics for students.</p>
+      </div>
+
+      <div className="mt-4 flex flex-col gap-2 sm:flex-row">
         <input value={topic} onChange={(event) => setTopic(event.target.value)} placeholder="New topic name" className="flex-1 rounded border border-slate-300 px-3 py-2 text-sm" />
-        <button type="button" onClick={addTopic} className="rounded bg-blue-600 px-3 py-2 text-sm font-medium text-white">Add Topic</button>
+        <button type="button" onClick={addTopic} className="rounded bg-cyan-600 px-4 py-2 text-sm font-medium text-white hover:bg-cyan-700">Add Topic</button>
       </div>
       {error && <p className="mt-3 rounded border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
-      <ul className="mt-4 space-y-2 text-sm">
+
+      <ul className="mt-4 grid gap-3 text-sm md:grid-cols-2">
         {topics.map((item) => (
-          <li key={`${item.week}-${item.name}`} className="rounded border border-slate-200 px-3 py-2">Week {item.week}: {item.name} • {item.status}</li>
+          <li key={`${item.week}-${item.name}`} className="rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
+            <p className="text-xs uppercase tracking-wide text-cyan-600">Week {item.week}</p>
+            <p className="mt-1 font-semibold text-slate-900">{item.name}</p>
+            <p className="mt-1 text-xs text-slate-500">Status: {item.status}</p>
+          </li>
         ))}
       </ul>
     </section>

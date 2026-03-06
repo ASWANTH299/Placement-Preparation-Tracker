@@ -64,14 +64,26 @@ export default function LoginPage() {
   }
 
   return (
-    <section className="flex min-h-screen items-center justify-center px-4 py-8">
-      <div className="w-full max-w-md rounded-xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
-        <p className="mb-2 text-center text-sm font-semibold uppercase tracking-wide text-blue-600 animate-pulse">
-          Placement Preparation Tracker
-        </p>
-        <h1 className="mb-6 text-2xl font-bold text-slate-900">Welcome Back</h1>
+    <section className="auth-stage relative z-10 flex min-h-screen items-center justify-center px-4 py-8">
+      <div className="surface-panel fade-rise w-full max-w-5xl overflow-hidden rounded-2xl">
+        <div className="grid md:grid-cols-2">
+          <aside className="hidden bg-gradient-to-br from-orange-700 to-teal-700 p-8 text-white md:block">
+            <p className="text-xs uppercase tracking-[0.2em] text-orange-100">Placement Preparation Tracker</p>
+            <h1 className="mt-5 text-3xl font-bold leading-tight">Ship your preparation plan with momentum.</h1>
+            <p className="mt-4 text-sm text-orange-50">Track streaks, questions, interviews, notes, and resume updates in one dashboard.</p>
+            <div className="mt-8 space-y-2 text-sm text-orange-50">
+              <p>- Structured weekly roadmap</p>
+              <p>- Interview progress analytics</p>
+              <p>- Role-based student/admin access</p>
+            </div>
+          </aside>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="bg-white p-6 sm:p-8">
+            <p className="mb-2 text-sm font-semibold uppercase tracking-wide text-orange-600">Placement Preparation Tracker</p>
+            <h2 className="mb-1 text-2xl font-bold text-slate-900">Welcome Back</h2>
+            <p className="mb-6 text-sm text-slate-600">Login to continue your preparation journey.</p>
+
+            <form onSubmit={handleSubmit} className="space-y-4">
           {error && <p className="rounded border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
           <div>
             <label htmlFor="email" className="mb-1 block text-sm font-medium text-slate-700">
@@ -85,7 +97,7 @@ export default function LoginPage() {
               onChange={onChange}
               required
               disabled={isSubmitting}
-              className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm outline-none ring-blue-500 focus:ring-2"
+              className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm outline-none ring-orange-500 focus:ring-2"
               placeholder="you@example.com"
             />
           </div>
@@ -102,7 +114,7 @@ export default function LoginPage() {
               onChange={onChange}
               required
               disabled={isSubmitting}
-              className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm outline-none ring-blue-500 focus:ring-2"
+              className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm outline-none ring-orange-500 focus:ring-2"
               placeholder="Enter your password"
             />
           </div>
@@ -129,7 +141,7 @@ export default function LoginPage() {
               value={values.role}
               onChange={onChange}
               disabled={isSubmitting}
-              className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm outline-none ring-blue-500 focus:ring-2"
+              className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm outline-none ring-orange-500 focus:ring-2"
             >
               <option value="student">Student</option>
               <option value="admin">Admin</option>
@@ -139,22 +151,24 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700"
+            className="w-full rounded-md bg-orange-600 px-4 py-2 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-orange-700"
           >
             {isSubmitting ? 'Logging in...' : 'Login'}
           </button>
-        </form>
+            </form>
 
-        <div className="mt-4 flex items-center justify-between text-sm">
-          <Link to="/forgot-password" className="text-blue-600 hover:text-blue-700">
+            <div className="mt-4 flex items-center justify-between text-sm">
+          <Link to="/forgot-password" className="text-orange-600 hover:text-orange-700">
             Forgot Password?
           </Link>
           <span className="text-slate-600">
             Don&apos;t have an account?{' '}
-            <Link to="/register" className="font-medium text-blue-600 hover:text-blue-700">
+            <Link to="/register" className="font-medium text-orange-600 hover:text-orange-700">
               Register here
             </Link>
           </span>
+            </div>
+          </div>
         </div>
       </div>
     </section>

@@ -58,7 +58,8 @@ export default function DashboardPage() {
 
   return (
     <section>
-      <div className="mb-6 flex items-end justify-between">
+      <div className="mb-6 rounded-2xl border border-orange-100 bg-gradient-to-r from-orange-50 to-amber-50 p-5">
+        <div className="flex items-end justify-between">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Student Dashboard</h1>
           <p className="text-sm text-slate-600">Central hub for your placement preparation progress.</p>
@@ -88,6 +89,7 @@ export default function DashboardPage() {
             Logout
           </button>
         </div>
+        </div>
       </div>
 
       {loading && <p className="mb-3 text-sm text-slate-500">Loading dashboard data...</p>}
@@ -95,9 +97,10 @@ export default function DashboardPage() {
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
         {cards.map((card) => (
-          <article key={card.title} className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-            <h2 className="text-base font-semibold text-slate-900">{card.title}</h2>
-            <p className="mt-2 text-sm text-slate-600">{card.content}</p>
+          <article key={card.title} className="surface-panel fade-rise rounded-2xl p-4">
+            <p className="text-xs uppercase tracking-wide text-orange-600">Insight</p>
+            <h2 className="mt-1 text-base font-semibold text-slate-900">{card.title}</h2>
+            <p className="mt-2 text-sm leading-relaxed text-slate-600">{card.content}</p>
           </article>
         ))}
       </div>

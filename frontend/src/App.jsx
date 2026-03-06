@@ -55,12 +55,13 @@ function AppLayout() {
   const showNavbar = !authRoutes.includes(location.pathname)
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-800">
+    <div className="min-h-screen text-slate-800">
+      <div className="app-animated-bg" aria-hidden="true" />
       <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded focus:bg-white focus:px-3 focus:py-2 focus:text-sm focus:font-medium focus:text-blue-700">
         Skip to main content
       </a>
       {showNavbar && (isAdminPath || role === 'admin' ? <AdminNavbar /> : <Navbar />)}
-      <main id="main-content" className={showNavbar ? 'mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8' : ''}>
+      <main id="main-content" className={showNavbar ? 'relative z-10 mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8' : 'relative z-10'}>
         <Routes>
           <Route path="/" element={<Navigate to="/login" replace />} />
           <Route path="/login" element={<LoginPage />} />

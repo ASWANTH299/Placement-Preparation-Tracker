@@ -22,9 +22,9 @@ export default function Navbar() {
   }
 
   return (
-    <header className="border-b border-slate-200 bg-white" role="banner">
+    <header className="sticky top-0 z-40 border-b border-orange-100 bg-white/90 backdrop-blur" role="banner">
       <div className="mx-auto flex w-full max-w-7xl items-center gap-3 px-4 py-3 sm:px-6 lg:px-8">
-        <Link to="/dashboard" className="text-base font-semibold text-blue-600 sm:text-lg">
+        <Link to="/dashboard" className="text-base font-semibold text-orange-700 sm:text-lg">
           Placement Tracker
         </Link>
 
@@ -35,7 +35,7 @@ export default function Navbar() {
               to={item.to}
               className={({ isActive }) =>
                 `rounded-md px-3 py-2 text-sm font-medium transition ${
-                  isActive ? 'bg-blue-50 text-blue-600' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-800'
+                  isActive ? 'bg-orange-600 text-white shadow-sm' : 'text-slate-600 hover:bg-orange-50 hover:text-orange-700'
                 }`
               }
             >

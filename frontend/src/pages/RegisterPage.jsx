@@ -64,14 +64,24 @@ export default function RegisterPage() {
   }
 
   return (
-    <section className="flex min-h-screen items-center justify-center px-4 py-8">
-      <div className="w-full max-w-md rounded-xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
-        <p className="mb-2 text-center text-sm font-semibold uppercase tracking-wide text-blue-600 animate-pulse">
-          Placement Preparation Tracker
-        </p>
-        <h1 className="mb-6 text-2xl font-bold text-slate-900">Create Your Account</h1>
+    <section className="auth-stage relative z-10 flex min-h-screen items-center justify-center px-4 py-8">
+      <div className="surface-panel fade-rise w-full max-w-5xl overflow-hidden rounded-2xl">
+        <div className="grid md:grid-cols-2">
+          <aside className="hidden bg-gradient-to-br from-teal-700 to-orange-700 p-8 text-white md:block">
+            <p className="text-xs uppercase tracking-[0.2em] text-teal-100">Get Started</p>
+            <h1 className="mt-5 text-3xl font-bold leading-tight">Create your prep workspace in minutes.</h1>
+            <p className="mt-4 text-sm text-teal-50">Choose your role and start tracking every key milestone from day one.</p>
+            <div className="mt-8 rounded-xl border border-white/30 bg-white/10 p-4 text-sm text-teal-50">
+              Use a strong password like <span className="font-semibold">Pass@1234</span> for quick onboarding.
+            </div>
+          </aside>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="bg-white p-6 sm:p-8">
+            <p className="mb-2 text-sm font-semibold uppercase tracking-wide text-orange-600">Placement Preparation Tracker</p>
+            <h2 className="mb-1 text-2xl font-bold text-slate-900">Create Your Account</h2>
+            <p className="mb-6 text-sm text-slate-600">Register as student or admin to access your dashboard.</p>
+
+            <form onSubmit={handleSubmit} className="space-y-4">
           {error && <p className="rounded border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
           {message && <p className="rounded border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-700">{message}</p>}
           <div>
@@ -88,7 +98,7 @@ export default function RegisterPage() {
               disabled={isSubmitting}
               minLength={2}
               maxLength={100}
-              className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm outline-none ring-blue-500 focus:ring-2"
+              className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm outline-none ring-orange-500 focus:ring-2"
               placeholder="Enter full name"
             />
           </div>
@@ -105,7 +115,7 @@ export default function RegisterPage() {
               onChange={onChange}
               required
               disabled={isSubmitting}
-              className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm outline-none ring-blue-500 focus:ring-2"
+              className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm outline-none ring-orange-500 focus:ring-2"
               placeholder="you@example.com"
             />
           </div>
@@ -123,7 +133,7 @@ export default function RegisterPage() {
               required
               disabled={isSubmitting}
               minLength={8}
-              className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm outline-none ring-blue-500 focus:ring-2"
+              className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm outline-none ring-orange-500 focus:ring-2"
               placeholder="Minimum 8 characters"
             />
           </div>
@@ -141,7 +151,7 @@ export default function RegisterPage() {
               required
               disabled={isSubmitting}
               minLength={8}
-              className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm outline-none ring-blue-500 focus:ring-2"
+              className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm outline-none ring-orange-500 focus:ring-2"
               placeholder="Re-enter your password"
             />
           </div>
@@ -166,22 +176,24 @@ export default function RegisterPage() {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700"
+            className="w-full rounded-md bg-orange-600 px-4 py-2 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-orange-700"
           >
             {isSubmitting ? 'Registering...' : 'Register'}
           </button>
-        </form>
+            </form>
 
-        <p className="mt-3 text-xs text-slate-500">
+            <p className="mt-3 text-xs text-slate-500">
           Password must include uppercase, lowercase, number, and special character.
-        </p>
+            </p>
 
-        <p className="mt-4 text-sm text-slate-600">
+            <p className="mt-4 text-sm text-slate-600">
           Already have an account?{' '}
-          <Link to="/login" className="font-medium text-blue-600 hover:text-blue-700">
+          <Link to="/login" className="font-medium text-orange-600 hover:text-orange-700">
             Login here
           </Link>
-        </p>
+            </p>
+          </div>
+        </div>
       </div>
     </section>
   )
