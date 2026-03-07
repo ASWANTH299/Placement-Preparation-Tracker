@@ -3,6 +3,7 @@ import { useSelector } from 'react-redux'
 import AdminDashboard from './components/Dashboard/AdminDashboard'
 import AdminNavbar from './components/Common/AdminNavbar'
 import CodingProfilesPage from './pages/CodingProfilesPage'
+import ConceptLearningPage from './pages/ConceptLearningPage'
 import Navbar from './components/Common/Navbar'
 import CompanyQuestionsPage from './pages/CompanyQuestionsPage'
 import DashboardPage from './pages/DashboardPage'
@@ -85,6 +86,7 @@ function AppLayout() {
           <Route path="/notes/:noteId" element={<ProtectedRoute><NoteDetailPage /></ProtectedRoute>} />
           <Route path="/leaderboard" element={<ProtectedRoute><LeaderboardPage /></ProtectedRoute>} />
           <Route path="/coding-profiles" element={<ProtectedRoute><CodingProfilesPage /></ProtectedRoute>} />
+          <Route path="/concept-learning" element={<ProtectedRoute><ConceptLearningPage /></ProtectedRoute>} />
           <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
           <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
 

@@ -10,6 +10,7 @@ const navItems = [
   { label: 'Notes', to: '/notes' },
   { label: 'Leaderboard', to: '/leaderboard' },
   { label: 'Coding Profiles', to: '/coding-profiles' },
+  { label: 'Concept Learning', to: '/concept-learning' },
   { label: 'Profile', to: '/profile' },
 ]
 

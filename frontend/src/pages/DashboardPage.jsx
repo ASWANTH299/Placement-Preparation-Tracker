@@ -19,12 +19,36 @@ export default function DashboardPage() {
   const [path, setPath] = useState(defaultPath)
 
   const cards = useMemo(() => [
-    { title: 'Study Streak', content: `🔥 ${streak.currentStreak} Day Streak · Keep it going!` },
-    { title: 'Progress Overview', content: `Learning Paths: ${progress.learningPathsCompleted}/${progress.totalLearningPaths} · Questions: ${progress.questionsSolved}/${progress.totalQuestions} · Mocks: ${progress.mockInterviewsCompleted}/${progress.totalMockInterviews}` },
-    { title: 'Daily Activity', content: `Questions: ${activity.questionsSolved} · Time: ${Math.round((activity.timeStudiedMinutes || 0) / 60)}h · Tasks: ${activity.tasksCompleted}` },
-    { title: 'Learning Path Progress', content: `Current topic: ${path.topic || '--'} · Next topic: ${path.nextTopic || '--'} · Progress: ${path.progressPercentage || 0}%` },
-    { title: 'Recent Mock Interviews', content: 'Track latest interview scores from Mock Interviews page.' },
-    { title: 'Quick Actions', content: 'Practice · Record Interview · Upload Resume · Add Notes' },
+    {
+      title: 'Study Streak',
+      content: `🔥 ${streak.currentStreak} Day Streak · Keep it going!`,
+      route: '/leaderboard',
+    },
+    {
+      title: 'Progress Overview',
+      content: `Learning Paths: ${progress.learningPathsCompleted}/${progress.totalLearningPaths} · Questions: ${progress.questionsSolved}/${progress.totalQuestions} · Mocks: ${progress.mockInterviewsCompleted}/${progress.totalMockInterviews}`,
+      route: '/company-questions',
+    },
+    {
+      title: 'Daily Activity',
+      content: `Questions: ${activity.questionsSolved} · Time: ${Math.round((activity.timeStudiedMinutes || 0) / 60)}h · Tasks: ${activity.tasksCompleted}`,
+      route: '/notes',
+    },
+    {
+      title: 'Learning Path Progress',
+      content: `Current topic: ${path.topic || '--'} · Next topic: ${path.nextTopic || '--'} · Progress: ${path.progressPercentage || 0}%`,
+      route: '/learning-path',
+    },
+    {
+      title: 'Recent Mock Interviews',
+      content: 'Track latest interview scores from Mock Interviews page.',
+      route: '/mock-interviews',
+    },
+    {
+      title: 'Quick Actions',
+      content: 'Practice · Record Interview · Upload Resume · Add Notes',
+      route: '/company-questions',
+    },
   ], [activity.questionsSolved, activity.tasksCompleted, activity.timeStudiedMinutes, path.nextTopic, path.progressPercentage, path.topic, progress.learningPathsCompleted, progress.mockInterviewsCompleted, progress.questionsSolved, progress.totalLearningPaths, progress.totalMockInterviews, progress.totalQuestions, streak.currentStreak])
 
   useEffect(() => {
@@ -115,7 +139,20 @@ export default function DashboardPage() {
       {!loading && (
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
           {cards.map((card) => (
-            <article key={card.title} className="ui-card rounded-2xl p-4 sm:p-5">
+            <article
+              key={card.title}
+              role="button"
+              tabIndex={0}
+              onClick={() => navigate(card.route)}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                  event.preventDefault()
+                  navigate(card.route)
+                }
+              }}
+              className="ui-card cursor-pointer rounded-2xl p-4 transition-transform duration-200 hover:-translate-y-0.5 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-900 sm:p-5"
+              aria-label={`Open ${card.title}`}
+            >
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-blue-600 dark:text-blue-300">Insight</p>
               <h2 className="mt-2 text-lg font-semibold text-slate-900 dark:text-slate-100">{card.title}</h2>
               <p className="mt-2 text-sm leading-relaxed text-slate-600 dark:text-slate-300">{card.content}</p>
