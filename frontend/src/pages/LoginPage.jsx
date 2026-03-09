@@ -67,20 +67,8 @@ export default function LoginPage() {
 
   return (
     <section className="auth-stage relative z-10 flex min-h-screen items-center justify-center px-4 py-8">
-      <div className="surface-panel fade-rise w-full max-w-5xl overflow-hidden rounded-2xl">
-        <div className="grid md:grid-cols-2">
-          <aside className="hidden bg-gradient-to-br from-orange-700 to-teal-700 p-8 text-white md:block">
-            <p className="text-xs uppercase tracking-[0.2em] text-orange-100">Placement Preparation Tracker</p>
-            <h1 className="mt-5 text-3xl font-bold leading-tight">Ship your preparation plan with momentum.</h1>
-            <p className="mt-4 text-sm text-orange-50">Track streaks, questions, interviews, notes, and resume updates in one dashboard.</p>
-            <div className="mt-8 space-y-2 text-sm text-orange-50">
-              <p>- Structured topic-based roadmap</p>
-              <p>- Interview progress analytics</p>
-              <p>- Role-based student/admin access</p>
-            </div>
-          </aside>
-
-          <div className="bg-white p-6 sm:p-8">
+      <div className="surface-panel fade-rise w-full max-w-xl overflow-hidden rounded-2xl">
+        <div className="bg-white p-6 sm:p-8">
             <p className="mb-2 text-sm font-semibold uppercase tracking-wide text-orange-600">Placement Preparation Tracker</p>
             <h2 className="mb-1 text-2xl font-bold text-slate-900">Welcome Back</h2>
             <p className="mb-6 text-sm text-slate-600">Login to continue your preparation journey.</p>
@@ -176,7 +164,6 @@ export default function LoginPage() {
             </Link>
           </span>
             </div>
-          </div>
         </div>
       </div>
     </section>

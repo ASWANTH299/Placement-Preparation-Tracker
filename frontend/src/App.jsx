@@ -30,6 +30,7 @@ import UnauthorizedPage from './pages/UnauthorizedPage'
 import AdminUsersPage from './pages/AdminUsersPage'
 import AdminLearningPathPage from './pages/AdminLearningPathPage'
 import AdminCompanyQuestionsPage from './pages/AdminCompanyQuestionsPage'
+import AiModeWidget from './components/Common/AiModeWidget'
 
 const authRoutes = ['/login', '/register', '/forgot-password', '/reset-password']
 const adminRoutes = ['/admin-dashboard', '/admin-users', '/admin-learning-path', '/admin-company-questions']
@@ -100,6 +101,7 @@ function AppLayout() {
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </main>
+      <AiModeWidget />
     </div>
   )
 }

@@ -4,8 +4,8 @@ const validateEmail = (email) => {
 };
 
 const validatePassword = (password) => {
-  // Min 8 chars, at least 1 uppercase, 1 lowercase, 1 number, 1 special char
-  const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+  // At least 1 uppercase and 1 special character; remaining characters are unrestricted
+  const passwordRegex = /^(?=.*[A-Z])(?=.*[^A-Za-z\d]).+$/;
   return passwordRegex.test(password);
 };
 

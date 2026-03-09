@@ -318,7 +318,7 @@ exports.changePassword = async (req, res, next) => {
 
     // Validate new password
     if (!validatePassword(newPassword)) {
-      return next(new AppError('Password must contain uppercase, lowercase, number, and special character', 400, 'PASSWORD_INVALID'));
+      return next(new AppError('Password must contain at least one uppercase letter and one special character', 400, 'PASSWORD_INVALID'));
     }
 
     if (newPassword !== confirmPassword) {

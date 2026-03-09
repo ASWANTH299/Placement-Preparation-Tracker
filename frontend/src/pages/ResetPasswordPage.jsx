@@ -3,6 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom'
 import PageShell from '../components/Common/PageShell'
 import { resetPassword } from '../services/authService'
 import { getErrorMessage } from '../utils/errorHandler'
+import { isStrongPassword } from '../utils/validators'
 
 export default function ResetPasswordPage() {
   const [searchParams] = useSearchParams()
@@ -17,8 +18,8 @@ export default function ResetPasswordPage() {
 
   const onSubmit = async (event) => {
     event.preventDefault()
-    if (form.password.length < 8) {
-      setMessage('Password must be at least 8 characters long.')
+    if (!isStrongPassword(form.password)) {
+      setMessage('Password must include at least one uppercase letter and one special character.')
       return
     }
 
