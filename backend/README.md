@@ -163,6 +163,27 @@ Authorization: Bearer <token>
 
 Token is returned on successful login and expires in 1 hour.
 
+### Password Reset Email Setup
+
+To send real reset emails, configure SMTP variables in `backend/.env`:
+
+```env
+FRONTEND_URL=http://localhost:5173
+FRONTEND_PROD_URL=https://your-frontend-domain.com
+
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_SECURE=false
+SMTP_USER=your-email@gmail.com
+SMTP_PASS=your-app-password
+SMTP_FROM_EMAIL=your-email@gmail.com
+EMAIL_FROM_NAME=Placement Tracker
+```
+
+Notes:
+- For Gmail, use an App Password (not your normal account password).
+- Restart the backend after updating `.env`.
+
 ## Database Collections
 
 1. **Users** - Student and admin accounts

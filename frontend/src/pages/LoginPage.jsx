@@ -66,104 +66,120 @@ export default function LoginPage() {
   }
 
   return (
-    <section className="auth-stage relative z-10 flex min-h-screen items-center justify-center px-4 py-8">
-      <div className="surface-panel fade-rise w-full max-w-xl overflow-hidden rounded-2xl">
-        <div className="bg-white p-6 sm:p-8">
-            <p className="mb-2 text-sm font-semibold uppercase tracking-wide text-orange-600">Placement Preparation Tracker</p>
-            <h2 className="mb-1 text-2xl font-bold text-slate-900">Welcome Back</h2>
-            <p className="mb-6 text-sm text-slate-600">Login to continue your preparation journey.</p>
+    <section className="auth-stage relative z-10 flex min-h-screen items-center justify-center px-4 py-8 sm:px-6">
+      <div className="login-shell-v4 fade-rise relative w-full max-w-5xl overflow-hidden rounded-3xl">
+        <div className="login-shell-v4__accent" aria-hidden="true" />
+
+        <div className="relative grid lg:grid-cols-[0.95fr_1.05fr]">
+          <aside className="login-brand-panel hidden lg:flex lg:flex-col lg:justify-between lg:p-10">
+            <div>
+              <h1 className="login-brand-title font-['Manrope'] font-extrabold leading-[0.88] text-slate-900 dark:text-slate-100">
+                <span>PLACEMENT</span>
+                <span>TRACKER</span>
+              </h1>
+            </div>
+          </aside>
+
+          <div className="login-details-panel p-6 sm:p-8 lg:p-10">
+            <div className="mb-6">
+              <p className="login-mobile-brand mb-2 font-['Manrope'] text-xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100 lg:hidden">
+                PLACEMENT TRACKER
+              </p>
+              <p className="login-kicker">Placement Preparation Tracker</p>
+              <h2 className="mt-3 font-['Manrope'] text-3xl font-extrabold text-slate-900 dark:text-slate-100">Welcome back</h2>
+              <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">Sign in and continue your interview prep flow.</p>
+            </div>
 
             {sessionExpired && (
-              <p className="mb-4 rounded border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-700">
+              <p className="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-700 dark:border-amber-700/60 dark:bg-amber-950/40 dark:text-amber-200">
                 Your session expired. Please log in again.
               </p>
             )}
 
-            <form onSubmit={handleSubmit} className="space-y-4">
-          {error && <p className="rounded border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
-          <div>
-            <label htmlFor="email" className="mb-1 block text-sm font-medium text-slate-700">
-              Email
-            </label>
-            <input
-              id="email"
-              name="email"
-              type="email"
-              value={values.email}
-              onChange={onChange}
-              required
-              disabled={isSubmitting}
-              className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm outline-none ring-orange-500 focus:ring-2"
-              placeholder="you@example.com"
-            />
-          </div>
+            <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
+              {error && <p className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-800/70 dark:bg-red-950/35 dark:text-red-200">{error}</p>}
 
-          <div>
-            <label htmlFor="password" className="mb-1 block text-sm font-medium text-slate-700">
-              Password
-            </label>
-            <input
-              id="password"
-              name="password"
-              type="password"
-              value={values.password}
-              onChange={onChange}
-              required
-              disabled={isSubmitting}
-              className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm outline-none ring-orange-500 focus:ring-2"
-              placeholder="Enter your password"
-            />
-          </div>
+              <div>
+                <label htmlFor="email" className="mb-1.5 block text-sm font-semibold text-slate-700 dark:text-slate-200">
+                  Email
+                </label>
+                <input
+                  id="email"
+                  name="email"
+                  type="email"
+                  value={values.email}
+                  onChange={onChange}
+                  required
+                  disabled={isSubmitting}
+                  className="login-input"
+                  placeholder="you@example.com"
+                />
+              </div>
 
-          <label className="flex items-center gap-2 text-sm text-slate-600">
-            <input
-              type="checkbox"
-              name="remember"
-              checked={values.remember}
-              onChange={onChange}
-              disabled={isSubmitting}
-              className="h-4 w-4 rounded border-slate-300"
-            />
-            Remember me
-          </label>
+              <div>
+                <label htmlFor="password" className="mb-1.5 block text-sm font-semibold text-slate-700 dark:text-slate-200">
+                  Password
+                </label>
+                <input
+                  id="password"
+                  name="password"
+                  type="password"
+                  value={values.password}
+                  onChange={onChange}
+                  required
+                  disabled={isSubmitting}
+                  className="login-input"
+                  placeholder="Enter your password"
+                />
+              </div>
 
-          <div>
-            <label htmlFor="role" className="mb-1 block text-sm font-medium text-slate-700">
-              Role
-            </label>
-            <select
-              id="role"
-              name="role"
-              value={values.role}
-              onChange={onChange}
-              disabled={isSubmitting}
-              className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm outline-none ring-orange-500 focus:ring-2"
-            >
-              <option value="student">Student</option>
-              <option value="admin">Admin</option>
-            </select>
-          </div>
+              <div>
+                <label htmlFor="role" className="mb-1.5 block text-sm font-semibold text-slate-700 dark:text-slate-200">
+                  Role
+                </label>
+                <select
+                  id="role"
+                  name="role"
+                  value={values.role}
+                  onChange={onChange}
+                  disabled={isSubmitting}
+                  className="login-input"
+                >
+                  <option value="student">Student</option>
+                  <option value="admin">Admin</option>
+                </select>
+              </div>
 
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="w-full rounded-md bg-orange-600 px-4 py-2 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-orange-700"
-          >
-            {isSubmitting ? 'Logging in...' : 'Login'}
-          </button>
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <label className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
+                  <input
+                    type="checkbox"
+                    name="remember"
+                    checked={values.remember}
+                    onChange={onChange}
+                    disabled={isSubmitting}
+                    className="h-4 w-4 rounded border-slate-300 text-orange-600 focus:ring-orange-500"
+                  />
+                  Remember me
+                </label>
+
+                <Link to="/forgot-password" className="text-sm font-medium text-orange-600 transition hover:text-orange-700">
+                  Forgot Password?
+                </Link>
+              </div>
+
+              <button type="submit" disabled={isSubmitting} className="login-cta-button w-full rounded-xl px-4 py-2.5 text-sm font-semibold text-white">
+                {isSubmitting ? 'Logging in...' : 'Login'}
+              </button>
             </form>
 
-            <div className="mt-4 flex items-center justify-between text-sm">
-          <Link to="/forgot-password" className="text-orange-600 hover:text-orange-700">
-            Forgot Password?
-          </Link>
-          <span className="text-slate-600">
-            Don&apos;t have an account?{' '}
-            <Link to="/register" className="font-medium text-orange-600 hover:text-orange-700">
-              Register here
-            </Link>
-          </span>
-            </div>
+            <p className="mt-5 text-center text-sm text-slate-600 dark:text-slate-300">
+              Don&apos;t have an account?{' '}
+              <Link to="/register" className="font-semibold text-orange-600 transition hover:text-orange-700">
+                Register here
+              </Link>
+            </p>
+          </div>
         </div>
       </div>
     </section>

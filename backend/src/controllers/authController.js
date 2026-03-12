@@ -2,6 +2,7 @@ const User = require('../models/User');
 const { generateToken } = require('../utils/jwt');
 const { validateEmail, validatePassword, validateName } = require('../utils/validators');
 const { AppError } = require('../utils/errorHandler');
+const { sendPasswordResetEmail } = require('../utils/email');
 const crypto = require('crypto');
 
 // Register
@@ -118,15 +119,36 @@ exports.forgotPassword = async (req, res, next) => {
       user.passwordResetExpiry = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
       await user.save();
 
-      // In production, send email with reset link
-      // const resetUrl = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`;
-      // await sendResetEmail(user.email, resetUrl);
+      const frontendBaseUrl = process.env.NODE_ENV === 'production'
+        ? (process.env.FRONTEND_PROD_URL || process.env.FRONTEND_URL)
+        : (process.env.FRONTEND_URL || 'http://localhost:5173');
+      const resetUrl = `${frontendBaseUrl.replace(/\/$/, '')}/reset-password?token=${resetToken}`;
+
+      try {
+        await sendPasswordResetEmail({
+          to: user.email,
+          resetUrl,
+          name: user.name,
+        });
+      } catch (emailError) {
+        console.error('Failed to send password reset email:', emailError.message);
+
+        if (process.env.NODE_ENV === 'production') {
+          user.passwordResetToken = undefined;
+          user.passwordResetExpiry = undefined;
+          await user.save();
+          return next(new AppError('Unable to send reset email right now. Please try again later.', 500, 'EMAIL_SEND_FAILED'));
+        }
+
+        // Development: log the reset URL to the console for debugging
+        console.log('\n[DEV] Password reset URL (email not sent - configure SMTP in .env):\n', resetUrl, '\n');
+      }
     }
 
     // Always return success message for security
     res.status(200).json({
       success: true,
-      message: 'If an account exists with this email, a reset link will be sent'
+      message: 'If an account exists with this email, a reset link will be sent',
     });
   } catch (error) {
     next(error);

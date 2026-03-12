@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import useAuth from '../hooks/useAuth'
 import { getCurrentLearningPath, getDashboardProgress, getStudyStreak, getTodayActivity, logTodayActivity } from '../services/studentService'
 import { getErrorMessage } from '../utils/errorHandler'
@@ -11,6 +11,8 @@ const defaultPath = { currentTopicId: null, topic: null, nextTopic: null, progre
 export default function DashboardPage() {
   const navigate = useNavigate()
   const { logout, user } = useAuth()
+  const [searchParams] = useSearchParams()
+  const search = searchParams.get('q') || ''
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [streak, setStreak] = useState({ currentStreak: 0 })
@@ -50,6 +52,16 @@ export default function DashboardPage() {
       route: '/company-questions',
     },
   ], [activity.questionsSolved, activity.tasksCompleted, activity.timeStudiedMinutes, path.nextTopic, path.progressPercentage, path.topic, progress.learningPathsCompleted, progress.mockInterviewsCompleted, progress.questionsSolved, progress.totalLearningPaths, progress.totalMockInterviews, progress.totalQuestions, streak.currentStreak])
+
+  const filteredCards = useMemo(() => {
+    const q = search.trim().toLowerCase()
+    if (!q) return cards
+    return cards.filter(
+      (card) =>
+        card.title.toLowerCase().includes(q) ||
+        card.content.toLowerCase().includes(q),
+    )
+  }, [cards, search])
 
   useEffect(() => {
     if (!user?.id) return
@@ -138,7 +150,10 @@ export default function DashboardPage() {
 
       {!loading && (
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {cards.map((card) => (
+          {filteredCards.length === 0 && (
+            <p className="col-span-full text-center text-sm text-slate-500 dark:text-slate-400">No results for &ldquo;{search}&rdquo;</p>
+          )}
+          {filteredCards.map((card) => (
             <article
               key={card.title}
               role="button"

@@ -125,8 +125,7 @@ Each problem must contain
 
 • problem description  
 • pseudocode  
-• Java solution  
-
+• Java solution
 Add checkbox
 
 Mark as Completed
