@@ -71,7 +71,7 @@ export default function RegisterPage() {
         <div className="relative grid lg:grid-cols-[0.95fr_1.05fr]">
           <aside className="login-brand-panel hidden lg:flex lg:flex-col lg:justify-between lg:p-10">
             <div>
-              <h1 className="login-brand-title font-['Manrope'] font-extrabold leading-[0.88] text-slate-900 dark:text-slate-100">
+              <h1 className="login-brand-title auth-shell-title font-['Manrope'] font-extrabold leading-[0.88]">
                 <span>PLACEMENT</span>
                 <span>TRACKER</span>
               </h1>
@@ -80,12 +80,12 @@ export default function RegisterPage() {
 
           <div className="login-details-panel p-6 sm:p-8 lg:p-10">
             <div className="mb-6">
-              <p className="login-mobile-brand mb-2 font-['Manrope'] text-xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100 lg:hidden">
+              <p className="login-mobile-brand auth-shell-title mb-2 font-['Manrope'] text-xl font-extrabold tracking-tight lg:hidden">
                 PLACEMENT TRACKER
               </p>
               <p className="login-kicker">Placement Preparation Tracker</p>
-              <h2 className="mt-3 font-['Manrope'] text-3xl font-extrabold text-slate-900 dark:text-slate-100">Create your account</h2>
-              <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">Register as student or admin to access your dashboard.</p>
+              <h2 className="auth-shell-title mt-3 font-['Manrope'] text-3xl font-extrabold">Create your account</h2>
+              <p className="auth-shell-copy mt-2 text-sm">Register as student or admin to access your dashboard.</p>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
@@ -93,7 +93,7 @@ export default function RegisterPage() {
               {message && <p className="rounded-xl border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-700 dark:border-green-800/70 dark:bg-green-950/35 dark:text-green-200">{message}</p>}
 
               <div>
-                <label htmlFor="fullName" className="mb-1.5 block text-sm font-semibold text-slate-700 dark:text-slate-200">
+                <label htmlFor="fullName" className="auth-shell-label mb-1.5 block text-sm font-semibold">
                   Full Name
                 </label>
                 <input
@@ -112,7 +112,7 @@ export default function RegisterPage() {
               </div>
 
               <div>
-                <label htmlFor="email" className="mb-1.5 block text-sm font-semibold text-slate-700 dark:text-slate-200">
+                <label htmlFor="email" className="auth-shell-label mb-1.5 block text-sm font-semibold">
                   Email
                 </label>
                 <input
@@ -129,7 +129,7 @@ export default function RegisterPage() {
               </div>
 
               <div>
-                <label htmlFor="password" className="mb-1.5 block text-sm font-semibold text-slate-700 dark:text-slate-200">
+                <label htmlFor="password" className="auth-shell-label mb-1.5 block text-sm font-semibold">
                   Password
                 </label>
                 <input
@@ -146,7 +146,7 @@ export default function RegisterPage() {
               </div>
 
               <div>
-                <label htmlFor="confirmPassword" className="mb-1.5 block text-sm font-semibold text-slate-700 dark:text-slate-200">
+                <label htmlFor="confirmPassword" className="auth-shell-label mb-1.5 block text-sm font-semibold">
                   Confirm Password
                 </label>
                 <input
@@ -163,7 +163,7 @@ export default function RegisterPage() {
               </div>
 
               <div>
-                <label htmlFor="role" className="mb-1.5 block text-sm font-semibold text-slate-700 dark:text-slate-200">
+                <label htmlFor="role" className="auth-shell-label mb-1.5 block text-sm font-semibold">
                   Role
                 </label>
                 <select
@@ -188,11 +188,11 @@ export default function RegisterPage() {
               </button>
             </form>
 
-            <p className="mt-3 text-xs text-slate-500 dark:text-slate-400">
+            <p className="auth-shell-muted mt-3 text-xs">
               Password must include at least one uppercase letter and one special character.
             </p>
 
-            <p className="mt-4 text-sm text-slate-600 dark:text-slate-300">
+            <p className="auth-shell-copy mt-4 text-sm">
               Already have an account?{' '}
               <Link to="/login" className="font-semibold text-orange-600 transition hover:text-orange-700">
                 Login here

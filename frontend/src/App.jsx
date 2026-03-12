@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { useSelector } from 'react-redux'
 import AdminDashboard from './components/Dashboard/AdminDashboard'
@@ -56,6 +57,11 @@ function AppLayout() {
   const role = useSelector((state) => state.auth.role)
   const isAdminPath = adminRoutes.includes(location.pathname)
   const showNavbar = !authRoutes.includes(location.pathname)
+
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('theme')
+    document.documentElement.classList.toggle('dark', savedTheme === 'dark')
+  }, [])
 
   return (
     <div className="min-h-screen text-slate-800">

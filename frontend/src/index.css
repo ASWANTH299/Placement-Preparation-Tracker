@@ -164,6 +164,15 @@ h4 {
   box-shadow: 0 10px 24px rgba(37, 99, 235, 0.35);
 }
 
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
 .loading-shimmer {
   position: relative;
   overflow: hidden;
@@ -187,6 +196,7 @@ h4 {
 
 .auth-stage {
   position: relative;
+  isolation: isolate;
   overflow: hidden;
   background:
     radial-gradient(circle at 94% 92%, rgba(125, 211, 252, 0.25), transparent 30%),
@@ -227,8 +237,10 @@ h4 {
 }
 
 .login-shell-v4 {
+  position: relative;
+  isolation: isolate;
   border: 1px solid rgba(148, 163, 184, 0.35);
-  background: linear-gradient(175deg, rgba(255, 255, 255, 0.98) 0%, rgba(247, 250, 255, 0.95) 100%);
+  background: linear-gradient(175deg, rgba(255, 255, 255, 0.995) 0%, rgba(248, 251, 255, 0.99) 100%);
   box-shadow: 0 30px 64px rgba(15, 23, 42, 0.24);
 }
 
@@ -246,6 +258,7 @@ h4 {
   position: absolute;
   inset: 0;
   pointer-events: none;
+  opacity: 0.92;
   background:
     radial-gradient(circle at -10% 18%, rgba(14, 165, 233, 0.2), transparent 34%),
     radial-gradient(circle at 100% 0%, rgba(249, 115, 22, 0.14), transparent 38%),
@@ -254,9 +267,10 @@ h4 {
 
 .login-brand-panel {
   position: relative;
+  z-index: 1;
   overflow: hidden;
   border-right: 1px solid rgba(148, 163, 184, 0.3);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(248, 250, 252, 0.95));
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.995), rgba(247, 250, 252, 0.985));
 }
 
 .login-brand-panel::before {
@@ -288,6 +302,7 @@ h4 {
   gap: 0.35rem;
   font-size: clamp(2.9rem, 7vw, 4.7rem);
   letter-spacing: -0.02em;
+  color: #eaf2ff;
   text-shadow: 0 10px 22px rgba(59, 130, 246, 0.22);
 }
 
@@ -302,8 +317,25 @@ h4 {
 }
 
 .login-details-panel {
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(248, 250, 252, 0.95));
-  backdrop-filter: blur(8px);
+  position: relative;
+  z-index: 1;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.995), rgba(248, 250, 252, 0.985));
+}
+
+.auth-shell-title {
+  color: #0f172a;
+}
+
+.auth-shell-label {
+  color: #334155;
+}
+
+.auth-shell-copy {
+  color: #475569;
+}
+
+.auth-shell-muted {
+  color: #64748b;
 }
 
 .login-kicker {
@@ -494,6 +526,22 @@ h4 {
   border-color: rgba(56, 189, 248, 0.34);
   background: rgba(56, 189, 248, 0.12);
   color: #7dd3fc;
+}
+
+.dark .auth-shell-title {
+  color: #f1f5f9;
+}
+
+.dark .auth-shell-label {
+  color: #cbd5e1;
+}
+
+.dark .auth-shell-copy {
+  color: #94a3b8;
+}
+
+.dark .auth-shell-muted {
+  color: #94a3b8;
 }
 
 .dark .login-input {

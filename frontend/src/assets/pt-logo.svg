@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-labelledby="ptLogoTitle ptLogoDesc">
+  <title id="ptLogoTitle">Placement Tracker Logo</title>
+  <desc id="ptLogoDesc">White PT monogram on a black circular badge with white ring.</desc>
+
+  <circle cx="128" cy="128" r="122" fill="#000000" />
+  <circle cx="128" cy="128" r="122" fill="none" stroke="#ffffff" stroke-width="8" />
+  <circle cx="128" cy="128" r="111" fill="none" stroke="#ffffff" stroke-width="2.5" opacity="0.95" />
+
+  <g fill="none" stroke="#ffffff" stroke-width="8" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M60 164V93h42c18 0 31 10 31 25s-13 25-31 25H84" />
+    <path d="M138 93h60" />
+    <path d="M168 93v71" />
+  </g>
+</svg>

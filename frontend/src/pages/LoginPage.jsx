@@ -73,7 +73,7 @@ export default function LoginPage() {
         <div className="relative grid lg:grid-cols-[0.95fr_1.05fr]">
           <aside className="login-brand-panel hidden lg:flex lg:flex-col lg:justify-between lg:p-10">
             <div>
-              <h1 className="login-brand-title font-['Manrope'] font-extrabold leading-[0.88] text-slate-900 dark:text-slate-100">
+              <h1 className="login-brand-title auth-shell-title font-['Manrope'] font-extrabold leading-[0.88]">
                 <span>PLACEMENT</span>
                 <span>TRACKER</span>
               </h1>
@@ -82,12 +82,12 @@ export default function LoginPage() {
 
           <div className="login-details-panel p-6 sm:p-8 lg:p-10">
             <div className="mb-6">
-              <p className="login-mobile-brand mb-2 font-['Manrope'] text-xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100 lg:hidden">
+              <p className="login-mobile-brand auth-shell-title mb-2 font-['Manrope'] text-xl font-extrabold tracking-tight lg:hidden">
                 PLACEMENT TRACKER
               </p>
               <p className="login-kicker">Placement Preparation Tracker</p>
-              <h2 className="mt-3 font-['Manrope'] text-3xl font-extrabold text-slate-900 dark:text-slate-100">Welcome back</h2>
-              <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">Sign in and continue your interview prep flow.</p>
+              <h2 className="auth-shell-title mt-3 font-['Manrope'] text-3xl font-extrabold">Welcome back</h2>
+              <p className="auth-shell-copy mt-2 text-sm">Sign in and continue your interview prep flow.</p>
             </div>
 
             {sessionExpired && (
@@ -100,7 +100,7 @@ export default function LoginPage() {
               {error && <p className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-800/70 dark:bg-red-950/35 dark:text-red-200">{error}</p>}
 
               <div>
-                <label htmlFor="email" className="mb-1.5 block text-sm font-semibold text-slate-700 dark:text-slate-200">
+                <label htmlFor="email" className="auth-shell-label mb-1.5 block text-sm font-semibold">
                   Email
                 </label>
                 <input
@@ -117,7 +117,7 @@ export default function LoginPage() {
               </div>
 
               <div>
-                <label htmlFor="password" className="mb-1.5 block text-sm font-semibold text-slate-700 dark:text-slate-200">
+                <label htmlFor="password" className="auth-shell-label mb-1.5 block text-sm font-semibold">
                   Password
                 </label>
                 <input
@@ -134,7 +134,7 @@ export default function LoginPage() {
               </div>
 
               <div>
-                <label htmlFor="role" className="mb-1.5 block text-sm font-semibold text-slate-700 dark:text-slate-200">
+                <label htmlFor="role" className="auth-shell-label mb-1.5 block text-sm font-semibold">
                   Role
                 </label>
                 <select
@@ -151,7 +151,7 @@ export default function LoginPage() {
               </div>
 
               <div className="flex flex-wrap items-center justify-between gap-3">
-                <label className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
+                <label className="auth-shell-copy flex items-center gap-2 text-sm">
                   <input
                     type="checkbox"
                     name="remember"
@@ -173,7 +173,7 @@ export default function LoginPage() {
               </button>
             </form>
 
-            <p className="mt-5 text-center text-sm text-slate-600 dark:text-slate-300">
+            <p className="auth-shell-copy mt-5 text-center text-sm">
               Don&apos;t have an account?{' '}
               <Link to="/register" className="font-semibold text-orange-600 transition hover:text-orange-700">
                 Register here
