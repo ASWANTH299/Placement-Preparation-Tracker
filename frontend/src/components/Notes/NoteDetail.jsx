@@ -23,6 +23,51 @@ const parseNoteSections = (content = '') => {
   }
 }
 
+const parseConceptSubparts = (concept = '') => {
+  const lines = String(concept || '').split('\n')
+  const headingRegex = /^([A-Za-z0-9 \-()/,&]+):$/
+  const parts = []
+  let current = null
+
+  for (const rawLine of lines) {
+    const line = rawLine.trimEnd()
+    const headingMatch = line.match(headingRegex)
+
+    if (headingMatch) {
+      if (current) {
+        current.content = current.content.trim()
+        parts.push(current)
+      }
+      current = { title: headingMatch[1].trim(), content: '' }
+      continue
+    }
+
+    if (!current) {
+      current = { title: 'Overview', content: '' }
+    }
+
+    current.content += `${line}\n`
+  }
+
+  if (current) {
+    current.content = current.content.trim()
+    parts.push(current)
+  }
+
+  return parts.filter((part) => part.content)
+}
+
+const isWideSubpart = (title = '') => {
+  const value = String(title || '').toLowerCase()
+  return (
+    value.includes('30-day schedule') ||
+    value.includes('15 must-solve') ||
+    value.includes('expected interview answers') ||
+    value.includes('problem taxonomy') ||
+    value.includes('self-assessment rubric')
+  )
+}
+
 export default function NoteDetail() {
   const { noteId } = useParams()
   const navigate = useNavigate()
@@ -71,6 +116,7 @@ export default function NoteDetail() {
   }, [note, userId])
 
   const sections = useMemo(() => parseNoteSections(editing ? draft : note?.content), [draft, editing, note?.content])
+  const conceptSubparts = useMemo(() => parseConceptSubparts(sections.concept), [sections.concept])
 
   const save = async () => {
     if (!isOwnNote || !isValidObjectId(noteId)) return
@@ -116,7 +162,21 @@ export default function NoteDetail() {
         <div className="mt-4 space-y-4">
           <article className="rounded border border-slate-200 p-4 dark:border-slate-700">
             <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300">Concept Explanation</h2>
-            <p className="mt-2 whitespace-pre-wrap text-sm text-slate-700 dark:text-slate-200">{sections.concept}</p>
+            {conceptSubparts.length > 0 ? (
+              <div className="mt-3 grid items-start gap-3 md:grid-cols-2">
+                {conceptSubparts.map((part, index) => (
+                  <section
+                    key={`${part.title}-${index}`}
+                    className={`rounded-lg border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800/70 ${isWideSubpart(part.title) ? 'md:col-span-2' : 'h-full'}`}
+                  >
+                    <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-300">{part.title}</h3>
+                    <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-slate-700 dark:text-slate-200">{part.content}</p>
+                  </section>
+                ))}
+              </div>
+            ) : (
+              <p className="mt-2 whitespace-pre-wrap text-sm text-slate-700 dark:text-slate-200">{sections.concept}</p>
+            )}
           </article>
 
           <article className="rounded border border-slate-200 p-4 dark:border-slate-700">
