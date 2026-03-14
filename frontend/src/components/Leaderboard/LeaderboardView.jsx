@@ -169,51 +169,51 @@ export default function LeaderboardView() {
           <div className="mt-4 overflow-x-auto">
             {loading && <p className="mb-3 text-sm text-slate-500 dark:text-slate-400">Loading leaderboard...</p>}
             <table className="w-full text-left text-sm">
-          <thead>
-              <tr className="border-b border-slate-200 text-slate-600 dark:border-slate-700 dark:text-slate-300">
-                <th className="py-2 pr-2">Rank</th>
-                <th className="py-2 pr-2">Student</th>
-                <th className="py-2 pr-2">Momentum</th>
-                <th className="py-2 pr-2">Progress</th>
-                <th className="py-2 pr-2">Questions</th>
-                <th className="py-2">Score</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rankedRows.map((row) => {
-                const momentum = getMomentum(row)
-                return (
-                  <tr key={`${row.rank}-${row.name}`} className="border-b border-slate-100 hover:bg-slate-50/70 dark:border-slate-800 dark:hover:bg-slate-800/40">
-                    <td className="py-3 pr-2">
-                      <span className="rounded-full bg-slate-100 px-2.5 py-1 font-medium text-slate-700 dark:bg-slate-800 dark:text-slate-200">#{row.rank}</span>
-                    </td>
-                    <td className="py-3 pr-2 font-medium text-slate-900 dark:text-slate-100">{row.name}</td>
-                    <td className="py-3 pr-2">
-                      <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${momentum.tone}`}>{momentum.label}</span>
-                    </td>
-                    <td className="py-3 pr-2">
-                      <div className="flex items-center gap-2">
-                        <div className="h-2 w-24 overflow-hidden rounded-full bg-slate-200 dark:bg-slate-800">
-                          <div className="h-full rounded-full bg-gradient-to-r from-blue-500 to-cyan-500" style={{ width: `${Math.min(Math.max(row.progress, 0), 100)}%` }} />
-                        </div>
-                        <span className="text-slate-700 dark:text-slate-200">{row.progress}%</span>
-                      </div>
-                    </td>
-                    <td className="py-3 pr-2 text-slate-700 dark:text-slate-200">{row.questions}</td>
-                    <td className="py-3 font-semibold text-slate-900 dark:text-slate-100">{row.score}</td>
-                  </tr>
-                )
-              })}
-              {!rankedRows.length && (
-                <tr>
-                  <td colSpan={6} className="py-8 text-center text-sm text-slate-500 dark:text-slate-400">No students found for your current filters.</td>
+              <thead>
+                <tr className="border-b border-slate-200 text-slate-600 dark:border-slate-700 dark:text-slate-300">
+                  <th className="py-2 pr-2">Rank</th>
+                  <th className="py-2 pr-2">Student</th>
+                  <th className="py-2 pr-2">Momentum</th>
+                  <th className="py-2 pr-2">Progress</th>
+                  <th className="py-2 pr-2">Questions</th>
+                  <th className="py-2">Score</th>
                 </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </article>
-    </div>
+              </thead>
+              <tbody>
+                {rankedRows.map((row) => {
+                  const momentum = getMomentum(row)
+                  return (
+                    <tr key={`${row.rank}-${row.name}`} className="border-b border-slate-100 hover:bg-slate-50/70 dark:border-slate-800 dark:hover:bg-slate-800/40">
+                      <td className="py-3 pr-2">
+                        <span className="rounded-full bg-slate-100 px-2.5 py-1 font-medium text-slate-700 dark:bg-slate-800 dark:text-slate-200">#{row.rank}</span>
+                      </td>
+                      <td className="py-3 pr-2 font-medium text-slate-900 dark:text-slate-100">{row.name}</td>
+                      <td className="py-3 pr-2">
+                        <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${momentum.tone}`}>{momentum.label}</span>
+                      </td>
+                      <td className="py-3 pr-2">
+                        <div className="flex items-center gap-2">
+                          <div className="h-2 w-24 overflow-hidden rounded-full bg-slate-200 dark:bg-slate-800">
+                            <div className="h-full rounded-full bg-gradient-to-r from-blue-500 to-cyan-500" style={{ width: `${Math.min(Math.max(row.progress, 0), 100)}%` }} />
+                          </div>
+                          <span className="text-slate-700 dark:text-slate-200">{row.progress}%</span>
+                        </div>
+                      </td>
+                      <td className="py-3 pr-2 text-slate-700 dark:text-slate-200">{row.questions}</td>
+                      <td className="py-3 font-semibold text-slate-900 dark:text-slate-100">{row.score}</td>
+                    </tr>
+                  )
+                })}
+                {!rankedRows.length && (
+                  <tr>
+                    <td colSpan={6} className="py-8 text-center text-sm text-slate-500 dark:text-slate-400">No students found for your current filters.</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </article>
+      </div>
   </section>
   )
 }

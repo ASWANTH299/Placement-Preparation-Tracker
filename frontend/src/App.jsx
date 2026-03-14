@@ -8,6 +8,7 @@ import ConceptLearningPage from './pages/ConceptLearningPage'
 import Navbar from './components/Common/Navbar'
 import CompanyQuestionsPage from './pages/CompanyQuestionsPage'
 import DashboardPage from './pages/DashboardPage'
+import DailyTaskPage from './pages/DailyTaskPage'
 import ForgotPasswordPage from './pages/ForgotPasswordPage'
 import LeaderboardPage from './pages/LeaderboardPage'
 import LearningPathDetailPage from './pages/LearningPathDetailPage'
@@ -79,6 +80,7 @@ function AppLayout() {
           <Route path="/reset-password" element={<ResetPasswordPage />} />
 
           <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
+          <Route path="/daily-task" element={<ProtectedRoute><DailyTaskPage /></ProtectedRoute>} />
           <Route path="/learning-path" element={<ProtectedRoute><LearningPathPage /></ProtectedRoute>} />
           <Route path="/learning-path/:topicId" element={<ProtectedRoute><LearningPathDetailPage /></ProtectedRoute>} />
           <Route path="/company-questions" element={<ProtectedRoute><CompanyQuestionsPage /></ProtectedRoute>} />

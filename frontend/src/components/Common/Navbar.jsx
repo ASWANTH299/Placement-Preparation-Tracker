@@ -6,6 +6,7 @@ import ptLogo from '../../assets/pt-logo.svg'
 const directNavItems = [
   { label: 'Dashboard', to: '/dashboard' },
   { label: 'Leaderboard', to: '/leaderboard' },
+  { label: 'Daily Task', to: '/daily-task' },
 ]
 
 const megaSections = [

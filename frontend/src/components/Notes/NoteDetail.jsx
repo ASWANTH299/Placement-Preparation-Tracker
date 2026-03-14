@@ -186,7 +186,7 @@ export default function NoteDetail() {
 
           <article className="rounded border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-transparent">
             <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300">Java Example</h2>
-            <pre className="mt-2 overflow-auto whitespace-pre-wrap rounded bg-slate-950 p-3 text-xs text-slate-100">{sections.javaExample}</pre>
+            <pre className="mt-2 overflow-auto whitespace-pre-wrap rounded bg-slate-100 p-3 text-xs text-slate-800 dark:bg-slate-950 dark:text-slate-100">{sections.javaExample}</pre>
           </article>
         </div>
       )}

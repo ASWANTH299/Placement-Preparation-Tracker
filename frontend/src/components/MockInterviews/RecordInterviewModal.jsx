@@ -4,6 +4,51 @@ import { useSelector } from 'react-redux'
 import { createMockInterview } from '../../services/interviewService'
 import { getErrorMessage } from '../../utils/errorHandler'
 
+const companyOptions = [
+  'Google',
+  'Amazon',
+  'Microsoft',
+  'Meta',
+  'Apple',
+  'Netflix',
+  'Adobe',
+  'Atlassian',
+  'Uber',
+  'NVIDIA',
+  'PayPal',
+  'Salesforce',
+  'Oracle',
+  'JPMorgan',
+  'Goldman Sachs',
+  'Flipkart',
+  'Walmart Global Tech',
+  'Zoho',
+  'TCS',
+  'Infosys',
+    'Morgan Stanley',
+    'ServiceNow',
+    'Intel',
+    'Qualcomm',
+    'Cisco',
+    'SAP',
+    'IBM',
+    'Accenture',
+    'Capgemini',
+    'Deloitte',
+    'Paytm',
+    'PhonePe',
+    'Razorpay',
+    'Swiggy',
+    'Zomato',
+    'Meesho',
+    'CRED',
+    'Myntra',
+    'LinkedIn',
+    'Twilio',
+    'Stripe',
+    'Coinbase',
+]
+
 export default function RecordInterviewModal({ isOpen, onClose }) {
   const studentId = useSelector((state) => state.auth.user?.id)
   const [form, setForm] = useState({ company: '', interviewDate: '', score: '', overallFeedback: '' })
@@ -46,9 +91,9 @@ export default function RecordInterviewModal({ isOpen, onClose }) {
           <label htmlFor="company" className="mb-1 block text-sm font-medium text-slate-700">Company</label>
           <select id="company" name="company" value={form.company} onChange={onChange} required disabled={submitting} className="w-full rounded border border-slate-300 px-3 py-2 text-sm">
             <option value="">Select company</option>
-            <option>Google</option>
-            <option>Amazon</option>
-            <option>Meta</option>
+            {companyOptions.map((company) => (
+              <option key={company} value={company}>{company}</option>
+            ))}
           </select>
         </div>
         <div className="grid gap-3 sm:grid-cols-2">

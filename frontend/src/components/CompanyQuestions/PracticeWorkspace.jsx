@@ -395,13 +395,13 @@ export default function PracticeWorkspace() {
   }
 
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white/95 p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900/90">
+    <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900/90">
       <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Practice Problem</h1>
       <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">Run and Submit use strict backend compiler/runtime checks with line-level errors.</p>
       {error && <p className="mt-3 rounded border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
 
       <div className="mt-4 grid gap-4 lg:grid-cols-2">
-        <article className="rounded-xl border border-slate-200 p-4 dark:border-slate-700">
+        <article className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-transparent">
           <h2 className="font-semibold text-slate-900 dark:text-slate-100">{question?.title || 'Loading problem...'}</h2>
           <h3 className="mt-3 text-sm font-semibold text-slate-900 dark:text-slate-100">Description</h3>
           <p className="mt-1 whitespace-pre-wrap text-sm leading-6 text-slate-700 dark:text-slate-200">{question?.description || 'Problem statement will appear here.'}</p>
@@ -439,7 +439,7 @@ export default function PracticeWorkspace() {
           </div>
         </article>
 
-        <article className="rounded-xl border border-slate-200 p-4 dark:border-slate-700">
+        <article className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-transparent">
           <div className="mb-2 flex items-center justify-between gap-2">
             <label className="text-sm font-medium text-slate-700 dark:text-slate-200">Language</label>
             <select
@@ -449,7 +449,7 @@ export default function PracticeWorkspace() {
                 setLanguage(selectedLanguage)
                 setCode(starterCodeByLanguage[selectedLanguage] || starterCodeByLanguage.Java)
               }}
-              className="rounded border border-slate-300 px-2 py-1 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+              className="rounded border border-slate-300 bg-white px-2 py-1 text-sm text-slate-900 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
             >
               {languageOptions.map((option) => (
                 <option key={option} value={option}>{option}</option>
@@ -460,15 +460,15 @@ export default function PracticeWorkspace() {
           <textarea
             value={code}
             onChange={(event) => setCode(event.target.value)}
-            className="h-64 w-full rounded border border-slate-300 bg-slate-950 p-3 font-mono text-xs text-slate-100"
+            className="h-64 w-full rounded border border-slate-300 bg-slate-100 p-3 font-mono text-xs text-slate-800 dark:bg-slate-950 dark:text-slate-100"
           />
 
-          <div className="mt-4 space-y-3 rounded-lg border border-slate-200 p-3 dark:border-slate-700">
+          <div className="mt-4 space-y-3 rounded-lg border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-700 dark:bg-transparent">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <select
                 value={selectedSampleIndex}
                 onChange={(event) => setSelectedSampleIndex(Number(event.target.value))}
-                className="rounded-full border border-slate-300 px-4 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+                className="rounded-full border border-slate-300 bg-white px-4 py-2 text-sm text-slate-900 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
               >
                 {examples.map((_, index) => (
                   <option key={`sample-${index}`} value={index}>{`SampleInput-${index + 1}`}</option>

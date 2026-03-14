@@ -149,31 +149,33 @@ export default function DashboardPage() {
       {error && <p className="rounded border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-900/60 dark:bg-red-950/40 dark:text-red-300">{error}</p>}
 
       {!loading && (
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {filteredCards.length === 0 && (
-            <p className="col-span-full text-center text-sm text-slate-500 dark:text-slate-400">No results for &ldquo;{search}&rdquo;</p>
-          )}
-          {filteredCards.map((card) => (
-            <article
-              key={card.title}
-              role="button"
-              tabIndex={0}
-              onClick={() => navigate(card.route)}
-              onKeyDown={(event) => {
-                if (event.key === 'Enter' || event.key === ' ') {
-                  event.preventDefault()
-                  navigate(card.route)
-                }
-              }}
-              className="ui-card cursor-pointer rounded-2xl p-4 transition-transform duration-200 hover:-translate-y-0.5 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-900 sm:p-5"
-              aria-label={`Open ${card.title}`}
-            >
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-blue-600 dark:text-blue-300">Insight</p>
-              <h2 className="mt-2 text-lg font-semibold text-slate-900 dark:text-slate-100">{card.title}</h2>
-              <p className="mt-2 text-sm leading-relaxed text-slate-600 dark:text-slate-300">{card.content}</p>
-            </article>
-          ))}
-        </div>
+        <>
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {filteredCards.length === 0 && (
+              <p className="col-span-full text-center text-sm text-slate-500 dark:text-slate-400">No results for &ldquo;{search}&rdquo;</p>
+            )}
+            {filteredCards.map((card) => (
+              <article
+                key={card.title}
+                role="button"
+                tabIndex={0}
+                onClick={() => navigate(card.route)}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault()
+                    navigate(card.route)
+                  }
+                }}
+                className="ui-card cursor-pointer rounded-2xl p-4 transition-transform duration-200 hover:-translate-y-0.5 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-900 sm:p-5"
+                aria-label={`Open ${card.title}`}
+              >
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-blue-600 dark:text-blue-300">Insight</p>
+                <h2 className="mt-2 text-lg font-semibold text-slate-900 dark:text-slate-100">{card.title}</h2>
+                <p className="mt-2 text-sm leading-relaxed text-slate-600 dark:text-slate-300">{card.content}</p>
+              </article>
+            ))}
+          </div>
+        </>
       )}
     </section>
   )
