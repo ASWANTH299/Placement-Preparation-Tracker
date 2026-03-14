@@ -1,7 +1,7 @@
 const CompanyQuestion = require('../models/CompanyQuestion');
 const QuestionProgress = require('../models/QuestionProgress');
 const { AppError } = require('../utils/errorHandler');
-const { executeCode, SUPPORTED_LANGUAGES } = require('../utils/codeExecutor');
+const { executeCode, SUPPORTED_LANGUAGES, getAvailableToolchains } = require('../utils/codeExecutor');
 
 const markAttemptProgress = async (studentId, questionId) => {
   if (!studentId || !questionId) return;
@@ -327,6 +327,19 @@ exports.submitCode = async (req, res, next) => {
         attemptMarked,
         ...result
       }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Get language toolchain availability
+exports.getPracticeToolchains = async (req, res, next) => {
+  try {
+    const toolchains = getAvailableToolchains();
+    res.status(200).json({
+      success: true,
+      data: toolchains
     });
   } catch (error) {
     next(error);

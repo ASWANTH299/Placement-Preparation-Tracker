@@ -1,16 +1,22 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
-import { getQuestionDetail, runPracticeCode, submitPracticeCode } from '../../services/questionService'
+import { getPracticeToolchains, getQuestionDetail, runPracticeCode, submitPracticeCode } from '../../services/questionService'
 import { getErrorMessage } from '../../utils/errorHandler'
 import { fallbackQuestionById, fallbackQuestions } from '../../utils/questionFallbackData'
 
-const languageOptions = ['Java', 'Python', 'JavaScript', 'C++']
+const languageOptions = ['Java', 'Python', 'JavaScript', 'TypeScript', 'C', 'C++', 'C#', 'Go', 'Rust', 'Kotlin']
 
 const starterCodeByLanguage = {
   Java: 'class Solution {\n  public static void main(String[] args) {\n    // Write your solution here\n  }\n}',
   Python: 'def solve():\n    # Write your solution here\n    pass\n\nif __name__ == "__main__":\n    solve()',
   JavaScript: 'function solve() {\n  // Write your solution here\n}\n\nsolve();',
-  'C++': '#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n  // Write your solution here\n  return 0;\n}'
+  TypeScript: 'function solve(): void {\n  // Write your solution here\n}\n\nsolve();',
+  C: '#include <stdio.h>\n\nint main() {\n  // Write your solution here\n  return 0;\n}',
+  'C++': '#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n  // Write your solution here\n  return 0;\n}',
+  'C#': 'using System;\n\nclass Program {\n  static void Main(string[] args) {\n    // Write your solution here\n  }\n}',
+  Go: 'package main\n\nimport "fmt"\n\nfunc main() {\n  // Write your solution here\n  fmt.Println("Hello")\n}',
+  Rust: 'fn main() {\n  // Write your solution here\n  println!("Hello");\n}',
+  Kotlin: 'fun main() {\n  // Write your solution here\n  println("Hello")\n}'
 }
 
 const isValidObjectId = (value) => /^[0-9a-fA-F]{24}$/.test(String(value || ''))
@@ -217,6 +223,7 @@ export default function PracticeWorkspace() {
   const [selectedSampleIndex, setSelectedSampleIndex] = useState(0)
   const [testInput, setTestInput] = useState('')
   const [error, setError] = useState('')
+  const [toolchainMap, setToolchainMap] = useState({})
 
   const inputFormat = question?.inputFormat || 'Read values exactly as shown in sample input and parse according to the problem statement.'
   const outputFormat = question?.outputFormat || 'Return or print output exactly in the expected format.'
@@ -257,6 +264,32 @@ export default function PracticeWorkspace() {
   }, [questionId])
 
   useEffect(() => {
+    let active = true
+
+    const loadToolchains = async () => {
+      try {
+        const response = await getPracticeToolchains()
+        if (!active) return
+
+        const map = (response?.data?.data || []).reduce((acc, item) => {
+          acc[item.language] = item
+          return acc
+        }, {})
+
+        setToolchainMap(map)
+      } catch {
+        if (!active) return
+        setToolchainMap({})
+      }
+    }
+
+    loadToolchains()
+    return () => {
+      active = false
+    }
+  }, [])
+
+  useEffect(() => {
     const sample = examples[selectedSampleIndex]
     if (!sample) {
       setTestInput('')
@@ -292,6 +325,13 @@ export default function PracticeWorkspace() {
 
   const runCode = async () => {
     setError('')
+
+    const selectedToolchain = toolchainMap[language]
+    if (selectedToolchain && !selectedToolchain.available) {
+      setOutputType('error')
+      setOutput(`Selected language toolchain is not available on server: ${language}`)
+      return
+    }
 
     if (!hasMeaningfulCode(code)) {
       setOutputType('error')
@@ -339,6 +379,13 @@ export default function PracticeWorkspace() {
 
   const submitCode = async () => {
     setError('')
+
+    const selectedToolchain = toolchainMap[language]
+    if (selectedToolchain && !selectedToolchain.available) {
+      setOutputType('error')
+      setOutput(`Selected language toolchain is not available on server: ${language}`)
+      return
+    }
 
     if (!hasMeaningfulCode(code)) {
       setOutputType('error')
@@ -456,6 +503,12 @@ export default function PracticeWorkspace() {
               ))}
             </select>
           </div>
+
+          {toolchainMap[language] && !toolchainMap[language].available && (
+            <p className="mb-2 rounded border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+              Compiler/runtime for {language} is not installed on backend server.
+            </p>
+          )}
 
           <textarea
             value={code}

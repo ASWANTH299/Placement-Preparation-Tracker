@@ -87,6 +87,7 @@ router.post('/students/:id/learning-progress/:weekId', learningPathController.up
 
 // Company Questions Routes (specific routes before generic ones)
 router.get('/company-questions', questionController.getQuestions);
+router.get('/practice/toolchains', questionController.getPracticeToolchains);
 router.post('/practice/run-code', questionController.runCode);
 router.post('/practice/submit-code', questionController.submitCode);
 router.post('/company-questions/:questionId/mark-solved', questionController.markSolved);

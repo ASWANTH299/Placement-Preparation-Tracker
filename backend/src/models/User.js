@@ -17,6 +17,13 @@ const userSchema = new mongoose.Schema(
       lowercase: true,
       match: [/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/, 'Please provide a valid email']
     },
+    phoneNumber: {
+      type: String,
+      unique: true,
+      sparse: true,
+      trim: true,
+      default: null,
+    },
     password: {
       type: String,
       required: [true, 'Password is required'],
@@ -70,6 +77,21 @@ const userSchema = new mongoose.Schema(
       type: Date,
       default: null
     },
+    passwordResetOtpHash: {
+      type: String,
+      default: null,
+      select: false,
+    },
+    passwordResetOtpExpiry: {
+      type: Date,
+      default: null,
+      select: false,
+    },
+    passwordResetOtpAttempts: {
+      type: Number,
+      default: 0,
+      select: false,
+    },
     passwordResetToken: String,
     passwordResetExpiry: Date
   },
@@ -80,6 +102,7 @@ const userSchema = new mongoose.Schema(
 
 // Index for email uniqueness and role queries
 userSchema.index({ email: 1 });
+userSchema.index({ phoneNumber: 1 }, { unique: true, sparse: true });
 userSchema.index({ createdAt: -1 });
 userSchema.index({ role: 1 });
 
@@ -105,6 +128,9 @@ userSchema.methods.comparePassword = async function (enteredPassword) {
 userSchema.methods.toJSON = function () {
   const user = this.toObject();
   delete user.password;
+  delete user.passwordResetOtpHash;
+  delete user.passwordResetOtpExpiry;
+  delete user.passwordResetOtpAttempts;
   delete user.passwordResetToken;
   delete user.passwordResetExpiry;
   return user;

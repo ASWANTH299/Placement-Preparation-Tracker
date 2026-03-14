@@ -1,15 +1,19 @@
 import { useState } from 'react'
-import { Link, useSearchParams } from 'react-router-dom'
+import { Link, useLocation, useSearchParams } from 'react-router-dom'
 import PageShell from '../components/Common/PageShell'
 import { resetPassword } from '../services/authService'
 import { getErrorMessage } from '../utils/errorHandler'
 import { isStrongPassword } from '../utils/validators'
 
 export default function ResetPasswordPage() {
+  const location = useLocation()
   const [searchParams] = useSearchParams()
-  const [form, setForm] = useState({ password: '', confirmPassword: '' })
+  const [form, setForm] = useState({ email: '', password: '', confirmPassword: '' })
   const [message, setMessage] = useState('')
   const [submitting, setSubmitting] = useState(false)
+
+  const resetSessionToken = location.state?.resetSessionToken || ''
+  const emailToken = searchParams.get('token')
 
   const onChange = (event) => {
     const { name, value } = event.target
@@ -23,9 +27,9 @@ export default function ResetPasswordPage() {
       return
     }
 
-    const token = searchParams.get('token')
+    const token = resetSessionToken || emailToken
     if (!token) {
-      setMessage('Reset token is missing. Please use the link from your email.')
+      setMessage('Reset session is missing. Please verify OTP again from Forgot Password page.')
       return
     }
 
@@ -36,9 +40,23 @@ export default function ResetPasswordPage() {
 
     try {
       setSubmitting(true)
-      await resetPassword({ token, newPassword: form.password, confirmPassword: form.confirmPassword })
+      if (resetSessionToken) {
+        if (!form.email.trim()) {
+          setMessage('Please enter your account email.')
+          return
+        }
+
+        await resetPassword({
+          resetSessionToken,
+          email: form.email.trim(),
+          newPassword: form.password,
+          confirmPassword: form.confirmPassword,
+        })
+      } else {
+        await resetPassword({ token, newPassword: form.password, confirmPassword: form.confirmPassword })
+      }
       setMessage('Password reset successful. You can now login.')
-      setForm({ password: '', confirmPassword: '' })
+      setForm({ email: '', password: '', confirmPassword: '' })
     } catch (requestError) {
       setMessage(getErrorMessage(requestError))
     } finally {
@@ -47,8 +65,20 @@ export default function ResetPasswordPage() {
   }
 
   return (
-    <PageShell title="Reset Password" subtitle="Set a new password using your reset token.">
+    <PageShell title="Reset Password" subtitle="Set a new password after OTP verification.">
       <form onSubmit={onSubmit} className="max-w-md space-y-3">
+        {resetSessionToken && (
+          <input
+            name="email"
+            type="email"
+            value={form.email}
+            onChange={onChange}
+            disabled={submitting}
+            className="w-full rounded border border-slate-300 px-3 py-2 text-sm"
+            placeholder="Account email"
+            required
+          />
+        )}
         <input
           name="password"
           type="password"

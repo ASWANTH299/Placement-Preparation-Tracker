@@ -145,9 +145,9 @@ const getQuestionForDay = (userSeed, dateKey) => {
 }
 
 const getDifficultyTone = (difficulty) => {
-  if (difficulty === 'Easy') return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300'
-  if (difficulty === 'Medium') return 'bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300'
-  return 'bg-rose-100 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300'
+  if (difficulty === 'Easy') return 'bg-emerald-200 text-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-300'
+  if (difficulty === 'Medium') return 'bg-amber-200 text-amber-900 dark:bg-amber-950/40 dark:text-amber-300'
+  return 'bg-rose-200 text-rose-900 dark:bg-rose-950/40 dark:text-rose-300'
 }
 
 export default function DailyTaskCard({ user, period = 'Today', className = '' }) {
@@ -222,7 +222,7 @@ export default function DailyTaskCard({ user, period = 'Today', className = '' }
         </span>
       </div>
 
-      <div className="mt-4 rounded-xl border border-slate-200 bg-gradient-to-br from-cyan-50 to-blue-50 p-4 dark:border-slate-700 dark:from-slate-900 dark:to-slate-800">
+      <div className="mt-4 rounded-xl border border-slate-200 bg-gradient-to-br from-slate-50 via-sky-50 to-blue-100 p-4 dark:border-slate-700 dark:from-slate-900 dark:to-slate-800">
         <div className="flex flex-wrap items-center gap-2">
           <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${getDifficultyTone(question.difficulty)}`}>{question.difficulty}</span>
           <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700 dark:bg-slate-800 dark:text-slate-300">{question.company}</span>

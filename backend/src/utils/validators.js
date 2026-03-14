@@ -28,10 +28,34 @@ const validateGraduationYear = (year) => {
   return year >= currentYear && year <= currentYear + 10;
 };
 
+const normalizePhoneNumber = (phoneNumber = '') => {
+  const digits = String(phoneNumber).replace(/\D/g, '');
+
+  if (digits.length === 10) {
+    return `+91${digits}`;
+  }
+
+  if (digits.length === 12 && digits.startsWith('91')) {
+    return `+${digits}`;
+  }
+
+  if (digits.length >= 11 && digits.length <= 15) {
+    return `+${digits}`;
+  }
+
+  return '';
+};
+
+const validatePhoneNumber = (phoneNumber = '') => {
+  return Boolean(normalizePhoneNumber(phoneNumber));
+};
+
 module.exports = {
   validateEmail,
   validatePassword,
   validateName,
   validateUrl,
-  validateGraduationYear
+  validateGraduationYear,
+  validatePhoneNumber,
+  normalizePhoneNumber
 };

@@ -165,7 +165,9 @@ Token is returned on successful login and expires in 1 hour.
 
 ### Password Reset Email Setup
 
-To send real reset emails, configure SMTP variables in `backend/.env`:
+Reset emails are sent using Nodemailer with Gmail SMTP.
+
+Configure these variables in `backend/.env`:
 
 ```env
 FRONTEND_URL=http://localhost:5173
@@ -182,6 +184,23 @@ EMAIL_FROM_NAME=Placement Tracker
 
 Notes:
 - For Gmail, use an App Password (not your normal account password).
+- Restart the backend after updating `.env`.
+
+### Password Reset OTP Setup (Mobile)
+
+Mobile OTP reset is implemented using Twilio SMS.
+
+Configure these variables in `backend/.env`:
+
+```env
+TWILIO_ACCOUNT_SID=your_twilio_account_sid
+TWILIO_AUTH_TOKEN=your_twilio_auth_token
+TWILIO_PHONE_NUMBER=+1xxxxxxxxxx
+```
+
+Notes:
+- Keep the phone number in E.164 format (example: `+919876543210`).
+- In trial mode, Twilio can only send to verified recipient numbers.
 - Restart the backend after updating `.env`.
 
 ## Database Collections

@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import useForm from '../hooks/useForm'
 import { register as registerRequest } from '../services/authService'
 import { getErrorMessage } from '../utils/errorHandler'
-import { isStrongPassword, isValidEmail } from '../utils/validators'
+import { isStrongPassword, isValidEmail, isValidPhoneNumber, normalizePhoneNumber } from '../utils/validators'
 
 export default function RegisterPage() {
   const navigate = useNavigate()
@@ -13,6 +13,7 @@ export default function RegisterPage() {
   const { values, onChange } = useForm({
     fullName: '',
     email: '',
+    mobileNumber: '',
     password: '',
     confirmPassword: '',
     role: 'student',
@@ -33,6 +34,12 @@ export default function RegisterPage() {
       return
     }
 
+    const normalizedPhone = values.mobileNumber ? normalizePhoneNumber(values.mobileNumber) : ''
+    if (values.mobileNumber && !isValidPhoneNumber(values.mobileNumber)) {
+      setError('Please enter a valid mobile number.')
+      return
+    }
+
     if (!isStrongPassword(values.password)) {
       setError('Password must include at least one uppercase letter and one special character.')
       return
@@ -50,6 +57,7 @@ export default function RegisterPage() {
       await registerRequest({
         name: trimmedName,
         email: values.email,
+        phoneNumber: normalizedPhone || undefined,
         password: values.password,
         confirmPassword: values.confirmPassword,
         role: values.role,
@@ -125,6 +133,22 @@ export default function RegisterPage() {
                   disabled={isSubmitting}
                   className="login-input"
                   placeholder="you@example.com"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="mobileNumber" className="auth-shell-label mb-1.5 block text-sm font-semibold">
+                  Mobile Number
+                </label>
+                <input
+                  id="mobileNumber"
+                  name="mobileNumber"
+                  type="tel"
+                  value={values.mobileNumber}
+                  onChange={onChange}
+                  disabled={isSubmitting}
+                  className="login-input"
+                  placeholder="Optional: mobile number"
                 />
               </div>
 

@@ -1,30 +1,30 @@
 const nodemailer = require('nodemailer');
 
+function isLikelyPlaceholder(value = '') {
+  return /your|example|change|placeholder/i.test(String(value));
+}
+
 function resolveTransportConfig() {
   const smtpUser = process.env.SMTP_USER || process.env.EMAIL_USER;
   const smtpPass = process.env.SMTP_PASS || process.env.EMAIL_PASSWORD;
+  const smtpHost = process.env.SMTP_HOST || 'smtp.gmail.com';
+  const port = Number(process.env.SMTP_PORT || 587);
+  const secure = process.env.SMTP_SECURE === 'true' || port === 465;
 
-  if (!smtpUser || !smtpPass) {
-    throw new Error('Missing SMTP credentials. Configure SMTP_USER/SMTP_PASS or EMAIL_USER/EMAIL_PASSWORD.');
-  }
+  const hasValidCredentials =
+    smtpUser &&
+    smtpPass &&
+    !isLikelyPlaceholder(smtpUser) &&
+    !isLikelyPlaceholder(smtpPass);
 
-  if (process.env.SMTP_HOST) {
-    const port = Number(process.env.SMTP_PORT || 587);
-    const secure = process.env.SMTP_SECURE === 'true' || port === 465;
-
-    return {
-      host: process.env.SMTP_HOST,
-      port,
-      secure,
-      auth: {
-        user: smtpUser,
-        pass: smtpPass,
-      },
-    };
+  if (!hasValidCredentials) {
+    throw new Error('SMTP is not configured. Set real SMTP_USER and SMTP_PASS (Gmail App Password) in backend/.env, then restart backend.');
   }
 
   return {
-    service: process.env.EMAIL_SERVICE || 'gmail',
+    host: smtpHost,
+    port,
+    secure,
     auth: {
       user: smtpUser,
       pass: smtpPass,
@@ -43,9 +43,18 @@ function resolveFromAddress() {
   return `"${fromName}" <${fromEmail}>`;
 }
 
-async function sendPasswordResetEmail({ to, resetUrl, name }) {
-  const transporter = nodemailer.createTransport(resolveTransportConfig());
+async function createTransporter() {
+  const configuredTransport = resolveTransportConfig();
+  const transporter = nodemailer.createTransport(configuredTransport);
+  await transporter.verify();
 
+  return {
+    transporter,
+    mode: 'smtp',
+  };
+}
+
+async function sendPasswordResetEmail({ to, resetUrl, name }) {
   const subject = 'Reset your Placement Tracker password';
   const greetingName = name ? name.split(' ')[0] : 'there';
   const text = `Hi ${greetingName},\n\nWe received a request to reset your password.\n\nUse the link below to set a new password (valid for 1 hour):\n${resetUrl}\n\nIf you did not request this, you can ignore this email.\n\n- Placement Tracker`;
@@ -67,13 +76,21 @@ async function sendPasswordResetEmail({ to, resetUrl, name }) {
     </div>
   `;
 
-  return transporter.sendMail({
+  const { transporter, mode } = await createTransporter();
+
+  const info = await transporter.sendMail({
     from: resolveFromAddress(),
     to,
     subject,
     text,
     html,
   });
+
+  return {
+    messageId: info.messageId,
+    mode,
+    previewUrl: null,
+  };
 }
 
 module.exports = {
