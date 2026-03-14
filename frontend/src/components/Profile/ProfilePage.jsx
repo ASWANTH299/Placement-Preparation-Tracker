@@ -287,7 +287,7 @@ export default function ProfilePage() {
           <h2 className="mt-1 text-xl font-semibold text-slate-900 dark:text-slate-100">Next Milestones</h2>
           <div className="mt-4 space-y-3">
             {milestonePlan.map((milestone) => (
-              <div key={milestone.title} className="rounded-xl border border-slate-200 bg-white/70 p-3 dark:border-slate-700 dark:bg-slate-900/70">
+              <div key={milestone.title} className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-700 dark:bg-slate-900/70">
                 <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">{milestone.title}</p>
                 <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">{milestone.description}</p>
               </div>
@@ -402,7 +402,7 @@ export default function ProfilePage() {
 
 function MiniMetric({ label, value }) {
   return (
-    <article className="rounded-xl border border-slate-200/70 bg-white/80 px-3 py-2.5 text-center backdrop-blur-sm dark:border-slate-700/70 dark:bg-slate-900/70">
+    <article className="rounded-xl border border-slate-200/80 bg-white px-3 py-2.5 text-center shadow-sm dark:border-slate-700/70 dark:bg-slate-900/70">
       <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">{label}</p>
       <p className="mt-1 text-base font-semibold text-slate-900 dark:text-slate-100">{value}</p>
     </article>
@@ -435,7 +435,7 @@ function BadgeChip({ label }) {
 
 function ChecklistItem({ label, done }) {
   return (
-    <div className="flex items-center justify-between gap-3 rounded-lg border border-slate-200 bg-white/70 px-3 py-2 dark:border-slate-700 dark:bg-slate-900/70">
+    <div className="flex items-center justify-between gap-3 rounded-lg border border-slate-200 bg-white px-3 py-2 shadow-sm dark:border-slate-700 dark:bg-slate-900/70">
       <p className="text-sm text-slate-700 dark:text-slate-200">{label}</p>
       <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${done ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300' : 'bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300'}`}>
         {done ? 'Done' : 'Pending'}
@@ -460,7 +460,7 @@ function ProgressRow({ label, value, percent }) {
 
 function StatCard({ label, value }) {
   return (
-    <article className="rounded-xl border border-slate-200 bg-white/60 p-4 dark:border-slate-700 dark:bg-slate-900/60">
+    <article className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900/60">
       <p className="text-xs font-medium uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">{label}</p>
       <p className="mt-2 text-xl font-bold text-slate-900 dark:text-slate-100">{value}</p>
     </article>

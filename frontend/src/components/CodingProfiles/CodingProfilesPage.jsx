@@ -91,7 +91,7 @@ export default function CodingProfilesPage() {
   }
 
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white/95 p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900/90">
+    <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900/90">
       <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Coding Platform Profiles</h1>
       <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">Add username or profile URL. Platform name opens profile in a new tab.</p>
       {error && <p className="mt-3 rounded border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
@@ -101,7 +101,7 @@ export default function CodingProfilesPage() {
           const profile = profileMap[platform]
           const resolvedUrl = profile ? getCanonicalProfileUrl(profile) : ''
           return (
-            <article key={platform} className="rounded-xl border border-slate-200 p-4 dark:border-slate-700">
+            <article key={platform} className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700">
               {profile && resolvedUrl ? (
                 <a href={resolvedUrl} target="_blank" rel="noopener noreferrer" className="text-base font-semibold text-blue-700 hover:underline dark:text-blue-300">
                   {platform}
@@ -122,12 +122,12 @@ export default function CodingProfilesPage() {
                         if (!resolvedUrl) return
                         window.open(resolvedUrl, '_blank', 'noopener,noreferrer')
                       }}
-                      className="rounded border border-slate-300 px-3 py-1 text-sm disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-600 dark:text-slate-100"
+                      className="rounded border border-slate-300 bg-white px-3 py-1 text-sm text-slate-900 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-600 dark:text-slate-100"
                     >
                       Open
                     </button>
-                    <button type="button" onClick={() => refresh(profile._id)} className="rounded border border-slate-300 px-3 py-1 text-sm dark:border-slate-600 dark:text-slate-100">Refresh</button>
-                    <button type="button" onClick={() => unlink(profile._id)} className="rounded border border-slate-300 px-3 py-1 text-sm dark:border-slate-600 dark:text-slate-100">Unlink</button>
+                    <button type="button" onClick={() => refresh(profile._id)} className="rounded border border-slate-300 bg-white px-3 py-1 text-sm text-slate-900 dark:border-slate-600 dark:text-slate-100">Refresh</button>
+                    <button type="button" onClick={() => unlink(profile._id)} className="rounded border border-slate-300 bg-white px-3 py-1 text-sm text-slate-900 dark:border-slate-600 dark:text-slate-100">Unlink</button>
                   </div>
                 </>
               ) : (
@@ -150,7 +150,7 @@ function ProfileLinkForm({ platform, onLink }) {
         value={value}
         onChange={(event) => setValue(event.target.value)}
         placeholder="Enter username or profile URL"
-        className="w-full rounded border border-slate-300 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+        className="w-full rounded border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
       />
       <button type="button" onClick={() => onLink(platform, value)} className="mt-2 rounded bg-blue-600 px-3 py-1 text-sm font-medium text-white">Link Profile</button>
     </div>

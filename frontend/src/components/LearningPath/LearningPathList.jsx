@@ -73,7 +73,7 @@ export default function LearningPathList() {
   const completedProblems = topics.reduce((sum, topic) => sum + Number(topic.completedProblems || 0), 0)
 
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white/95 p-6 shadow-sm transition-colors dark:border-slate-700 dark:bg-slate-900/90">
+    <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition-colors dark:border-slate-700 dark:bg-slate-900/90">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Learning Roadmap</h1>
@@ -85,7 +85,7 @@ export default function LearningPathList() {
           value={search}
           onChange={(event) => setSearch(event.target.value)}
           placeholder="Search topics"
-          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm md:w-64 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 md:w-64 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
         />
       </div>
 
@@ -96,7 +96,7 @@ export default function LearningPathList() {
           <Link
             key={topic._id}
             to={`/learning-path/${topic._id}`}
-            className="group rounded-xl border border-slate-200 bg-gradient-to-br from-white to-slate-50 p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-blue-300 hover:shadow-md dark:border-slate-700 dark:from-slate-900 dark:to-slate-800"
+            className="group rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-blue-300 hover:shadow-md dark:border-slate-700 dark:bg-slate-900"
           >
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">{topic.topic}</h2>

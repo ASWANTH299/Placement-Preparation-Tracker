@@ -102,23 +102,23 @@ export default function LearningPathDetail() {
   const completedIndexes = new Set(topic?.completedProblemIndexes || [])
 
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white/95 p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900/90">
+    <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900/90">
       <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">{topic?.topic || 'Learning Topic'}</h1>
       <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">{topic?.description}</p>
       {error && <p className="mt-3 rounded border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
 
       <div className="mt-5 grid gap-4 md:grid-cols-2">
-        <article className="rounded-xl border border-slate-200 p-4 dark:border-slate-700">
+        <article className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-transparent">
           <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300">Explanation</h2>
           <p className="mt-2 whitespace-pre-wrap text-sm text-slate-700 dark:text-slate-200">{topic?.explanation || 'Explanation will appear here.'}</p>
         </article>
-        <article className="rounded-xl border border-slate-200 p-4 dark:border-slate-700">
+        <article className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-transparent">
           <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300">Pseudocode</h2>
           <pre className="mt-2 overflow-auto whitespace-pre-wrap text-sm text-slate-700 dark:text-slate-200">{topic?.pseudocodeExplanation || 'Pseudocode explanation will appear here.'}</pre>
         </article>
       </div>
 
-      <article className="mt-4 rounded-xl border border-slate-200 p-4 dark:border-slate-700">
+      <article className="mt-4 rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-transparent">
         <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300">Java Syntax Example</h2>
         <pre className="mt-2 overflow-auto whitespace-pre-wrap rounded bg-slate-950 p-3 text-xs text-slate-100">{topic?.javaSyntaxExample || '// Java example not available yet'}</pre>
       </article>
@@ -132,7 +132,7 @@ export default function LearningPathDetail() {
           {(topic?.problems || []).map((problem, index) => {
             const isCompleted = completedIndexes.has(index)
             return (
-              <article key={`${problem.title}-${index}`} className="rounded-xl border border-slate-200 p-4 dark:border-slate-700">
+              <article key={`${problem.title}-${index}`} className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-transparent">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <h3 className="text-base font-semibold text-slate-900 dark:text-slate-100">{problem.title}</h3>
                   <label className="inline-flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300">

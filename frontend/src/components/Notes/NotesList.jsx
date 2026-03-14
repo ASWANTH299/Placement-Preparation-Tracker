@@ -61,13 +61,13 @@ export default function NotesList() {
   }, [items, query, visibility])
 
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white/95 p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900/90">
+    <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900/90">
       <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Study Notes</h1>
       <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">Open any note to view concept explanation, pseudocode, and Java examples.</p>
 
       <div className="mt-4 grid gap-3 md:grid-cols-2">
         <SearchBar value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search notes" />
-        <select value={visibility} onChange={(event) => setVisibility(event.target.value)} className="rounded-md border border-slate-300 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100">
+        <select value={visibility} onChange={(event) => setVisibility(event.target.value)} className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100">
           <option>All</option>
           <option>Public</option>
           <option>Private</option>
@@ -88,7 +88,7 @@ export default function NotesList() {
                 navigate(`/notes/${note._id || note.id}`)
               }
             }}
-            className="cursor-pointer rounded-xl border border-slate-200 p-4 transition hover:-translate-y-0.5 hover:border-blue-300 hover:shadow-sm dark:border-slate-700"
+            className="cursor-pointer rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-blue-300 hover:shadow-sm dark:border-slate-700"
           >
             <h2 className="font-semibold text-slate-900 dark:text-slate-100">{note.title}</h2>
             <p className="text-sm text-slate-600 dark:text-slate-400">
