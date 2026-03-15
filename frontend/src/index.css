@@ -225,6 +225,38 @@ html:not(.dark) span {
   color: inherit;
 }
 
+html:not(.dark) .daily-task-question-panel {
+  border-color: #cbd5e1 !important;
+  background-color: #f8fafc !important;
+  background-image: none !important;
+}
+
+html:not(.dark) .daily-task-question-title {
+  color: #020617 !important;
+  -webkit-text-fill-color: #020617 !important;
+  opacity: 1 !important;
+}
+
+html:not(.dark) .daily-task-question-prompt {
+  color: #0f172a !important;
+  -webkit-text-fill-color: #0f172a !important;
+  opacity: 1 !important;
+}
+
+html:not(.dark) .daily-task-meta-chip,
+html:not(.dark) .daily-task-tag-chip {
+  color: #334155 !important;
+}
+
+html:not(.dark) .daily-task-meta-chip {
+  background-color: #e2e8f0 !important;
+}
+
+html:not(.dark) .daily-task-tag-chip {
+  border-color: #94a3b8 !important;
+  background-color: #ffffff !important;
+}
+
 @keyframes shimmer {
   100% {
     transform: translateX(100%);

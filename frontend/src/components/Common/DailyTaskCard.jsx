@@ -222,19 +222,19 @@ export default function DailyTaskCard({ user, period = 'Today', className = '' }
         </span>
       </div>
 
-      <div className="mt-4 rounded-xl border border-slate-200 bg-gradient-to-br from-slate-50 via-sky-50 to-blue-100 p-4 dark:border-slate-700 dark:from-slate-900 dark:to-slate-800">
+      <div className="daily-task-question-panel mt-4 rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-gradient-to-br dark:from-slate-900 dark:to-slate-800">
         <div className="flex flex-wrap items-center gap-2">
-          <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${getDifficultyTone(question.difficulty)}`}>{question.difficulty}</span>
-          <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700 dark:bg-slate-800 dark:text-slate-300">{question.company}</span>
-          <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700 dark:bg-slate-800 dark:text-slate-300">{question.time}</span>
+          <span className={`daily-task-difficulty-chip rounded-full px-2.5 py-1 text-xs font-semibold ${getDifficultyTone(question.difficulty)}`}>{question.difficulty}</span>
+          <span className="daily-task-meta-chip rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700 dark:bg-slate-800 dark:text-slate-300">{question.company}</span>
+          <span className="daily-task-meta-chip rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700 dark:bg-slate-800 dark:text-slate-300">{question.time}</span>
         </div>
 
-        <h4 className="mt-3 text-base font-semibold text-slate-900 dark:text-slate-100">{question.title}</h4>
-        <p className="mt-2 text-sm text-slate-700 dark:text-slate-300">{question.prompt}</p>
+        <h4 className="daily-task-question-title mt-3 text-base font-semibold text-slate-950 dark:text-slate-100">{question.title}</h4>
+        <p className="daily-task-question-prompt mt-2 text-sm text-slate-800 dark:text-slate-300">{question.prompt}</p>
 
         <div className="mt-3 flex flex-wrap gap-2">
           {question.tags.map((tag) => (
-            <span key={tag} className="rounded-full border border-slate-300 bg-white px-2.5 py-1 text-xs text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300">
+            <span key={tag} className="daily-task-tag-chip rounded-full border border-slate-300 bg-white px-2.5 py-1 text-xs text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300">
               {tag}
             </span>
           ))}
