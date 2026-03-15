@@ -4,69 +4,11 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { deleteNote, getNoteById, updateNote } from '../../services/noteService'
 import { getErrorMessage } from '../../utils/errorHandler'
 import { fallbackNoteById, fallbackNotes } from '../../utils/noteFallbackData'
+import { DEFAULT_BOX_TITLES, getBoxTag } from '../../utils/noteSections'
 
 const fallbackNote = fallbackNotes[0]
 
 const isValidObjectId = (value) => /^[0-9a-fA-F]{24}$/.test(String(value || ''))
-
-const parseNoteSections = (content = '') => {
-  const text = String(content || '')
-
-  const conceptMatch = text.match(/Concept(?: explanation)?:\s*([\s\S]*?)(?=\n\nPseudocode:|\n\nJava example:|$)/i)
-  const pseudoMatch = text.match(/Pseudocode:\s*([\s\S]*?)(?=\n\nJava example:|$)/i)
-  const javaMatch = text.match(/Java example:\s*([\s\S]*?)$/i)
-
-  return {
-    concept: (conceptMatch?.[1] || '').trim() || text.trim() || 'No concept explanation available.',
-    pseudocode: (pseudoMatch?.[1] || '').trim() || 'No pseudocode available.',
-    javaExample: (javaMatch?.[1] || '').trim() || 'No Java example available.'
-  }
-}
-
-const parseConceptSubparts = (concept = '') => {
-  const lines = String(concept || '').split('\n')
-  const headingRegex = /^([A-Za-z0-9 \-()/,&]+):$/
-  const parts = []
-  let current = null
-
-  for (const rawLine of lines) {
-    const line = rawLine.trimEnd()
-    const headingMatch = line.match(headingRegex)
-
-    if (headingMatch) {
-      if (current) {
-        current.content = current.content.trim()
-        parts.push(current)
-      }
-      current = { title: headingMatch[1].trim(), content: '' }
-      continue
-    }
-
-    if (!current) {
-      current = { title: 'Overview', content: '' }
-    }
-
-    current.content += `${line}\n`
-  }
-
-  if (current) {
-    current.content = current.content.trim()
-    parts.push(current)
-  }
-
-  return parts.filter((part) => part.content)
-}
-
-const isWideSubpart = (title = '') => {
-  const value = String(title || '').toLowerCase()
-  return (
-    value.includes('30-day schedule') ||
-    value.includes('15 must-solve') ||
-    value.includes('expected interview answers') ||
-    value.includes('problem taxonomy') ||
-    value.includes('self-assessment rubric')
-  )
-}
 
 export default function NoteDetail() {
   const { noteId } = useParams()
@@ -115,8 +57,13 @@ export default function NoteDetail() {
     return Boolean(ownerId && userId && ownerId === userId)
   }, [note, userId])
 
-  const sections = useMemo(() => parseNoteSections(editing ? draft : note?.content), [draft, editing, note?.content])
-  const conceptSubparts = useMemo(() => parseConceptSubparts(sections.concept), [sections.concept])
+  const visibleBoxes = useMemo(() => (
+    [1, 2, 3, 4, 5, 6].map((number) => ({
+      number,
+      title: DEFAULT_BOX_TITLES[number],
+      content: `Open ${DEFAULT_BOX_TITLES[number]} section`
+    }))
+  ), [])
 
   const save = async () => {
     if (!isOwnNote || !isValidObjectId(noteId)) return
@@ -145,9 +92,9 @@ export default function NoteDetail() {
   }
 
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900/90">
-      <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">{note?.title || 'Note Detail'}</h1>
-      <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
+    <section className="rounded-2xl border border-slate-700 bg-slate-950 p-6 text-slate-100 shadow-sm">
+      <h1 className="text-2xl font-bold text-slate-100">{note?.title || 'Note Detail'}</h1>
+      <p className="mt-1 text-sm text-slate-300">
         Created: {note?.createdAt ? new Date(note.createdAt).toLocaleDateString() : '-'} • Visibility: {note?.visibility || '-'}
       </p>
       {error && <p className="mt-3 rounded border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
@@ -159,35 +106,31 @@ export default function NoteDetail() {
           className="mt-4 h-64 w-full rounded border border-slate-300 bg-white p-3 text-sm text-slate-900 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
         />
       ) : (
-        <div className="mt-4 space-y-4">
-          <article className="rounded border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-transparent">
-            <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300">Concept Explanation</h2>
-            {conceptSubparts.length > 0 ? (
-              <div className="mt-3 grid items-start gap-3 md:grid-cols-2">
-                {conceptSubparts.map((part, index) => (
-                  <section
-                    key={`${part.title}-${index}`}
-                    className={`rounded-lg border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800/70 ${isWideSubpart(part.title) ? 'md:col-span-2' : 'h-full'}`}
-                  >
-                    <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-300">{part.title}</h3>
-                    <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-slate-700 dark:text-slate-200">{part.content}</p>
-                  </section>
-                ))}
-              </div>
-            ) : (
-              <p className="mt-2 whitespace-pre-wrap text-sm text-slate-700 dark:text-slate-200">{sections.concept}</p>
-            )}
-          </article>
-
-          <article className="rounded border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-transparent">
-            <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300">Pseudocode</h2>
-            <pre className="mt-2 whitespace-pre-wrap text-xs text-slate-700 dark:text-slate-200">{sections.pseudocode}</pre>
-          </article>
-
-          <article className="rounded border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-transparent">
-            <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300">Java Example</h2>
-            <pre className="mt-2 overflow-auto whitespace-pre-wrap rounded bg-slate-100 p-3 text-xs text-slate-800 dark:bg-slate-950 dark:text-slate-100">{sections.javaExample}</pre>
-          </article>
+        <div className="mt-4 grid gap-4 md:grid-cols-2">
+          {visibleBoxes.map((box) => (
+            <article
+              key={`${box.number}-${box.title}`}
+              role="button"
+              tabIndex={0}
+              onClick={() => navigate(`/notes/${noteId}/sections/${box.number}`)}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                  event.preventDefault()
+                  navigate(`/notes/${noteId}/sections/${box.number}`)
+                }
+              }}
+              className="relative cursor-pointer overflow-hidden rounded-3xl border border-cyan-800/60 bg-gradient-to-br from-slate-900 via-slate-900 to-blue-950 p-6 shadow-lg transition duration-300 hover:-translate-y-0.5 hover:border-cyan-500/80 hover:shadow-cyan-900/30"
+            >
+              <div className="absolute right-0 top-0 h-24 w-24 rounded-full bg-cyan-500/10 blur-2xl" />
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-cyan-200">
+                {getBoxTag(box.title)}
+              </p>
+              <h2 className="mt-2 text-xl font-bold text-white">
+                {box.title || DEFAULT_BOX_TITLES[box.number] || `Section ${box.number}`}
+              </h2>
+              <p className="mt-3 line-clamp-2 text-sm text-slate-200">{String(box.content || 'Click to open this section').split('\n')[0]}</p>
+            </article>
+          ))}
         </div>
       )}
 

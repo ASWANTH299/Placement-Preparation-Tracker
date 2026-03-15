@@ -69,26 +69,26 @@ const TOPIC_OVERVIEWS = {
 };
 
 const TOPIC_PSEUDOCODE = {
-  Arrays: '1. Traverse once\n2. Maintain running state\n3. Update answer using invariant\n4. Return final value',
-  'Linked Lists': '1. Track current/previous pointers\n2. Move through list safely\n3. Rewire links if required\n4. Return head/result',
-  Stacks: '1. Iterate elements\n2. Pop while condition fails\n3. Push current candidate\n4. Build output from stack',
-  Queues: '1. Push start node/item\n2. Process front\n3. Push valid next items\n4. Continue until empty',
-  Trees: '1. Handle null base case\n2. Recurse on children\n3. Combine child results\n4. Return subtree answer',
-  'Binary Search Trees': '1. Compare key with root\n2. Move left/right accordingly\n3. Update answer on match condition\n4. Stop when null',
-  Heaps: '1. Push element into heap\n2. If size exceeds target, pop root\n3. Continue for all elements\n4. Read answer from heap',
-  Graphs: '1. Build adjacency list\n2. Mark visited nodes\n3. Traverse with BFS/DFS\n4. Aggregate problem-specific result',
-  'Dynamic Programming': '1. Define DP state\n2. Set base cases\n3. Fill transition in dependency order\n4. Return target state',
-  'Greedy Algorithms': '1. Sort by greedy key\n2. Select best feasible option\n3. Preserve constraints\n4. Return constructed result',
-  Recursion: '1. Define base case\n2. Recurse on smaller input\n3. Combine recursive outputs\n4. Return composed answer',
-  Backtracking: '1. Choose option\n2. Recurse deeper\n3. Record valid state\n4. Undo and continue',
-  Trie: '1. Insert/query per character\n2. Create or move child node\n3. Mark terminal state\n4. Return prefix/word status',
-  'Segment Trees': '1. Build tree by ranges\n2. Query by overlap type\n3. Merge left/right results\n4. Propagate updates upward',
-  'Bit Manipulation': '1. Define mask/bit rule\n2. Apply shift/and/or/xor\n3. Check resulting bits\n4. Return computed value',
-  'Sliding Window': '1. Expand right pointer\n2. Shrink left while invalid\n3. Update best answer\n4. Continue until end',
-  'Two Pointer Technique': '1. Initialize left/right\n2. Evaluate condition\n3. Move pointer(s) by rule\n4. Track best/target answer',
-  'Binary Search': '1. Set low/high bounds\n2. Compute mid\n3. Move boundary by predicate\n4. Return final boundary/index',
-  'System Design Basics': '1. Clarify requirements\n2. Estimate scale\n3. Design services and storage\n4. Analyze bottlenecks/trade-offs',
-  'Concurrency Basics': '1. Identify shared state\n2. Protect critical sections\n3. Use safe communication primitives\n4. Validate liveness/safety'
+  Arrays: 'Question pattern: Two Sum\n1. Create empty map valueToIndex\n2. For each index i in nums:\n   a. need = target - nums[i]\n   b. If need exists in map, return [map[need], i]\n   c. Store nums[i] -> i in map\n3. If no pair found, return [-1, -1]',
+  'Linked Lists': 'Question pattern: Reverse Linked List\n1. prev = null, curr = head\n2. While curr is not null:\n   a. next = curr.next\n   b. curr.next = prev\n   c. prev = curr\n   d. curr = next\n3. Return prev as new head',
+  Stacks: 'Question pattern: Valid Parentheses\n1. Initialize empty stack\n2. For each char c:\n   a. If opening bracket, push expected closing bracket\n   b. Else if stack empty or pop != c, return false\n3. Return stack is empty',
+  Queues: 'Question pattern: Implement Queue using Stacks\n1. push(x): push x to inStack\n2. pop(): if outStack empty, move all from inStack to outStack, then pop\n3. peek(): same transfer rule, then return top of outStack\n4. empty(): return inStack and outStack are both empty',
+  Trees: 'Question pattern: Maximum Depth of Binary Tree\n1. If root is null, return 0\n2. leftDepth = depth(root.left)\n3. rightDepth = depth(root.right)\n4. Return 1 + max(leftDepth, rightDepth)',
+  'Binary Search Trees': 'Question pattern: Validate BST\n1. DFS(node, low, high)\n2. If node is null, return true\n3. If node.val <= low or node.val >= high, return false\n4. Return DFS(left, low, node.val) and DFS(right, node.val, high)',
+  Heaps: 'Question pattern: Kth Largest Element in Array\n1. Create minHeap\n2. For each number x:\n   a. Push x\n   b. If heap size > k, pop smallest\n3. Heap top is kth largest, return top',
+  Graphs: 'Question pattern: Number of Islands\n1. Iterate all grid cells\n2. When cell is unvisited land:\n   a. islands++\n   b. Run DFS/BFS to mark connected land visited\n3. Return islands',
+  'Dynamic Programming': 'Question pattern: Coin Change\n1. dp[0] = 0, dp[1..amount] = INF\n2. For a from 1 to amount:\n   a. For each coin c:\n      if a-c >= 0 then dp[a] = min(dp[a], dp[a-c] + 1)\n3. If dp[amount] is INF return -1 else return dp[amount]',
+  'Greedy Algorithms': 'Question pattern: Jump Game II\n1. jumps=0, currEnd=0, farthest=0\n2. For i from 0 to n-2:\n   a. farthest = max(farthest, i + nums[i])\n   b. If i == currEnd: jumps++, currEnd = farthest\n3. Return jumps',
+  Recursion: 'Question pattern: Pow(x, n)\n1. If n == 0 return 1\n2. half = pow(x, n/2)\n3. If n is even return half*half\n4. If n > 0 return half*half*x else return (half*half)/x',
+  Backtracking: 'Question pattern: Subsets\n1. backtrack(index, path)\n2. Add copy(path) to answer\n3. For i from index to n-1:\n   a. Add nums[i] to path\n   b. backtrack(i+1, path)\n   c. Remove last element from path',
+  Trie: 'Question pattern: Implement Trie\n1. insert(word): walk characters, create missing child nodes, mark end=true\n2. search(word): walk characters, return true only if end=true at last char\n3. startsWith(prefix): walk characters, return false on missing child else true',
+  'Segment Trees': 'Question pattern: Range Sum Query - Mutable\n1. Build tree(node, l, r) storing sum for interval [l,r]\n2. Query(node, l, r, ql, qr) using no/partial/full overlap\n3. Update(node, l, r, idx, val) and recompute parent sums\n4. Return query result for requested range',
+  'Bit Manipulation': 'Question pattern: Single Number\n1. ans = 0\n2. For each value x in nums: ans = ans XOR x\n3. Return ans (pairs cancel out: x XOR x = 0)',
+  'Sliding Window': 'Question pattern: Longest Substring Without Repeating Characters\n1. left=0, best=0, lastSeen map\n2. For right from 0..n-1:\n   a. If s[right] seen at >= left, left = lastSeen[s[right]] + 1\n   b. Update lastSeen[s[right]] = right\n   c. best = max(best, right-left+1)\n3. Return best',
+  'Two Pointer Technique': 'Question pattern: Two Sum II (sorted array)\n1. left=0, right=n-1\n2. While left < right:\n   a. sum = a[left] + a[right]\n   b. If sum == target return [left+1, right+1]\n   c. If sum < target left++ else right--\n3. Return [-1, -1] if no pair exists',
+  'Binary Search': 'Question pattern: Search Insert Position\n1. low=0, high=n-1\n2. While low <= high:\n   a. mid = low + (high-low)/2\n   b. If nums[mid] == target return mid\n   c. If nums[mid] < target low = mid+1 else high = mid-1\n3. Return low as insertion index',
+  'System Design Basics': 'Question pattern: Design URL Shortener\n1. Accept longURL and validate input\n2. Generate unique short key (base62 or hash+collision check)\n3. Store mapping shortKey -> longURL in DB/cache\n4. Redirect flow: lookup shortKey and return 302 to longURL\n5. Add rate limiting, analytics, and expiration policy',
+  'Concurrency Basics': 'Question pattern: Producer Consumer\n1. Shared bounded queue + mutex + notFull + notEmpty conditions\n2. Producer: wait while queue full, push item, signal notEmpty\n3. Consumer: wait while queue empty, pop item, signal notFull\n4. Always lock around queue operations; unlock in finally block'
 };
 
 const TOPIC_JAVA_EXAMPLES = {
@@ -160,6 +160,350 @@ const MEMORY_SHEETS = {
   'Concurrency Basics': ['Mutual exclusion for critical sections', 'Avoid deadlock: ordered lock acquisition', 'Producer-consumer via blocking queue', 'Prefer immutability to reduce shared state bugs']
 };
 
+const TOPIC_USE_CASES = {
+  Arrays: ['Range queries with prefix/suffix preprocessing', 'Index-based simulation and in-place transforms', 'Subarray optimization with hash/prefix techniques'],
+  'Linked Lists': ['Pointer rewiring problems (reverse, reorder, merge)', 'Fast/slow pointer detection (cycle, middle)', 'Constant-space node manipulations'],
+  Stacks: ['Balanced symbols and nested expression parsing', 'Monotonic stack for next greater/smaller', 'Undo-style and last-in-first-out state handling'],
+  Queues: ['BFS and level-wise traversal', 'Scheduling and rate-limited processing', 'Sliding window with deque optimization'],
+  Trees: ['Hierarchy traversal and subtree aggregation', 'Path sum and ancestor queries', 'Recursive decomposition into left/right subproblems'],
+  'Binary Search Trees': ['Ordered search and range filtering', 'Kth element via inorder traversal', 'Successor/predecessor style operations'],
+  Heaps: ['Top-k selection in streaming data', 'Dynamic priority scheduling', 'Repeated extract-min/max workflows'],
+  Graphs: ['Connectivity and component detection', 'Dependency ordering and cycle checks', 'Shortest path in weighted/unweighted models'],
+  'Dynamic Programming': ['Optimal substructure and overlapping subproblems', 'Counting ways/paths under constraints', 'Decision optimization with state transitions'],
+  'Greedy Algorithms': ['Interval scheduling and coverage', 'Locally optimal pick under proofable invariants', 'Resource assignment with sorted priorities'],
+  Recursion: ['Divide into smaller identical subproblems', 'Tree/graph DFS style traversals', 'Backtracking-style state exploration'],
+  Backtracking: ['Generate all valid combinations/permutations', 'Constraint satisfaction search', 'Decision tree with prune and rollback'],
+  Trie: ['Prefix matching and autocomplete', 'Dictionary lookup and multi-word search', 'String set operations with common prefixes'],
+  'Segment Trees': ['Range query + point/range updates', 'Online query/update mixes', 'Custom aggregate functions over intervals'],
+  'Bit Manipulation': ['Masking state representation', 'Power/parity/uniqueness checks', 'Subset and XOR based optimizations'],
+  'Sliding Window': ['Substring/subarray with contiguous constraints', 'Variable-size window validity problems', 'Fixed-size aggregate window calculations'],
+  'Two Pointer Technique': ['Pair sum and sorted array constraints', 'In-place partition/compaction operations', 'Window-like shrinking/expanding with ordered movement'],
+  'Binary Search': ['Sorted lookup and boundary search', 'Search on answer with monotonic predicate', 'Minimum/maximum feasible value problems'],
+  'System Design Basics': ['Scalable read/write service decomposition', 'Caching and data partitioning choices', 'Reliability and observability planning'],
+  'Concurrency Basics': ['Thread-safe shared state updates', 'Producer-consumer coordination', 'Deadlock/race avoidance with synchronization']
+};
+
+const TOPIC_EDGE_CASES = {
+  Arrays: ['Empty array, single element, all equal values', 'Negative-heavy and overflow-prone sums', 'Index boundaries at 0 and n-1'],
+  'Linked Lists': ['Null head and single-node list', 'Cycle presence and tail boundary rewiring', 'Losing next pointer during mutation'],
+  Stacks: ['Unexpected closing token early', 'Duplicate values for monotonic variants', 'Leftover stack state after scan'],
+  Queues: ['Queue exhaustion conditions', 'Level-size bookkeeping errors in BFS', 'Repeated node enqueue without visited checks'],
+  Trees: ['Null root and skewed tree depth', 'Leaf-only and single-branch structures', 'Path sums with negative values'],
+  'Binary Search Trees': ['Duplicate key handling policy', 'Delete root with two children', 'Boundary values near INT limits'],
+  Heaps: ['k larger than input size', 'Equal priorities with tie behavior', 'Heap growth without size cap'],
+  Graphs: ['Disconnected components', 'Self-loops and multi-edges', 'Directed vs undirected traversal assumptions'],
+  'Dynamic Programming': ['Incorrect base initialization', 'Transition order causing stale states', 'State definition not covering all constraints'],
+  'Greedy Algorithms': ['Greedy choice invalid without proof', 'Tie-breaking impacts final optimality', 'Local optimum not global optimum'],
+  Recursion: ['Missing base case termination', 'Stack overflow on deep recursion', 'Incorrect combination of recursive returns'],
+  Backtracking: ['Forgetting to undo state', 'Late pruning causing TLE', 'Duplicate generation without canonical ordering'],
+  Trie: ['Case/charset normalization mismatch', 'Prefix present but word-end missing', 'Null child traversal checks'],
+  'Segment Trees': ['Partial overlap merge errors', 'Update propagation bug to parent nodes', 'Range boundaries off by one'],
+  'Bit Manipulation': ['Signed shift pitfalls', 'Operator precedence mistakes', 'Mask width mismatch with integer type'],
+  'Sliding Window': ['Shrinking condition too early/late', 'Frequency map underflow', 'Not updating answer at valid window states'],
+  'Two Pointer Technique': ['Pointer movement in wrong direction', 'Duplicate handling in 3Sum/4Sum', 'Infinite loop when pointers do not progress'],
+  'Binary Search': ['Mid update causing infinite loop', 'Incorrect lower/upper bound condition', 'Predicate not truly monotonic'],
+  'System Design Basics': ['Ignoring capacity estimates', 'Single point of failure in architecture', 'No cache invalidation strategy'],
+  'Concurrency Basics': ['Race conditions on shared mutable state', 'Deadlock from inconsistent lock order', 'Liveness/starvation under heavy contention']
+};
+
+const TOPIC_INTERVIEW_STRATEGY = {
+  Arrays: 'Lead with brute force O(n^2), then shift to prefix/hash/two-pointer optimization depending on constraint shape.',
+  'Linked Lists': 'Draw node transitions first, verbalize pointer invariants, and mention O(1) extra-space rewiring whenever possible.',
+  Stacks: 'State stack invariant before coding and explain exactly why each pop preserves correctness.',
+  Queues: 'Explain processing order guarantee (FIFO) and how it maps to shortest-level traversal or event simulation.',
+  Trees: 'Declare DFS/BFS choice with reason, then define return meaning for each recursive call.',
+  'Binary Search Trees': 'Use BST ordering explicitly to prune search space and justify O(h) behavior.',
+  Heaps: 'Call out why heap is better than full sorting for top-k or streaming constraints.',
+  Graphs: 'Start with graph representation, then choose BFS/DFS/Topo based on reachability, cycle, or ordering goal.',
+  'Dynamic Programming': 'Define state and transition in one sentence each before writing any loop or recursion.',
+  'Greedy Algorithms': 'Mention greedy criterion and provide a brief proof sketch (exchange argument/invariant).',
+  Recursion: 'State base case first, then recursive relation, then complexity from branching and depth.',
+  Backtracking: 'Use choose-explore-unchoose narration and explicitly mention pruning conditions.',
+  Trie: 'Describe node meaning (children + terminal flag) and complexity as O(length of word/prefix).',
+  'Segment Trees': 'Clarify overlap cases (no, partial, full) and show how merge function drives correctness.',
+  'Bit Manipulation': 'Translate problem statement into bit rule first, then apply masks with tested examples.',
+  'Sliding Window': 'Define window validity condition and when left pointer must move to restore invariants.',
+  'Two Pointer Technique': 'Explain why pointer movement is monotonic and cannot skip valid answers under sorted/ordered assumptions.',
+  'Binary Search': 'Declare invariant and boundary objective (first true/last false) before loop implementation.',
+  'System Design Basics': 'Start with requirements + scale estimates, then APIs/data model/cache/reliability trade-offs.',
+  'Concurrency Basics': 'Identify shared state, synchronization primitive, and liveness guarantees before implementation details.'
+};
+
+const TOPIC_DEEP_DIVE = {
+  Arrays: {
+    focus: 'Index-based reasoning, prefix/suffix transformations, and in-place mutation safety.',
+    variants: ['Prefix sum and difference arrays', 'Kadane-style running optimum', 'In-place rotation/partition templates'],
+    proof: 'Show index invariant and that each element contributes correctly once per transition.',
+    tuning: 'Precompute reusable aggregates and avoid nested scans when constraints are large.'
+  },
+  'Linked Lists': {
+    focus: 'Pointer wiring correctness with minimal extra memory.',
+    variants: ['Reverse full/partial list', 'Fast-slow cycle and middle finding', 'Merge/split/reorder operations'],
+    proof: 'Prove no node is lost by storing next pointer before rewiring.',
+    tuning: 'Use dummy nodes to simplify head-edge updates and reduce branch complexity.'
+  },
+  Stacks: {
+    focus: 'Maintaining LIFO invariants and monotonic order constraints.',
+    variants: ['Balanced delimiters', 'Monotonic stack for next greater/smaller', 'Expression evaluation and decoding'],
+    proof: 'Argue each push/pop preserves stack invariant and bounds total pops to O(n).',
+    tuning: 'Store indices instead of values when position impacts output construction.'
+  },
+  Queues: {
+    focus: 'FIFO processing guarantees and level-ordered traversal logic.',
+    variants: ['Classic BFS', 'Deque-based monotonic window', 'Task/process simulation queues'],
+    proof: 'Show enqueue/dequeue order matches required temporal or distance ordering.',
+    tuning: 'Track current level size once per layer to avoid repeated queue length checks.'
+  },
+  Trees: {
+    focus: 'Recursive decomposition of subtree answers and traversal strategy selection.',
+    variants: ['DFS preorder/inorder/postorder', 'BFS level traversal', 'Path and subtree aggregate problems'],
+    proof: 'Use induction on subtree size with base case null/leaf correctness.',
+    tuning: 'Return compound state tuples from recursion to avoid repeated traversals.'
+  },
+  'Binary Search Trees': {
+    focus: 'Leveraging sorted structural property: left < root < right.',
+    variants: ['Search/insert/delete', 'Kth element via inorder', 'Range pruning queries'],
+    proof: 'Show branch pruning is safe because BST ordering excludes impossible regions.',
+    tuning: 'Prefer iterative traversal for long skewed trees to reduce call-stack risk.'
+  },
+  Heaps: {
+    focus: 'Priority extraction and bounded top-k maintenance.',
+    variants: ['Min-heap for k largest', 'Max-heap for repeated best pick', 'Two-heaps median maintenance'],
+    proof: 'Demonstrate root always represents current extreme under heap order property.',
+    tuning: 'Keep heap size bounded when only top-k is required to reduce memory/time.'
+  },
+  Graphs: {
+    focus: 'Modeling relationships and traversing with visited-state discipline.',
+    variants: ['Connected components', 'Cycle detection', 'Topological sorting and shortest paths'],
+    proof: 'Prove each vertex/edge is processed under clear visitation invariant.',
+    tuning: 'Use adjacency lists for sparse graphs and avoid repeated neighbor scans.'
+  },
+  'Dynamic Programming': {
+    focus: 'State design, recurrence transitions, and dependency order.',
+    variants: ['1D/2D tabulation', 'Memoized recursion', 'Knapsack/LIS/path-count families'],
+    proof: 'Show transition uses already-correct smaller states and covers all possibilities.',
+    tuning: 'Apply rolling arrays/state compression when transition depends on limited history.'
+  },
+  'Greedy Algorithms': {
+    focus: 'Locally optimal decision rules with global correctness argument.',
+    variants: ['Interval scheduling', 'Resource assignment', 'Minimum step/cover constructions'],
+    proof: 'Provide exchange argument or invariant showing no better solution is excluded.',
+    tuning: 'Sort once by greedy key and keep decision loop strictly linear thereafter.'
+  },
+  Recursion: {
+    focus: 'Problem reduction into self-similar subproblems with clear base cases.',
+    variants: ['Divide and conquer', 'Tree traversals', 'Recursive enumeration'],
+    proof: 'Termination + correctness by induction on input size/depth.',
+    tuning: 'Memoize overlapping branches and convert to iterative when stack depth is unsafe.'
+  },
+  Backtracking: {
+    focus: 'Search tree exploration with choose-explore-unchoose discipline.',
+    variants: ['Permutations/combinations/subsets', 'Constraint satisfaction', 'Board/path search'],
+    proof: 'Every valid solution path is visited once while invalid prefixes are pruned.',
+    tuning: 'Prune early with feasibility checks and canonical ordering to avoid duplicates.'
+  },
+  Trie: {
+    focus: 'Prefix-indexed string storage with character-level branching.',
+    variants: ['Insert/search/prefix check', 'Autocomplete suggestions', 'Dictionary + wildcard search'],
+    proof: 'Character path uniquely represents prefix; terminal flag determines word completion.',
+    tuning: 'Use compact child representation for larger alphabets to save memory.'
+  },
+  'Segment Trees': {
+    focus: 'Range decomposition and efficient query/update propagation.',
+    variants: ['Range sum/min/max', 'Point update', 'Lazy propagation for range update'],
+    proof: 'Each node stores correct aggregate for its interval; merge correctness composes globally.',
+    tuning: 'Avoid rebuilding; propagate only affected branches and lazy tags as needed.'
+  },
+  'Bit Manipulation': {
+    focus: 'Binary-state operations for compact and fast computation.',
+    variants: ['Mask set/clear/toggle', 'XOR uniqueness tricks', 'Bit-count and subset encoding'],
+    proof: 'Use truth-table reasoning for each operator and mask transformation.',
+    tuning: 'Prefer constant-time bit operations over loops where transformation is direct.'
+  },
+  'Sliding Window': {
+    focus: 'Maintaining contiguous window validity while scanning once.',
+    variants: ['Fixed-size windows', 'Variable-size with constraints', 'Frequency-map window control'],
+    proof: 'Window invariant is restored after each adjustment before scoring answer.',
+    tuning: 'Update counts incrementally instead of recomputing window properties.'
+  },
+  'Two Pointer Technique': {
+    focus: 'Monotonic pointer movement to discard impossible states efficiently.',
+    variants: ['Opposite-direction sum search', 'Fast/slow compaction', 'Deduplicated multi-sum families'],
+    proof: 'Each pointer move removes only infeasible candidates and guarantees progress.',
+    tuning: 'Sort once, skip duplicates carefully, and ensure at least one pointer moves each loop.'
+  },
+  'Binary Search': {
+    focus: 'Boundary narrowing on sorted/monotonic search spaces.',
+    variants: ['Exact match', 'Lower/upper bound', 'Binary search on answer predicate'],
+    proof: 'Maintain loop invariant that target boundary remains within [low, high].',
+    tuning: 'Use mid = low + (high-low)/2 and consistent boundary update semantics.'
+  },
+  'System Design Basics': {
+    focus: 'Requirement-driven architecture with explicit scale and reliability trade-offs.',
+    variants: ['Read-heavy cache-first systems', 'Write-heavy queued pipelines', 'Event-driven microservice decomposition'],
+    proof: 'Justify each component by bottleneck addressed and failure mode handled.',
+    tuning: 'Add partitioning, caching, and asynchronous flows only where measurable need exists.'
+  },
+  'Concurrency Basics': {
+    focus: 'Safe parallel execution with synchronization and liveness guarantees.',
+    variants: ['Mutex/semaphore coordination', 'Producer-consumer queues', 'Read-write lock strategies'],
+    proof: 'Demonstrate race freedom, deadlock avoidance, and forward progress assumptions.',
+    tuning: 'Minimize lock scope and contention hotspots; prefer immutability where practical.'
+  }
+};
+
+const TOPIC_CONCEPT_OVERRIDES = {
+  'Two Pointer Technique': (overview, memorySheet) => `Overview:
+${overview}
+
+What Two Pointer Technique really means:
+- You maintain two moving indices (left/right, slow/fast, read/write) over ordered data.
+- Each pointer move must be justified by a monotonic rule so you never skip valid answers.
+- The main goal is reducing O(n^2) pair/window checks to O(n) or O(n log n).
+
+When to use Two Pointers:
+- Pair constraints in sorted arrays (sum, difference, closest value).
+- In-place array transformations (remove duplicates, move zeros, partition).
+- String/palindrome checks from both ends.
+- Merge-like linear scans of two sorted sources.
+
+Recognition signals in interview questions:
+- "sorted array" + "find pair/triplet" conditions.
+- Need linear-time optimization from brute-force nested loops.
+- Problem allows directional elimination (if value too small move left, if too large move right).
+
+Core pointer patterns:
+1. Opposite-direction pointers:
+- left=0, right=n-1, move one pointer each iteration by comparison with target.
+2. Same-direction fast/slow pointers:
+- fast explores input, slow writes/maintains valid compacted region.
+3. Sliding-boundary pointer pair:
+- right expands candidate region, left shrinks to restore validity.
+
+Correctness invariant template:
+- Invariant: all eliminated states cannot produce a better/valid answer.
+- Maintenance: each pointer move strictly removes only impossible states.
+- Termination: when pointers cross (or fast ends), all feasible states were considered.
+
+Complexity targets:
+- Typical time: O(n) after sorting, or O(n log n) including sorting.
+- Space: O(1) auxiliary for in-place pointer scans.
+
+Topic-specific edge cases:
+- Duplicate values causing repeated results (3Sum/4Sum dedup loops required).
+- Integer overflow while computing sums near limits.
+- Infinite loops when pointer does not move in some branch.
+- Invalid boundary checks (left < right vs left <= right confusion).
+
+Common mistakes:
+- Moving wrong pointer for a comparison outcome.
+- Forgetting to sort when algorithm assumes ordering.
+- Returning early before checking duplicate-adjusted positions.
+- Not updating answer before pointer shift in max/min optimization variants.
+
+Interview walkthrough script:
+- "Brute force is O(n^2). Because input is sorted (or can be sorted), I can use two pointers."
+- "If sum is smaller than target, I must increase left; if larger, decrease right."
+- "This is safe because the eliminated side cannot satisfy the target anymore."
+- "Complexity becomes O(n) scan after sorting, with O(1) extra space."
+
+Practice roadmap inside this topic:
+- Level 1: Two Sum II, Valid Palindrome, Move Zeroes.
+- Level 2: Container With Most Water, 3Sum, Remove Duplicates from Sorted Array.
+- Level 3: 4Sum, Trapping Rain Water, partition-style advanced variants.
+
+Advanced variants and extensions:
+- k-Sum family: reduce k-Sum to (k-1)-Sum recursively with two-pointer base.
+- Closest-value optimization: track minimum absolute difference while moving pointers.
+- Stable in-place partitioning: combine read/write pointer with local swap discipline.
+- Hybrid techniques: sort + two pointers + hashing for dedup or membership checks.
+
+Correctness proof checklist:
+- Pointer movement always reduces search space.
+- No eliminated pair can become valid later.
+- Loop terminates because at least one pointer moves each iteration.
+- Duplicate-skipping rules preserve completeness and uniqueness.
+
+Debug checklist:
+- Verify pointer updates in every branch.
+- Log (left, right, sum) transitions on one failing input.
+- Check dedup loops for boundary overrun.
+- Re-test with all-equal values and strictly increasing values.
+
+Formula and memory sheet:
+${memorySheet.map((item) => `- ${item}`).join('\n')}`,
+
+  'System Design Basics': (overview, memorySheet) => `Overview:
+${overview}
+
+What this topic is about:
+- Designing reliable services under scale, latency, and availability constraints.
+- Converting vague requirements into APIs, data models, and infrastructure choices.
+- Explaining trade-offs instead of chasing a single "perfect" architecture.
+
+Interview structure to follow:
+1. Clarify requirements:
+- Functional (what features?) and non-functional (QPS, latency, uptime, consistency).
+2. Capacity estimation:
+- Estimate traffic, storage, read/write ratio, and growth.
+3. High-level design:
+- Client -> Gateway -> Services -> Cache/Queue/DB/Blob store.
+4. Data model and APIs:
+- Primary entities, keys, indexes, API contracts.
+5. Deep dive bottlenecks:
+- Caching, partitioning, replication, failover, backpressure.
+6. Reliability and observability:
+- Retries, idempotency, rate limits, monitoring, alerting.
+
+Core system components and when they matter:
+- Load balancer: distribute requests and improve availability.
+- Cache (Redis): reduce read latency and DB pressure.
+- Message queue: absorb bursts and decouple producers/consumers.
+- SQL/NoSQL: choose by query shape and consistency requirements.
+- CDN/object storage: static assets and large file delivery.
+
+Common trade-offs to articulate:
+- Latency vs consistency.
+- Simplicity vs flexibility.
+- Cost vs performance.
+- Read optimization vs write amplification.
+
+Topic-specific edge cases:
+- Cache stampede and stale reads.
+- Hot partitions/skewed keys.
+- Retry storms during partial outages.
+- Duplicate requests without idempotency keys.
+
+Common mistakes:
+- Skipping requirement clarification.
+- No capacity numbers at all.
+- Choosing tools without workload justification.
+- Ignoring failure modes and recovery path.
+
+Interview answer template:
+- "Given expected QPS and latency target, I split read/write paths."
+- "I add cache-aside for hot reads and queue for asynchronous heavy tasks."
+- "Data is partitioned by __ and replicated for high availability."
+- "Failure handling includes retries with backoff, idempotency, and circuit breakers."
+
+Advanced deep-dive points:
+- Data consistency model: strong vs eventual and where each is acceptable.
+- Partition strategy: key choice, skew management, and rebalancing approach.
+- Write path safety: idempotency keys, deduplication, and at-least-once effects.
+- Read path performance: cache hit strategy, invalidation policy, stale-read handling.
+- Failure policy: timeout budgets, circuit breakers, fallback behavior, and recovery SLA.
+
+System design review checklist:
+- Does architecture survive one component failure?
+- Are hot keys and uneven traffic explicitly handled?
+- Can we observe failure quickly (logs/metrics/traces)?
+- Is there a clear migration path when scale 10x increases?
+- Are security and abuse protections covered (auth, rate limit, audit)?
+
+Formula and memory sheet:
+${memorySheet.map((item) => `- ${item}`).join('\n')}`
+};
+
 const buildThirtyDaySchedule = (topic) => {
   return [
     `Day 1: Read ${topic} fundamentals and write one-page summary.`,
@@ -229,143 +573,237 @@ const buildExpectedInterviewAnswers = (topic) => {
   ].join('\n');
 };
 
+const buildExpectedInterviewQuestions = (topic) => {
+  return [
+    `1. What is ${topic} and when should you use it?`,
+    '2. Which brute-force approach would you start with?',
+    '3. How do you optimize the baseline approach?',
+    '4. What invariant do you maintain for correctness?',
+    '5. Which edge cases are most error-prone here?',
+    '6. What is the time and space complexity, and why?',
+    '7. What are common implementation mistakes in this topic?',
+    '8. How would you test this approach quickly in an interview?',
+    '9. What trade-offs exist between readability and performance?',
+    `10. How would you adapt ${topic} if constraints become much larger?`
+  ].join('\n');
+};
+
+const buildAdvancedPseudocodeSection = (topic, pseudocode, mustSolve) => {
+  const selectedQuestions = (Array.isArray(mustSolve) && mustSolve.length > 0
+    ? mustSolve
+    : [`${topic} Core Interview Problem`, `${topic} Variant Problem`, `${topic} Optimization Problem`]).slice(0, 3);
+
+  const buildSampleBlock = (questionName, codeBody) => {
+    return `Problem Statement:
+Write pseudocode for "${questionName}" from ${topic} and return the required output with optimized logic.
+
+SampleInput1:
+N and problem-specific input values
+SampleOutput1:
+Expected valid output for input 1
+SampleInput2:
+Another valid input with edge conditions
+SampleOutput2:
+Expected valid output for input 2
+
+Pseudocode:
+BEGIN
+${codeBody}
+END`;
+  };
+
+  const variantPseudocode = (questionName, index) => {
+    const primary = `    READ input
+    INITIALIZE state variables and helper structures
+    FOR each required element/state transition
+        APPLY ${topic} transition rule
+        UPDATE answer candidate/invariant
+    ENDFOR
+    PRINT/RETURN final answer`;
+
+    const robust = `    READ input and constraints
+    IF input is empty THEN
+        PRINT/RETURN base case answer
+    ENDIF
+    INITIALIZE pointers/index/state trackers
+    WHILE/FOR transition loop is valid
+        APPLY ${topic} rule and boundary checks
+        UPDATE state and answer safely
+    ENDLOOP
+    PRINT/RETURN final optimized answer`;
+
+    const optimized = `    READ input
+    SET up optimized ${topic} structure (precompute/map/pointers)
+    ITERATE through states once where possible
+        MAINTAIN invariant after each transition
+        CAPTURE best/required answer
+    ENDITERATE
+    HANDLE remaining edge condition if any
+    PRINT/RETURN final answer`;
+
+    if (index === 0) {
+      return buildSampleBlock(questionName, primary);
+    }
+
+    if (index === 1) {
+      return buildSampleBlock(questionName, robust);
+    }
+
+    return buildSampleBlock(questionName, optimized);
+  };
+
+  const variantTheory = (index) => {
+    const lines = [
+      [
+        '- This is the canonical interview flow for the topic and is easiest to explain under time pressure.',
+        '- State transition order is explicit, so correctness proof becomes straightforward.',
+        '- Each step has a clear invariant check before the next update.',
+        '- Time and space analysis can be derived directly from the loop/recursion structure.',
+        '- This version is best for building baseline confidence and avoiding logic drift.'
+      ],
+      [
+        '- This variant introduces extra boundary handling for tricky constraints and edge cases.',
+        '- It focuses on robust updates when duplicates or special conditions appear.',
+        '- The structure reduces failure probability in hidden test cases.',
+        '- It trades a little readability for stronger safety in corner scenarios.',
+        '- Use this when the problem includes additional conditional rules.'
+      ],
+      [
+        '- This optimization variant removes redundant work and improves performance under large inputs.',
+        '- Invariant-preserving transitions ensure optimization does not break correctness.',
+        '- Data-structure choices are aligned with asymptotic improvement targets.',
+        '- It is suitable when constraints force near-optimal complexity.',
+        '- Use this variant after validating the baseline implementation.'
+      ]
+    ];
+
+    return (lines[index] || lines[0]).join('\n');
+  };
+
+  const questionBlocks = selectedQuestions.map((questionName, index) => {
+    return `Question name: ${questionName}\n${variantPseudocode(questionName, index)}\nTheory:\n${variantTheory(index)}`;
+  }).join('\n\n');
+
+  return `${questionBlocks}\n\nAdvanced pseudocode features:\n- Add explicit guard clauses for empty input and minimal input size.\n- Document invariant after each transition-heavy step.\n- Include one dry-run (normal case) and one adversarial dry-run.\n- Mention final time complexity and space complexity under the pseudocode.`;
+};
+
 const createDetailedNoteContent = (topic) => {
   const overview = TOPIC_OVERVIEWS[topic] || `${topic} interview fundamentals.`;
   const pseudocode = TOPIC_PSEUDOCODE[topic] || '1. Define problem state\n2. Apply suitable strategy\n3. Track invariants\n4. Return answer';
   const javaExample = TOPIC_JAVA_EXAMPLES[topic] || `class ${topic.replace(/[^A-Za-z0-9]/g, '')}Demo {\n  int solve(int[] nums) {\n    return nums.length;\n  }\n}`;
   const mustSolve = MUST_SOLVE_QUESTIONS[topic] || [];
-  const memorySheet = MEMORY_SHEETS[topic] || [];
   const thirtyDayPlan = buildThirtyDaySchedule(topic);
-  const expectedAnswers = buildExpectedInterviewAnswers(topic);
+  const expectedQuestions = buildExpectedInterviewQuestions(topic);
+  const memorySheet = MEMORY_SHEETS[topic] || [];
+  const useCases = TOPIC_USE_CASES[topic] || ['Core interview pattern detection', 'Constraint-aware optimization', 'Correctness with invariant reasoning'];
+  const edgeCases = TOPIC_EDGE_CASES[topic] || ['Empty input', 'Single-item input', 'Boundary condition handling'];
+  const interviewStrategy = TOPIC_INTERVIEW_STRATEGY[topic] || `Start from baseline for ${topic}, optimize with invariant, then justify complexity and edge-case handling.`;
+  const deepDive = TOPIC_DEEP_DIVE[topic] || {
+    focus: `${topic} core patterns and correctness trade-offs.`,
+    variants: ['Canonical template', 'Optimization variant', 'Edge-case aware variant'],
+    proof: 'Define invariant and prove transition safety + termination.',
+    tuning: 'Remove repeated work and choose efficient data structures.'
+  };
+  const javaExplanation = [
+    '- Uses a standard interview-safe template for this topic.',
+    '- Emphasizes clear state transitions and boundary checks.',
+    '- Can be optimized further based on problem-specific constraints.'
+  ].join('\n');
+  const pseudocodeSection = buildAdvancedPseudocodeSection(topic, pseudocode, mustSolve);
+  const conceptBody = TOPIC_CONCEPT_OVERRIDES[topic]
+    ? TOPIC_CONCEPT_OVERRIDES[topic](overview, memorySheet)
+    : `Why this topic matters:
+- Frequently appears in online assessments and technical interviews.
+- Acts as a foundation for mixed-pattern medium and hard questions.
+- Helps demonstrate both problem solving and optimization thinking.
 
-  return `Concept explanation:
-Overview:
-${overview}
+Mental model:
+- Start by identifying what state must be tracked at each step.
+- Define one invariant that remains true after every transition.
+- Keep updates deterministic: old state -> transition -> new state.
+- Validate the approach on a tiny dry-run before coding fully.
 
-Why this topic matters in placements:
-- Frequently tested in coding rounds and interviews.
-- Helps interviewers evaluate problem decomposition and optimization skill.
-- Appears as a building block in combined multi-pattern questions.
+Topic deep dive:
+- Focus: ${deepDive.focus}
+- Variants:
+${deepDive.variants.map((item) => `  - ${item}`).join('\n')}
+- Proof mindset: ${deepDive.proof}
+- Performance tuning: ${deepDive.tuning}
 
-Core theory and mental model:
-- Identify what state changes each step and what must remain invariant.
-- Keep transitions explicit: current state -> next state.
-- Prefer clear correctness reasoning before micro-optimizations.
-- Separate idea, proof sketch, and implementation details.
+Best situations to apply ${topic}:
+${useCases.map((item) => `- ${item}`).join('\n')}
 
-Interview framework (before coding):
-1. Confirm constraints and expected output.
-2. Explain brute-force baseline.
-3. Present optimized strategy with invariant.
-4. Discuss edge cases and failure modes.
-5. State complexity and trade-offs.
+Core ideas:
+- Identify the invariant that must stay true.
+- Update state in a safe and deterministic order.
+- Validate with boundary and edge-case checks.
 
-Important patterns within ${topic}:
-- Template selection and adaptation
-- Boundary/index/pointer safety
-- Space-time trade-off decisions
-- Dry-run based correctness verification
+Important patterns inside ${topic}:
+- Pattern recognition from problem constraints.
+- Correct boundary/index/pointer movement.
+- Reduction of repeated work via caching/precomputation.
+- Choosing readable vs optimized implementation under constraints.
 
 Common mistakes to avoid:
-- Missing empty/minimal input cases
-- Updating state in wrong order
-- Breaking loop/recursion invariant
-- Overlooking overflow/depth constraints
+- Off-by-one and wrong loop/recursion stopping condition.
+- Updating variables in the wrong order.
+- Ignoring empty/minimum-size and duplicate-heavy inputs.
+- Returning early without validating all required conditions.
+
+Topic-specific edge cases:
+${edgeCases.map((item) => `- ${item}`).join('\n')}
+
+Formula and memory sheet:
+${memorySheet.map((item) => `- ${item}`).join('\n')}
 
 Complexity checklist:
-- Time complexity in best/avg/worst cases
-- Auxiliary space usage
-- Can we reduce repeated work?
-- Is in-place processing acceptable?
+- Best, average, and worst-case time complexity.
+- Auxiliary space and recursion stack usage.
+- Can repeated work be removed without breaking correctness?
+- Is this complexity acceptable for given constraints?
 
-7-day focused practice plan:
-- Day 1: Learn the base template and solve 2 easy questions.
-- Day 2: Solve 3 medium questions under timer.
-- Day 3: Re-solve previous set without reference.
-- Day 4: Attempt 1 difficult variant and write notes.
-- Day 5: Mixed-topic set where ${topic} appears as sub-pattern.
-- Day 6: Mock interview discussion + code walkthrough.
-- Day 7: Revision and error-log consolidation.
+Interview focus:
+- Explain brute force first, then optimization.
+- Justify correctness with invariant + termination.
+- State final time and space complexity clearly.
 
-Mini interview Q&A:
-Q1: Why is this solution correct?
-A1: The invariant holds after each update and guarantees all valid states are considered.
+Interview strategy for ${topic}:
+${interviewStrategy}
 
-Q2: What edge cases did you handle?
-A2: Empty input, single element/node, repeated values, extremes, and invalid transitions.
+How to explain in interviews (quick script):
+- "My baseline is __ with complexity __."
+- "I optimize using __ while preserving invariant __."
+- "Edge cases handled: __, __, __."
+- "Final complexity is __ time and __ space."
 
-Q3: Can it be improved?
-A3: Improve by reducing repeated scans, caching intermediate data, or replacing heavy structures.
+Advanced depth for ${topic}:
+- Standard variants: counting, optimization (min/max), construction, validation.
+- Proof angle: invariant + termination + no-missed-state argument.
+- Optimization ladder: brute force -> pruning -> data-structure-assisted -> in-place refinement.
+- Interview traps: hidden edge constraints, integer limits, duplicate handling, tie-breaking.
+- Final check: run one normal case + one adversarial edge case before submission.`;
 
-Q4: Why this complexity is acceptable?
-A4: It aligns with standard optimal bounds for this problem category in interviews.
-
-Problem taxonomy for ${topic}:
-- Recognition problems: map prompt to known templates quickly.
-- Construction problems: generate output while maintaining constraints.
-- Optimization problems: maximize/minimize target metric efficiently.
-- Validation problems: verify state/structure correctness.
-- Counting problems: compute number of valid outcomes or paths.
-
-Deep-dive checklist (advanced understanding):
-- Can this approach be derived from brute force incrementally?
-- Can correctness be justified using an invariant?
-- Can you identify counter-examples for wrong approaches?
-- Can the same idea scale for larger constraints?
-- Can you switch between iterative and recursive forms?
-
-Optimization playbook:
-- Eliminate repeated scans with cached state.
-- Replace expensive loops using pattern-specific techniques.
-- Reduce auxiliary memory where possible.
-- Maintain stable update order for correctness.
-- Re-check if complexity meets interview expectations.
-
-Debugging workflow in interview settings:
-1. Dry-run smallest valid input first.
-2. Trace key variables after each state transition.
-3. Verify boundary and stop conditions.
-4. Test one adversarial edge case.
-5. Re-state complexity post-fix.
-
-Communication template while coding:
-- "Baseline approach is ..."
-- "Invariant maintained is ..."
-- "Transition step does ... because ..."
-- "Edge case handling includes ..."
-- "Final complexity and trade-offs are ..."
-
-Self-assessment rubric (1-5 score):
-- Pattern recognition
-- Correctness explanation
-- Edge-case robustness
-- Complexity confidence
-- Implementation reliability
-
-Any score below 3 indicates need for focused revision and re-solving without old references.
-
-15 must-solve question names:
-${mustSolve.map((question, index) => `${index + 1}. ${question}`).join('\n')}
-
-Topic-wise formula/memory sheet:
-${memorySheet.map((line) => `- ${line}`).join('\n')}
-
-30-day schedule:
-${thirtyDayPlan}
-
-Expected interview answers (top 10):
-${expectedAnswers}
+  return `Concept Explanation:
+${conceptBody}
 
 Pseudocode:
-${pseudocode}
+${pseudocodeSection}
 
-Java example:
+Java Code with Explanation:
+Java code:
 ${javaExample}
 
-Revision cheat sheet:
-- Summary: ${topic} requires selecting the right pattern and preserving invariant.
-- Trigger words: constraints, optimize, edge case, invariant, dry run.
-- Final reminder: explain approach first, then code, then verify with 2 manual test cases.`;
+Explanation:
+${javaExplanation}
+
+Expected Interview Questions:
+${expectedQuestions}
+
+15 Must-Solve Question Names:
+${mustSolve.map((question, index) => `${index + 1}. ${question}`).join('\n')}
+
+30-Day Schedule:
+${thirtyDayPlan}`;
 };
 
 const topicProblems = (topic) => {

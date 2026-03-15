@@ -17,6 +17,7 @@ import LoginPage from './pages/LoginPage'
 import MockInterviewDetailPage from './pages/MockInterviewDetailPage'
 import MockInterviewsPage from './pages/MockInterviewsPage'
 import NoteDetailPage from './pages/NoteDetailPage'
+import NoteSectionDetailPage from './pages/NoteSectionDetailPage'
 import NotesPage from './pages/NotesPage'
 import NotFoundPage from './pages/NotFoundPage'
 import ProfilePage from './pages/ProfilePage'
@@ -93,6 +94,7 @@ function AppLayout() {
           <Route path="/resume-tracker" element={<ProtectedRoute><ResumeTrackerPage /></ProtectedRoute>} />
           <Route path="/notes" element={<ProtectedRoute><NotesPage /></ProtectedRoute>} />
           <Route path="/notes/:noteId" element={<ProtectedRoute><NoteDetailPage /></ProtectedRoute>} />
+          <Route path="/notes/:noteId/sections/:sectionId" element={<ProtectedRoute><NoteSectionDetailPage /></ProtectedRoute>} />
           <Route path="/leaderboard" element={<ProtectedRoute><LeaderboardPage /></ProtectedRoute>} />
           <Route path="/coding-profiles" element={<ProtectedRoute><CodingProfilesPage /></ProtectedRoute>} />
           <Route path="/concept-learning" element={<ProtectedRoute><ConceptLearningPage /></ProtectedRoute>} />
