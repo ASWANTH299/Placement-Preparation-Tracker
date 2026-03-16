@@ -23,6 +23,7 @@ const megaSections = [
     items: [
       { label: 'Questions & Practice', to: '/company-questions', desc: 'Company-specific Q&A bank' },
       { label: 'Coding Profiles', to: '/coding-profiles', desc: 'Track LeetCode, CF & more' },
+      { label: 'QUIZ', to: '/quiz', desc: 'Test your knowledge' },
     ],
   },
   {
