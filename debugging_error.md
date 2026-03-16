@@ -369,7 +369,179 @@ Features
 • completed problems
 
 
+--------------------------------------------------
+
+## 9 Student Projects Section
+
+A new section must be added where students can upload and manage their projects.
+
+Required Features
+
+Students can upload project folders.
+
+Constraints
+
+• Maximum 5 project folders per user
+• Each project folder may contain multiple files
+• Each folder must not exceed 5MB
+• Store project folders in server local storage
+
+If user already has 5 projects
+
+Show error:
+
+"Maximum 5 projects allowed. Delete an existing project before uploading a new one."
+
+Project features
+
+• upload project folder
+• view project list
+• open project details
+• delete project
+• download project
+
+Project fields
+
+project_name  
+description  
+technology_stack  
+upload_date  
+
+Route examples
+
+/projects  
+/projects/upload  
+/projects/:projectId
+
+--------------------------------------------------
+
+## 10 Student Forum / Chat System
+
+Add a forum section where students can communicate with each other.
+
+Features
+
+• students can create discussion messages
+• students can reply to messages
+• real-time chat between students
+• messages displayed in chronological order
+
+Chat behavior
+
+• users can send messages
+• users can view previous messages
+• messages show sender name and timestamp
+
+Possible implementation
+
+Backend
+
+Create collection:
+
+ForumMessages
+
+fields
+
+user_id  
+message  
+created_at  
+
+API routes
+
+GET /api/forum/messages  
+POST /api/forum/messages  
+
+Frontend
+
+Create forum page
+
+/forum
+
+UI must include
+
+• chat message list
+• message input box
+• send button
+
+Messages should appear instantly after sending.
+
+Optional enhancement
+
+Use WebSockets or Socket.io for real-time updates.
 
 
 
+--------------------------------------------------
+
+## 11 HR Interview Preparation
+
+Add a section for HR interview preparation where students can read common HR interview questions and learn how to answer them.
+
+Purpose
+
+Help students prepare for behavioral and HR interview rounds.
+
+Features
+
+• display HR interview questions
+• show recommended answer for each question
+• easy navigation through questions
+
+Route
+
+/hr-interview
+
+Behavior
+
+Clicking a question should open the full answer.
+
+Example
+
+Question
+Why did you choose this company?
+
+Answer
+I chose this company because it has a strong reputation for innovation and growth in the industry. I admire the company's values, work culture, and commitment to quality. I believe this organization provides a great environment to learn new skills and grow professionally. I am confident that my abilities and dedication will allow me to contribute positively to the company while also developing my career.
+
+--------------------------------------------------
+
+### Required Questions (10–15)
+
+Example questions to include
+
+1 Why should we hire you?
+
+2 Why do you want to work at this company?
+
+3 Tell me about yourself.
+
+4 What are your strengths?
+
+5 What are your weaknesses?
+
+6 Where do you see yourself in five years?
+
+7 Why should we hire you over other candidates?
+
+8 Tell me about a challenge you faced.
+
+9 Describe a time you worked in a team.
+
+10 How do you handle pressure?
+
+11 What motivates you?
+
+12 Why did you choose your field of study?
+
+13 What are your career goals?
+
+14 Are you willing to relocate?
+
+15 Do you have any questions for us?
+
+Each question must contain
+
+• question text
+• recommended answer
+• clear explanation style
 
