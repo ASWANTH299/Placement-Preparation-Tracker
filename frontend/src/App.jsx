@@ -34,6 +34,7 @@ import AdminUsersPage from './pages/AdminUsersPage'
 import AdminLearningPathPage from './pages/AdminLearningPathPage'
 import AdminCompanyQuestionsPage from './pages/AdminCompanyQuestionsPage'
 import AiModeWidget from './components/Common/AiModeWidget'
+import QuizPage from './pages/QuizPage'
 
 const authRoutes = ['/login', '/register', '/forgot-password', '/reset-password']
 const adminRoutes = ['/admin-dashboard', '/admin-users', '/admin-learning-path', '/admin-company-questions']
@@ -100,6 +101,7 @@ function AppLayout() {
           <Route path="/concept-learning" element={<ProtectedRoute><ConceptLearningPage /></ProtectedRoute>} />
           <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
           <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
+          <Route path="/quiz" element={<ProtectedRoute><QuizPage /></ProtectedRoute>} />
 
           <Route path="/admin-dashboard" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
           <Route path="/admin-users" element={<AdminRoute><AdminUsersPage /></AdminRoute>} />
