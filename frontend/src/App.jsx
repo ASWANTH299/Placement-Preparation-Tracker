@@ -10,6 +10,7 @@ import CompanyQuestionsPage from './pages/CompanyQuestionsPage'
 import DashboardPage from './pages/DashboardPage'
 import DailyTaskPage from './pages/DailyTaskPage'
 import ForgotPasswordPage from './pages/ForgotPasswordPage'
+import ForumPage from './pages/ForumPage'
 import LeaderboardPage from './pages/LeaderboardPage'
 import LearningPathDetailPage from './pages/LearningPathDetailPage'
 import LearningPathPage from './pages/LearningPathPage'
@@ -21,6 +22,8 @@ import NoteSectionDetailPage from './pages/NoteSectionDetailPage'
 import NotesPage from './pages/NotesPage'
 import NotFoundPage from './pages/NotFoundPage'
 import ProfilePage from './pages/ProfilePage'
+import ProjectDetailPage from './pages/ProjectDetailPage'
+import ProjectsPage from './pages/ProjectsPage'
 import PracticePage from './pages/PracticePage'
 import QuestionDetailPage from './pages/QuestionDetailPage'
 import RecordInterviewPage from './pages/RecordInterviewPage'
@@ -96,6 +99,10 @@ function AppLayout() {
           <Route path="/notes" element={<ProtectedRoute><NotesPage /></ProtectedRoute>} />
           <Route path="/notes/:noteId" element={<ProtectedRoute><NoteDetailPage /></ProtectedRoute>} />
           <Route path="/notes/:noteId/sections/:sectionId" element={<ProtectedRoute><NoteSectionDetailPage /></ProtectedRoute>} />
+          <Route path="/projects" element={<ProtectedRoute><ProjectsPage /></ProtectedRoute>} />
+          <Route path="/projects/upload" element={<ProtectedRoute><ProjectsPage /></ProtectedRoute>} />
+          <Route path="/projects/:projectId" element={<ProtectedRoute><ProjectDetailPage /></ProtectedRoute>} />
+          <Route path="/forum" element={<ProtectedRoute><ForumPage /></ProtectedRoute>} />
           <Route path="/leaderboard" element={<ProtectedRoute><LeaderboardPage /></ProtectedRoute>} />
           <Route path="/coding-profiles" element={<ProtectedRoute><CodingProfilesPage /></ProtectedRoute>} />
           <Route path="/concept-learning" element={<ProtectedRoute><ConceptLearningPage /></ProtectedRoute>} />

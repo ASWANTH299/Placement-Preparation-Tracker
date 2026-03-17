@@ -8,6 +8,8 @@ const noteController = require('../controllers/noteController');
 const leaderboardController = require('../controllers/leaderboardController');
 const codingProfileController = require('../controllers/codingProfileController');
 const aiController = require('../controllers/aiController');
+const projectController = require('../controllers/projectController');
+const forumController = require('../controllers/forumController');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
@@ -41,6 +43,29 @@ const upload = multer({
     }
   },
   limits: { fileSize: 5 * 1024 * 1024 } // 5MB limit
+});
+
+const projectUploadDir = path.resolve('uploads', 'projects');
+if (!fs.existsSync(projectUploadDir)) {
+  fs.mkdirSync(projectUploadDir, { recursive: true });
+}
+
+const projectStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, projectUploadDir);
+  },
+  filename: (req, file, cb) => {
+    const safeName = String(file.originalname || 'file').replace(/[\\/]/g, '-');
+    cb(null, `${Date.now()}-${safeName}`);
+  }
+});
+
+const projectUpload = multer({
+  storage: projectStorage,
+  limits: {
+    fileSize: 5 * 1024 * 1024,
+    files: 200
+  }
 });
 
 const avatarUpload = multer({
@@ -111,6 +136,13 @@ router.get('/students/:id/resumes', resumeController.getResumes);
 router.get('/students/:id/resumes/:resumeId/download', resumeController.downloadResume);
 router.delete('/students/:id/resumes/:resumeId', resumeController.deleteResume);
 
+// Student Projects Routes
+router.post('/students/:id/projects/upload', projectUpload.array('files', 200), projectController.uploadProject);
+router.get('/students/:id/projects', projectController.getProjects);
+router.get('/students/:id/projects/:projectId', projectController.getProjectById);
+router.get('/students/:id/projects/:projectId/download', projectController.downloadProject);
+router.delete('/students/:id/projects/:projectId', projectController.deleteProject);
+
 // Notes Routes (specific routes before generic ones)
 router.post('/students/:id/notes', noteController.createNote);
 router.get('/students/:id/notes', noteController.getNotes);
@@ -131,5 +163,9 @@ router.delete('/students/:id/coding-profiles/:platformId', codingProfileControll
 // AI assistant route
 router.post('/ai/chat', aiController.chat);
 router.post('/students/ai/chat', aiController.chat);
+
+// Forum / chat routes
+router.get('/forum/messages', forumController.getForumMessages);
+router.post('/forum/messages', forumController.createForumMessage);
 
 module.exports = router;

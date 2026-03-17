@@ -31,6 +31,8 @@ const megaSections = [
     items: [
       { label: 'Resume', to: '/resume-tracker', desc: 'Build & track your résumé' },
       { label: 'Notes', to: '/notes', desc: 'Personal study notes' },
+      { label: 'Projects', to: '/projects', desc: 'Upload and manage project folders' },
+      { label: 'Forum', to: '/forum', desc: 'Discuss and reply with peers' },
     ],
   },
   {
