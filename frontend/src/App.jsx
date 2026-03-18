@@ -11,6 +11,7 @@ import DashboardPage from './pages/DashboardPage'
 import DailyTaskPage from './pages/DailyTaskPage'
 import ForgotPasswordPage from './pages/ForgotPasswordPage'
 import ForumPage from './pages/ForumPage'
+import HRInterviewPage from './pages/HRInterviewPage'
 import LeaderboardPage from './pages/LeaderboardPage'
 import LearningPathDetailPage from './pages/LearningPathDetailPage'
 import LearningPathPage from './pages/LearningPathPage'
@@ -103,6 +104,7 @@ function AppLayout() {
           <Route path="/projects/upload" element={<ProtectedRoute><ProjectsPage /></ProtectedRoute>} />
           <Route path="/projects/:projectId" element={<ProtectedRoute><ProjectDetailPage /></ProtectedRoute>} />
           <Route path="/forum" element={<ProtectedRoute><ForumPage /></ProtectedRoute>} />
+          <Route path="/hr-interview" element={<ProtectedRoute><HRInterviewPage /></ProtectedRoute>} />
           <Route path="/leaderboard" element={<ProtectedRoute><LeaderboardPage /></ProtectedRoute>} />
           <Route path="/coding-profiles" element={<ProtectedRoute><CodingProfilesPage /></ProtectedRoute>} />
           <Route path="/concept-learning" element={<ProtectedRoute><ConceptLearningPage /></ProtectedRoute>} />

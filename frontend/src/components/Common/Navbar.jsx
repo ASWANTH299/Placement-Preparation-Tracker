@@ -16,6 +16,7 @@ const megaSections = [
       { label: 'Learning Path', to: '/learning-path', desc: 'Structured study roadmap' },
       { label: 'Concept Learning', to: '/concept-learning', desc: 'Deep-dive concept notes' },
       { label: 'Mock Interviews', to: '/mock-interviews', desc: 'AI-powered practice sessions' },
+      { label: 'HR Interview', to: '/hr-interview', desc: 'Behavioral Q&A with model answers' },
     ],
   },
   {
