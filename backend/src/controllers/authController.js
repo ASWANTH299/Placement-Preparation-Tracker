@@ -3,14 +3,24 @@ const PasswordResetOtpSession = require('../models/PasswordResetOtpSession');
 const { generateToken } = require('../utils/jwt');
 const { validateEmail, validatePassword, validateName, validatePhoneNumber, normalizePhoneNumber } = require('../utils/validators');
 const { AppError } = require('../utils/errorHandler');
-const { sendPasswordResetOtpSms } = require('../utils/sms');
+const { sendPasswordResetEmail } = require('../utils/email');
 const crypto = require('crypto');
 
 const hashValue = (value) => crypto.createHash('sha256').update(value).digest('hex');
 
-const generateNumericOtp = () => {
-  const otp = Math.floor(100000 + Math.random() * 900000);
-  return String(otp);
+const resolveFrontendBaseUrl = () => {
+  const preferred = process.env.NODE_ENV === 'production'
+    ? (process.env.FRONTEND_PROD_URL || process.env.FRONTEND_URL)
+    : (process.env.FRONTEND_URL || process.env.FRONTEND_PROD_URL);
+
+  return (preferred || 'http://localhost:5173').replace(/\/$/, '');
+};
+
+const maskEmail = (email = '') => {
+  const [localPart = '', domain = ''] = String(email).split('@');
+  if (!localPart || !domain) return 'invalid-email';
+  if (localPart.length <= 2) return `${localPart[0] || '*'}*@${domain}`;
+  return `${localPart[0]}***${localPart[localPart.length - 1]}@${domain}`;
 };
 
 // Register
@@ -123,56 +133,90 @@ exports.login = async (req, res, next) => {
   }
 };
 
-// Send password reset OTP to mobile
+// Send password reset link to email
 exports.forgotPassword = async (req, res, next) => {
   try {
-    const { mobileNumber } = req.body;
+    const { email } = req.body;
 
-    if (!mobileNumber) {
-      return next(new AppError('Mobile number is required', 400, 'VALIDATION_ERROR'));
+    if (!email) {
+      return next(new AppError('Email is required', 400, 'VALIDATION_ERROR'));
     }
 
-    if (!validatePhoneNumber(mobileNumber)) {
-      return next(new AppError('Please provide a valid mobile number', 400, 'VALIDATION_ERROR'));
+    if (!validateEmail(email)) {
+      return next(new AppError('Please provide a valid email', 400, 'VALIDATION_ERROR'));
     }
 
-    const normalizedPhone = normalizePhoneNumber(mobileNumber);
+    const normalizedEmail = email.toLowerCase().trim();
+    const user = await User.findOne({ email: normalizedEmail }).select('name email');
 
-    const otp = generateNumericOtp();
-    await PasswordResetOtpSession.deleteMany({ phoneNumber: normalizedPhone });
+    let mailDebug = null;
 
-    const otpSession = new PasswordResetOtpSession({
-      phoneNumber: normalizedPhone,
-      otpHash: hashValue(otp),
-      otpExpiry: new Date(Date.now() + 10 * 60 * 1000),
-      attempts: 0,
-      verifiedTokenHash: null,
-      verifiedTokenExpiry: null,
-    });
+    if (user) {
+      const resetToken = crypto.randomBytes(32).toString('hex');
+      user.passwordResetToken = hashValue(resetToken);
+      user.passwordResetExpiry = new Date(Date.now() + 60 * 60 * 1000);
+      await user.save({ validateBeforeSave: false });
 
-    await otpSession.save();
+      const resetUrl = `${resolveFrontendBaseUrl()}/reset-password?token=${resetToken}`;
 
-    try {
-      await sendPasswordResetOtpSms({
-        to: normalizedPhone,
-        otp,
-      });
-    } catch (smsError) {
-      console.error('Failed to send password reset OTP:', smsError.message);
+      try {
+        const mailResult = await sendPasswordResetEmail({
+          to: user.email,
+          resetUrl,
+          name: user.name,
+        });
 
-      await PasswordResetOtpSession.deleteMany({ phoneNumber: normalizedPhone });
+        console.info('[auth.forgotPassword] Password reset email sent', {
+          to: maskEmail(user.email),
+          messageId: mailResult.messageId,
+          accepted: mailResult.accepted,
+          rejected: mailResult.rejected,
+          response: mailResult.response,
+          mode: mailResult.mode,
+        });
 
-      const message = `Unable to send OTP: ${smsError.message}`;
+        mailDebug = {
+          deliveryMode: mailResult.mode,
+          previewUrl: mailResult.previewUrl || null,
+          fallbackResetUrl: process.env.NODE_ENV === 'production' ? null : resetUrl,
+          messageId: mailResult.messageId,
+        };
+      } catch (mailError) {
+        console.error('[auth.forgotPassword] Failed to send password reset email', {
+          to: maskEmail(user.email),
+          code: mailError.code,
+          command: mailError.command,
+          responseCode: mailError.responseCode,
+          response: mailError.response,
+          message: mailError.message,
+        });
 
-      return next(new AppError(message, 500, 'OTP_SEND_FAILED'));
+        user.passwordResetToken = undefined;
+        user.passwordResetExpiry = undefined;
+        await user.save({ validateBeforeSave: false });
+
+        const isSmtpAuthFailure = mailError?.code === 'EAUTH' || Number(mailError?.responseCode) === 535;
+        const developmentErrorMessage = isSmtpAuthFailure
+          ? 'SMTP authentication failed. Configure SMTP_USER as your Gmail address and SMTP_PASS as a 16-character Gmail App Password (not your normal Gmail password).'
+          : 'Unable to send reset email. Check SMTP configuration and try again.';
+
+        return next(
+          new AppError(
+            process.env.NODE_ENV === 'production'
+              ? 'Unable to send reset email. Please try again later.'
+              : developmentErrorMessage,
+            500,
+            'EMAIL_SEND_FAILED',
+          ),
+        );
+      }
     }
 
-    const responsePayload = {
+    return res.status(200).json({
       success: true,
-      message: 'If an account exists with this mobile number, an OTP has been sent',
-    };
-
-    res.status(200).json(responsePayload);
+      message: 'If an account exists with this email, a reset link has been sent',
+      ...(mailDebug ? { dev: mailDebug } : {}),
+    });
   } catch (error) {
     next(error);
   }

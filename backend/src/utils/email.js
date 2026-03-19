@@ -1,7 +1,25 @@
 const nodemailer = require('nodemailer');
 
-function isLikelyPlaceholder(value = '') {
-  return /your|example|change|placeholder/i.test(String(value));
+function isLikelyPlaceholderUser(value = '') {
+  const normalized = String(value || '').trim().toLowerCase();
+  return (
+    normalized === '' ||
+    normalized.includes('example') ||
+    normalized.includes('placeholder') ||
+    normalized === 'noreply@placementtracker.com' ||
+    /^your[-_.a-z0-9]*@/.test(normalized)
+  );
+}
+
+function isLikelyPlaceholderPass(value = '') {
+  const normalized = String(value || '').trim().toLowerCase();
+  return (
+    normalized === '' ||
+    normalized.includes('app_specific_password') ||
+    normalized.includes('your_gmail_app_password') ||
+    normalized.includes('your-app-password') ||
+    normalized.includes('placeholder')
+  );
 }
 
 function resolveTransportConfig() {
@@ -14,8 +32,8 @@ function resolveTransportConfig() {
   const hasValidCredentials =
     smtpUser &&
     smtpPass &&
-    !isLikelyPlaceholder(smtpUser) &&
-    !isLikelyPlaceholder(smtpPass);
+    !isLikelyPlaceholderUser(smtpUser) &&
+    !isLikelyPlaceholderPass(smtpPass);
 
   if (!hasValidCredentials) {
     throw new Error('SMTP is not configured. Set real SMTP_USER and SMTP_PASS (Gmail App Password) in backend/.env, then restart backend.');
@@ -25,9 +43,13 @@ function resolveTransportConfig() {
     host: smtpHost,
     port,
     secure,
+    requireTLS: !secure,
     auth: {
       user: smtpUser,
       pass: smtpPass,
+    },
+    tls: {
+      minVersion: 'TLSv1.2',
     },
   };
 }
@@ -45,7 +67,11 @@ function resolveFromAddress() {
 
 async function createTransporter() {
   const configuredTransport = resolveTransportConfig();
-  const transporter = nodemailer.createTransport(configuredTransport);
+  const transporter = nodemailer.createTransport({
+    ...configuredTransport,
+    logger: process.env.SMTP_DEBUG === 'true',
+    debug: process.env.SMTP_DEBUG === 'true',
+  });
   await transporter.verify();
 
   return {
@@ -86,9 +112,20 @@ async function sendPasswordResetEmail({ to, resetUrl, name }) {
     html,
   });
 
+  console.info('[email] Password reset email sendMail completed', {
+    to,
+    messageId: info.messageId,
+    accepted: info.accepted,
+    rejected: info.rejected,
+    response: info.response,
+  });
+
   return {
     messageId: info.messageId,
     mode,
+    accepted: info.accepted,
+    rejected: info.rejected,
+    response: info.response,
     previewUrl: null,
   };
 }
