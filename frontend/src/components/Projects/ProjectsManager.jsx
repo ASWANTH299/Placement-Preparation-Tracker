@@ -169,7 +169,7 @@ export default function ProjectsManager() {
   }
 
   return (
-    <section className="space-y-5 rounded-2xl border border-slate-200 bg-white/95 p-6 shadow-xl shadow-slate-200/60 backdrop-blur-sm dark:border-slate-700 dark:bg-slate-900/90 dark:shadow-none">
+    <section className="projects-shell space-y-5 rounded-2xl border border-slate-200 bg-white p-6 text-slate-900 shadow-xl shadow-slate-200/60 dark:border-slate-700 dark:bg-slate-900/90 dark:text-slate-100 dark:shadow-none">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Student Projects</h1>
@@ -179,7 +179,7 @@ export default function ProjectsManager() {
           <button type="button" onClick={() => navigate('/projects/upload')} className="rounded-lg border border-blue-300 bg-blue-50 px-3 py-2 text-sm font-medium text-blue-700 transition hover:bg-blue-100 dark:border-blue-700 dark:bg-blue-900/20 dark:text-blue-300">
             Upload Project
           </button>
-          <button type="button" onClick={loadProjects} disabled={loading} className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:opacity-60 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800">
+          <button type="button" onClick={loadProjects} disabled={loading} className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:opacity-60 dark:border-slate-600 dark:bg-transparent dark:text-slate-200 dark:hover:bg-slate-800">
             {loading ? 'Refreshing...' : 'Refresh'}
           </button>
         </div>
@@ -189,7 +189,7 @@ export default function ProjectsManager() {
       {success && <p className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">{success}</p>}
 
       {(isUploadRoute || projects.length === 0) && (
-        <form onSubmit={handleUpload} className="grid gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800/40 md:grid-cols-2">
+        <form onSubmit={handleUpload} className="projects-upload-form grid gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800/40 md:grid-cols-2">
           <div className="md:col-span-2">
             <p className="text-sm font-semibold text-slate-800 dark:text-slate-100">Upload Project Folder</p>
             <p className="text-xs text-slate-500 dark:text-slate-400">Choose a folder to upload all files together.</p>
@@ -217,7 +217,7 @@ export default function ProjectsManager() {
             className="md:col-span-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 outline-none ring-blue-500 transition focus:ring-2 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
           />
 
-          <div className="md:col-span-2 rounded-lg border border-dashed border-slate-300 bg-white p-3 dark:border-slate-600 dark:bg-slate-900">
+          <div className="projects-file-drop md:col-span-2 rounded-lg border border-dashed border-slate-300 bg-white p-3 dark:border-slate-600 dark:bg-slate-900">
             <input
               ref={fileInputRef}
               type="file"
@@ -230,7 +230,7 @@ export default function ProjectsManager() {
           </div>
 
           <div className="md:col-span-2 flex justify-end gap-2">
-            <button type="button" onClick={resetUploadForm} className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800">
+            <button type="button" onClick={resetUploadForm} className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-600 dark:bg-transparent dark:text-slate-200 dark:hover:bg-slate-800">
               Clear
             </button>
             <button type="submit" disabled={uploading} className="rounded-lg border border-emerald-300 bg-emerald-50 px-3 py-2 text-sm font-medium text-emerald-700 transition hover:bg-emerald-100 disabled:opacity-60 dark:border-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-300">
@@ -242,7 +242,7 @@ export default function ProjectsManager() {
 
       <div className="space-y-3">
         {projects.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 p-6 text-center text-sm text-slate-600 dark:border-slate-600 dark:bg-slate-800/40 dark:text-slate-300">
+          <div className="projects-empty-state rounded-xl border border-dashed border-slate-300 bg-slate-50 p-6 text-center text-sm text-slate-600 dark:border-slate-600 dark:bg-slate-800/40 dark:text-slate-300">
             {loading ? 'Loading projects...' : 'No projects uploaded yet.'}
           </div>
         ) : (
@@ -271,7 +271,7 @@ export default function ProjectsManager() {
                   </div>
 
                   <div className="flex flex-wrap gap-2">
-                    <button type="button" onClick={() => navigate(`/projects/${project._id}`)} className="rounded-md border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800">
+                    <button type="button" onClick={() => navigate(`/projects/${project._id}`)} className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-600 dark:bg-transparent dark:text-slate-200 dark:hover:bg-slate-800">
                       Open
                     </button>
                     <button type="button" onClick={() => handleDownload(project)} disabled={downloading} className="rounded-md border border-blue-300 bg-blue-50 px-3 py-1.5 text-xs font-medium text-blue-700 transition hover:bg-blue-100 disabled:opacity-60 dark:border-blue-700 dark:bg-blue-900/20 dark:text-blue-300">

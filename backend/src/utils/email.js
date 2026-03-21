@@ -39,6 +39,14 @@ function resolveTransportConfig() {
     throw new Error('SMTP is not configured. Set real SMTP_USER and SMTP_PASS (Gmail App Password) in backend/.env, then restart backend.');
   }
 
+  const normalizedPass = String(smtpPass || '').replace(/\s/g, '');
+  const isGmail = /gmail\.com$/i.test(String(smtpHost || '').trim()) || /@gmail\.com$/i.test(String(smtpUser || '').trim());
+  const smtpPassForAuth = isGmail ? normalizedPass : smtpPass;
+
+  if (isGmail && normalizedPass.length !== 16) {
+    throw new Error('For Gmail SMTP, SMTP_PASS must be a 16-character Google App Password (not your normal Gmail password).');
+  }
+
   return {
     host: smtpHost,
     port,
@@ -46,7 +54,7 @@ function resolveTransportConfig() {
     requireTLS: !secure,
     auth: {
       user: smtpUser,
-      pass: smtpPass,
+      pass: smtpPassForAuth,
     },
     tls: {
       minVersion: 'TLSv1.2',

@@ -257,6 +257,112 @@ html:not(.dark) .daily-task-tag-chip {
   background-color: #ffffff !important;
 }
 
+html:not(.dark) .note-detail-shell,
+html:not(.dark) .note-section-shell {
+  background-color: #ffffff !important;
+  border-color: #cbd5e1 !important;
+}
+
+html:not(.dark) .note-box-card,
+html:not(.dark) .note-section-card {
+  background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%) !important;
+  border-color: #cbd5e1 !important;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08) !important;
+}
+
+html:not(.dark) .note-box-card:hover,
+html:not(.dark) .note-section-card:hover {
+  background: linear-gradient(180deg, #ffffff 0%, #f1f7ff 100%) !important;
+  border-color: #93c5fd !important;
+}
+
+html:not(.dark) .note-box-tag,
+html:not(.dark) .note-section-tag {
+  color: #0e7490 !important;
+}
+
+html:not(.dark) .note-box-title,
+html:not(.dark) .note-section-title {
+  color: #0f172a !important;
+}
+
+html:not(.dark) .note-box-preview {
+  color: #334155 !important;
+}
+
+html:not(.dark) .note-section-subpanel,
+html:not(.dark) .note-section-content {
+  background-color: #f8fafc !important;
+  border-color: #dbe4ef !important;
+  color: #1e293b !important;
+}
+
+.projects-shell {
+  background-color: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  color: #0f172a !important;
+}
+
+.projects-upload-form {
+  background-color: #f8fafc !important;
+  border-color: #cbd5e1 !important;
+}
+
+.projects-file-drop,
+.projects-empty-state {
+  background-color: #ffffff !important;
+  border-color: #94a3b8 !important;
+  color: #334155 !important;
+}
+
+html.dark .projects-shell {
+  background-color: rgba(15, 23, 42, 0.9) !important;
+  border-color: #334155 !important;
+  color: #f1f5f9 !important;
+}
+
+html.dark .projects-upload-form {
+  background-color: rgba(30, 41, 59, 0.4) !important;
+  border-color: #334155 !important;
+}
+
+html.dark .projects-file-drop,
+html.dark .projects-empty-state {
+  background-color: #0f172a !important;
+  border-color: #475569 !important;
+  color: #cbd5e1 !important;
+}
+
+.forum-shell {
+  background-color: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  color: #0f172a !important;
+}
+
+.forum-compose-form,
+.forum-state-box {
+  background-color: #f8fafc !important;
+  border-color: #cbd5e1 !important;
+}
+
+.forum-message-card {
+  background-color: #ffffff !important;
+  border-color: #cbd5e1 !important;
+}
+
+html.dark .forum-shell {
+  background-color: rgba(15, 23, 42, 0.9) !important;
+  border-color: #334155 !important;
+  color: #f1f5f9 !important;
+}
+
+html.dark .forum-compose-form,
+html.dark .forum-state-box,
+html.dark .forum-message-card {
+  background-color: rgba(30, 41, 59, 0.4) !important;
+  border-color: #334155 !important;
+}
+
 @keyframes shimmer {
   100% {
     transform: translateX(100%);

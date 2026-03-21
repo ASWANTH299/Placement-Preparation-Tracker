@@ -191,14 +191,33 @@ exports.forgotPassword = async (req, res, next) => {
           message: mailError.message,
         });
 
+        const isSmtpAuthFailure = mailError?.code === 'EAUTH' || Number(mailError?.responseCode) === 535;
+        const isDevelopment = process.env.NODE_ENV !== 'production';
+        const allowDevMailFallback = process.env.ALLOW_DEV_MAIL_FALLBACK === 'true';
+
+        if (isDevelopment && allowDevMailFallback && isSmtpAuthFailure) {
+          console.warn('[auth.forgotPassword] SMTP auth failed in development; returning fallback reset URL for manual testing.');
+          mailDebug = {
+            deliveryMode: 'dev-fallback',
+            previewUrl: null,
+            fallbackResetUrl: resetUrl,
+            messageId: null,
+          };
+
+          return res.status(200).json({
+            success: true,
+            message: 'Mail provider authentication failed. Use the development reset link below, then configure Gmail App Password.',
+            dev: mailDebug,
+          });
+        }
+
         user.passwordResetToken = undefined;
         user.passwordResetExpiry = undefined;
         await user.save({ validateBeforeSave: false });
 
-        const isSmtpAuthFailure = mailError?.code === 'EAUTH' || Number(mailError?.responseCode) === 535;
         const developmentErrorMessage = isSmtpAuthFailure
           ? 'SMTP authentication failed. Configure SMTP_USER as your Gmail address and SMTP_PASS as a 16-character Gmail App Password (not your normal Gmail password).'
-          : 'Unable to send reset email. Check SMTP configuration and try again.';
+          : (mailError?.message || 'Unable to send reset email. Check SMTP configuration and try again.');
 
         return next(
           new AppError(

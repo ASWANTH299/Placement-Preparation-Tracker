@@ -86,7 +86,7 @@ export default function ForumChat() {
 
       return (
         <div key={messageId} className={`space-y-2 ${depth > 0 ? 'ml-4 border-l border-slate-200 pl-3 dark:border-slate-700' : ''}`}>
-          <article className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+          <article className="forum-message-card rounded-xl border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-700 dark:bg-slate-900">
             <div className="flex items-center justify-between gap-2">
               <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">{author}</p>
               <p className="text-xs text-slate-500 dark:text-slate-400">{formatTime(message.created_at || message.createdAt)}</p>
@@ -95,7 +95,7 @@ export default function ForumChat() {
             <button
               type="button"
               onClick={() => setReplyTo(messageId)}
-              className="mt-2 rounded-md border border-slate-300 px-2.5 py-1 text-xs font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800"
+              className="mt-2 rounded-md border border-slate-300 bg-white px-2.5 py-1 text-xs font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-600 dark:bg-transparent dark:text-slate-200 dark:hover:bg-slate-800"
             >
               Reply
             </button>
@@ -107,7 +107,7 @@ export default function ForumChat() {
   }
 
   return (
-    <section className="space-y-4 rounded-2xl border border-slate-200 bg-white/95 p-6 shadow-xl shadow-slate-200/60 backdrop-blur-sm dark:border-slate-700 dark:bg-slate-900/90 dark:shadow-none">
+    <section className="forum-shell space-y-4 rounded-2xl border border-slate-200 bg-white p-6 text-slate-900 shadow-xl shadow-slate-200/60 dark:border-slate-700 dark:bg-slate-900/90 dark:text-slate-100 dark:shadow-none">
       <div>
         <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Student Forum</h1>
         <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">Discuss placement prep topics with fellow students. Messages refresh every few seconds.</p>
@@ -115,7 +115,7 @@ export default function ForumChat() {
 
       {error && <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
 
-      <form onSubmit={handleSend} className="space-y-2 rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800/40">
+      <form onSubmit={handleSend} className="forum-compose-form space-y-2 rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800/40">
         {replyTo && (
           <div className="flex items-center justify-between rounded-md border border-blue-200 bg-blue-50 px-2 py-1 text-xs text-blue-700">
             <span>Replying to message</span>
@@ -138,11 +138,11 @@ export default function ForumChat() {
 
       <div className="space-y-3">
         {loading ? (
-          <div className="rounded-lg border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600 dark:border-slate-700 dark:bg-slate-800/40 dark:text-slate-300">
+          <div className="forum-state-box rounded-lg border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600 dark:border-slate-700 dark:bg-slate-800/40 dark:text-slate-300">
             Loading messages...
           </div>
         ) : messages.length === 0 ? (
-          <div className="rounded-lg border border-dashed border-slate-300 bg-slate-50 p-5 text-sm text-slate-600 dark:border-slate-600 dark:bg-slate-800/40 dark:text-slate-300">
+          <div className="forum-state-box rounded-lg border border-dashed border-slate-300 bg-slate-50 p-5 text-sm text-slate-600 dark:border-slate-600 dark:bg-slate-800/40 dark:text-slate-300">
             No messages yet. Start the first discussion.
           </div>
         ) : (
