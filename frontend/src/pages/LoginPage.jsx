@@ -19,7 +19,6 @@ export default function LoginPage() {
     email: rememberedEmail,
     password: '',
     remember: Boolean(rememberedEmail),
-    role: 'student',
   })
 
   const handleSubmit = async (event) => {
@@ -34,11 +33,6 @@ export default function LoginPage() {
       setError('')
       const response = await loginRequest({ email: values.email, password: values.password })
       const payload = response?.data?.data
-
-      if (payload?.role !== values.role) {
-        setError(`This account is ${payload?.role || 'unknown'} role. Please choose the correct role to login.`)
-        return
-      }
 
       login({
         token: payload?.token,
@@ -131,23 +125,6 @@ export default function LoginPage() {
                   className="login-input"
                   placeholder="Enter your password"
                 />
-              </div>
-
-              <div>
-                <label htmlFor="role" className="auth-shell-label mb-1.5 block text-sm font-semibold">
-                  Role
-                </label>
-                <select
-                  id="role"
-                  name="role"
-                  value={values.role}
-                  onChange={onChange}
-                  disabled={isSubmitting}
-                  className="login-input"
-                >
-                  <option value="student">Student</option>
-                  <option value="admin">Admin</option>
-                </select>
               </div>
 
               <div className="flex flex-wrap items-center justify-between gap-3">

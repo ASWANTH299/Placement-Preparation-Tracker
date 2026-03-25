@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import useForm from '../hooks/useForm'
 import { register as registerRequest } from '../services/authService'
 import { getErrorMessage } from '../utils/errorHandler'
-import { isStrongPassword, isValidEmail, isValidPhoneNumber, normalizePhoneNumber } from '../utils/validators'
+import { isStrongPassword, isValidEmail } from '../utils/validators'
 
 export default function RegisterPage() {
   const navigate = useNavigate()
@@ -13,10 +13,8 @@ export default function RegisterPage() {
   const { values, onChange } = useForm({
     fullName: '',
     email: '',
-    mobileNumber: '',
     password: '',
     confirmPassword: '',
-    role: 'student',
   })
 
   const handleSubmit = async (event) => {
@@ -31,12 +29,6 @@ export default function RegisterPage() {
 
     if (!isValidEmail(values.email)) {
       setError('Please enter a valid email address.')
-      return
-    }
-
-    const normalizedPhone = values.mobileNumber ? normalizePhoneNumber(values.mobileNumber) : ''
-    if (values.mobileNumber && !isValidPhoneNumber(values.mobileNumber)) {
-      setError('Please enter a valid mobile number.')
       return
     }
 
@@ -57,10 +49,8 @@ export default function RegisterPage() {
       await registerRequest({
         name: trimmedName,
         email: values.email,
-        phoneNumber: normalizedPhone || undefined,
         password: values.password,
         confirmPassword: values.confirmPassword,
-        role: values.role,
       })
       setMessage('Registration successful. Redirecting to login...')
       setTimeout(() => navigate('/login'), 1200)
@@ -93,7 +83,7 @@ export default function RegisterPage() {
               </p>
               <p className="login-kicker">Placement Preparation Tracker</p>
               <h2 className="auth-shell-title mt-3 font-['Manrope'] text-3xl font-extrabold">Create your account</h2>
-              <p className="auth-shell-copy mt-2 text-sm">Register as student or admin to access your dashboard.</p>
+              <p className="auth-shell-copy mt-2 text-sm">Register to access your dashboard.</p>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
@@ -137,22 +127,6 @@ export default function RegisterPage() {
               </div>
 
               <div>
-                <label htmlFor="mobileNumber" className="auth-shell-label mb-1.5 block text-sm font-semibold">
-                  Mobile Number
-                </label>
-                <input
-                  id="mobileNumber"
-                  name="mobileNumber"
-                  type="tel"
-                  value={values.mobileNumber}
-                  onChange={onChange}
-                  disabled={isSubmitting}
-                  className="login-input"
-                  placeholder="Optional: mobile number"
-                />
-              </div>
-
-              <div>
                 <label htmlFor="password" className="auth-shell-label mb-1.5 block text-sm font-semibold">
                   Password
                 </label>
@@ -184,23 +158,6 @@ export default function RegisterPage() {
                   className="login-input"
                   placeholder="Re-enter your password"
                 />
-              </div>
-
-              <div>
-                <label htmlFor="role" className="auth-shell-label mb-1.5 block text-sm font-semibold">
-                  Role
-                </label>
-                <select
-                  id="role"
-                  name="role"
-                  value={values.role}
-                  onChange={onChange}
-                  disabled={isSubmitting}
-                  className="login-input"
-                >
-                  <option value="student">Student</option>
-                  <option value="admin">Admin</option>
-                </select>
               </div>
 
               <button
