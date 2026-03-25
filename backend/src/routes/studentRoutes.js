@@ -7,7 +7,6 @@ const resumeController = require('../controllers/resumeController');
 const noteController = require('../controllers/noteController');
 const leaderboardController = require('../controllers/leaderboardController');
 const codingProfileController = require('../controllers/codingProfileController');
-const aiController = require('../controllers/aiController');
 const projectController = require('../controllers/projectController');
 const forumController = require('../controllers/forumController');
 const multer = require('multer');
@@ -159,10 +158,6 @@ router.post('/students/:id/coding-profiles', codingProfileController.linkProfile
 router.get('/students/:id/coding-profiles', codingProfileController.getCodingProfiles);
 router.put('/students/:id/coding-profiles/:platformId', codingProfileController.refreshProfile);
 router.delete('/students/:id/coding-profiles/:platformId', codingProfileController.unlinkProfile);
-
-// AI assistant route
-router.post('/ai/chat', aiController.chat);
-router.post('/students/ai/chat', aiController.chat);
 
 // Forum / chat routes
 router.get('/forum/messages', forumController.getForumMessages);
