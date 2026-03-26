@@ -1,6 +1,7 @@
 const User = require('../models/User');
 const PasswordResetOtpSession = require('../models/PasswordResetOtpSession');
 const { generateToken } = require('../utils/jwt');
+const jwt = require('jsonwebtoken');
 const { validateEmail, validatePassword, validateName, validatePhoneNumber, normalizePhoneNumber } = require('../utils/validators');
 const { AppError } = require('../utils/errorHandler');
 const { sendPasswordResetEmail } = require('../utils/email');
@@ -8,12 +9,17 @@ const crypto = require('crypto');
 
 const hashValue = (value) => crypto.createHash('sha256').update(value).digest('hex');
 
-const resolveFrontendBaseUrl = () => {
-  const preferred = process.env.NODE_ENV === 'production'
-    ? (process.env.FRONTEND_PROD_URL || process.env.FRONTEND_URL)
-    : (process.env.FRONTEND_URL || process.env.FRONTEND_PROD_URL);
-
-  return (preferred || 'http://localhost:5173').replace(/\/$/, '');
+/**
+ * Resolve the client-side base URL for password reset links.
+ * Priority: CLIENT_URL → FRONTEND_URL → FRONTEND_PROD_URL → fallback
+ */
+const resolveClientUrl = () => {
+  const url =
+    process.env.CLIENT_URL ||
+    process.env.FRONTEND_URL ||
+    process.env.FRONTEND_PROD_URL ||
+    'http://localhost:3000';
+  return url.replace(/\/$/, '');
 };
 
 const maskEmail = (email = '') => {
@@ -23,12 +29,11 @@ const maskEmail = (email = '') => {
   return `${localPart[0]}***${localPart[localPart.length - 1]}@${domain}`;
 };
 
-// Register
+// ─── Register ────────────────────────────────────────────────────────────────
 exports.register = async (req, res, next) => {
   try {
-    const { name, email, phoneNumber, password, confirmPassword, role = 'student' } = req.body;
+    const { name, email, phoneNumber, password, confirmPassword } = req.body;
 
-    // Validation
     if (!validateName(name)) {
       return next(new AppError('Name must be between 2-100 characters', 400, 'VALIDATION_ERROR'));
     }
@@ -52,11 +57,6 @@ exports.register = async (req, res, next) => {
       return next(new AppError('Passwords do not match', 400, 'VALIDATION_ERROR'));
     }
 
-    if (!['student', 'admin'].includes(role)) {
-      return next(new AppError('Role must be either student or admin', 400, 'VALIDATION_ERROR'));
-    }
-
-    // Check if email exists
     const existingUser = await User.findOne({ email: email.toLowerCase() });
     if (existingUser) {
       return next(new AppError('Email already exists', 409, 'EMAIL_EXISTS'));
@@ -69,13 +69,12 @@ exports.register = async (req, res, next) => {
       }
     }
 
-    // Create user
+    // Role is always 'student' (schema default) — never taken from request
     const user = new User({
       name: name.trim(),
       email: email.toLowerCase(),
       phoneNumber: normalizedPhone || null,
       password,
-      role
     });
 
     await user.save();
@@ -96,7 +95,7 @@ exports.register = async (req, res, next) => {
   }
 };
 
-// Login
+// ─── Login ───────────────────────────────────────────────────────────────────
 exports.login = async (req, res, next) => {
   try {
     const { email, password } = req.body;
@@ -111,7 +110,6 @@ exports.login = async (req, res, next) => {
       return next(new AppError('Invalid email or password', 401, 'AUTH_FAILED'));
     }
 
-    // Update last login
     user.lastLogin = new Date();
     await user.save();
 
@@ -133,7 +131,7 @@ exports.login = async (req, res, next) => {
   }
 };
 
-// Send password reset link to email
+// ─── Forgot Password (JWT-based, 15-min expiry) ─────────────────────────────
 exports.forgotPassword = async (req, res, next) => {
   try {
     const { email } = req.body;
@@ -149,99 +147,60 @@ exports.forgotPassword = async (req, res, next) => {
     const normalizedEmail = email.toLowerCase().trim();
     const user = await User.findOne({ email: normalizedEmail }).select('name email');
 
-    let mailDebug = null;
-
     if (user) {
-      const resetToken = crypto.randomBytes(32).toString('hex');
+      // Generate a JWT reset token (15-minute expiry)
+      const resetToken = jwt.sign(
+        { id: user._id, email: user.email },
+        process.env.JWT_SECRET,
+        { expiresIn: '15m' }
+      );
+
+      // Store hashed token in DB for single-use validation
       user.passwordResetToken = hashValue(resetToken);
-      user.passwordResetExpiry = new Date(Date.now() + 60 * 60 * 1000);
+      user.passwordResetExpiry = new Date(Date.now() + 15 * 60 * 1000);
       await user.save({ validateBeforeSave: false });
 
-      const resetUrl = `${resolveFrontendBaseUrl()}/reset-password?token=${resetToken}`;
+      const resetUrl = `${resolveClientUrl()}/reset-password?token=${resetToken}`;
 
       try {
-        const mailResult = await sendPasswordResetEmail({
+        await sendPasswordResetEmail({
           to: user.email,
           resetUrl,
           name: user.name,
         });
 
-        console.info('[auth.forgotPassword] Password reset email sent', {
-          to: maskEmail(user.email),
-          messageId: mailResult.messageId,
-          accepted: mailResult.accepted,
-          rejected: mailResult.rejected,
-          response: mailResult.response,
-          mode: mailResult.mode,
-        });
-
-        mailDebug = {
-          deliveryMode: mailResult.mode,
-          previewUrl: mailResult.previewUrl || null,
-          fallbackResetUrl: process.env.NODE_ENV === 'production' ? null : resetUrl,
-          messageId: mailResult.messageId,
-        };
+        console.info('[auth.forgotPassword] Reset email sent to', maskEmail(user.email));
       } catch (mailError) {
-        console.error('[auth.forgotPassword] Failed to send password reset email', {
-          to: maskEmail(user.email),
-          code: mailError.code,
-          command: mailError.command,
-          responseCode: mailError.responseCode,
-          response: mailError.response,
-          message: mailError.message,
-        });
+        console.error('[auth.forgotPassword] Failed to send email:', mailError.message);
 
-        const isSmtpAuthFailure = mailError?.code === 'EAUTH' || Number(mailError?.responseCode) === 535;
-        const isDevelopment = process.env.NODE_ENV !== 'production';
-        const allowDevMailFallback = process.env.ALLOW_DEV_MAIL_FALLBACK === 'true';
-
-        if (isDevelopment && allowDevMailFallback && isSmtpAuthFailure) {
-          console.warn('[auth.forgotPassword] SMTP auth failed in development; returning fallback reset URL for manual testing.');
-          mailDebug = {
-            deliveryMode: 'dev-fallback',
-            previewUrl: null,
-            fallbackResetUrl: resetUrl,
-            messageId: null,
-          };
-
-          return res.status(200).json({
-            success: true,
-            message: 'Mail provider authentication failed. Use the development reset link below, then configure Gmail App Password.',
-            dev: mailDebug,
-          });
-        }
-
+        // Clear the token since email failed
         user.passwordResetToken = undefined;
         user.passwordResetExpiry = undefined;
         await user.save({ validateBeforeSave: false });
-
-        const developmentErrorMessage = isSmtpAuthFailure
-          ? 'SMTP authentication failed. Configure SMTP_USER as your Gmail address and SMTP_PASS as a 16-character Gmail App Password (not your normal Gmail password).'
-          : (mailError?.message || 'Unable to send reset email. Check SMTP configuration and try again.');
 
         return next(
           new AppError(
             process.env.NODE_ENV === 'production'
               ? 'Unable to send reset email. Please try again later.'
-              : developmentErrorMessage,
+              : `Email send failed: ${mailError.message}`,
             500,
-            'EMAIL_SEND_FAILED',
-          ),
+            'EMAIL_SEND_FAILED'
+          )
         );
       }
     }
 
-    return res.status(200).json({
+    // Always return success (don't reveal whether email exists)
+    res.status(200).json({
       success: true,
       message: 'If an account exists with this email, a reset link has been sent',
-      ...(mailDebug ? { dev: mailDebug } : {}),
     });
   } catch (error) {
     next(error);
   }
 };
 
-// Verify OTP and issue short-lived reset session token
+// ─── Verify Reset OTP (mobile flow — unchanged) ─────────────────────────────
 exports.verifyResetOtp = async (req, res, next) => {
   try {
     const { mobileNumber, otp } = req.body;
@@ -285,23 +244,25 @@ exports.verifyResetOtp = async (req, res, next) => {
     res.status(200).json({
       success: true,
       message: 'OTP verified successfully',
-      data: {
-        resetSessionToken,
-      },
+      data: { resetSessionToken },
     });
   } catch (error) {
     next(error);
   }
 };
 
-// Reset Password
+// ─── Reset Password (JWT + single-use validation) ───────────────────────────
 exports.resetPassword = async (req, res, next) => {
   try {
     const { token, resetSessionToken, email, newPassword, confirmPassword } = req.body;
     const effectiveToken = token || resetSessionToken;
 
     if (!effectiveToken || !newPassword || !confirmPassword) {
-      return next(new AppError('Reset session token, new password, and password confirmation are required', 400, 'VALIDATION_ERROR'));
+      return next(new AppError('Token, new password, and password confirmation are required', 400, 'VALIDATION_ERROR'));
+    }
+
+    if (newPassword.length < 6) {
+      return next(new AppError('Password must be at least 6 characters', 400, 'VALIDATION_ERROR'));
     }
 
     if (!validatePassword(newPassword)) {
@@ -315,12 +276,30 @@ exports.resetPassword = async (req, res, next) => {
     let user = null;
 
     if (token) {
-      const hashedToken = hashValue(effectiveToken);
+      // ── JWT-based email reset flow ──────────────────────────────────────
+      let decoded;
+      try {
+        decoded = jwt.verify(token, process.env.JWT_SECRET);
+      } catch (jwtError) {
+        const message = jwtError.name === 'TokenExpiredError'
+          ? 'Reset link has expired. Please request a new one.'
+          : 'Invalid reset link. Please request a new one.';
+        return next(new AppError(message, 400, 'TOKEN_INVALID'));
+      }
+
+      // Single-use validation: compare hashed token with DB value
+      const hashedToken = hashValue(token);
       user = await User.findOne({
+        _id: decoded.id,
         passwordResetToken: hashedToken,
-        passwordResetExpiry: { $gt: Date.now() }
+        passwordResetExpiry: { $gt: Date.now() },
       });
+
+      if (!user) {
+        return next(new AppError('Reset link has already been used or is invalid', 400, 'TOKEN_INVALID'));
+      }
     } else {
+      // ── OTP-based mobile reset flow (unchanged) ─────────────────────────
       if (!email || !validateEmail(email)) {
         return next(new AppError('Valid account email is required to reset password', 400, 'VALIDATION_ERROR'));
       }
@@ -342,10 +321,7 @@ exports.resetPassword = async (req, res, next) => {
       await PasswordResetOtpSession.deleteOne({ _id: otpSession._id });
     }
 
-    if (!user) {
-      return next(new AppError('Reset link has expired or is invalid', 400, 'TOKEN_EXPIRED'));
-    }
-
+    // Update password (bcrypt hashing handled by User pre-save hook)
     user.password = newPassword;
     user.passwordResetToken = undefined;
     user.passwordResetExpiry = undefined;
@@ -353,14 +329,14 @@ exports.resetPassword = async (req, res, next) => {
 
     res.status(200).json({
       success: true,
-      message: 'Password reset successful. Please login with new password.'
+      message: 'Password reset successful. Please login with your new password.'
     });
   } catch (error) {
     next(error);
   }
 };
 
-// Logout
+// ─── Logout ──────────────────────────────────────────────────────────────────
 exports.logout = async (req, res, next) => {
   try {
     res.status(200).json({
