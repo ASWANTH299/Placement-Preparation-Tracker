@@ -71,7 +71,6 @@ export default function RegisterPage() {
             <div>
               <h1 className="login-brand-title auth-shell-title font-['Manrope'] font-extrabold leading-[0.88]">
                 <span>PLACEMENT</span>
-                <span>PREPARATION</span>
                 <span>TRACKER</span>
               </h1>
             </div>
@@ -80,9 +79,9 @@ export default function RegisterPage() {
           <div className="login-details-panel p-6 sm:p-8 lg:p-10">
             <div className="mb-6">
               <p className="login-mobile-brand auth-shell-title mb-2 font-['Manrope'] text-xl font-extrabold tracking-tight lg:hidden">
-                PLACEMENT PREPARATION TRACKER
+                PLACEMENT TRACKER
               </p>
-              <p className="login-kicker">Placement Preparation Tracker</p>
+              <p className="login-kicker">Placement Tracker</p>
               <h2 className="auth-shell-title mt-3 font-['Manrope'] text-3xl font-extrabold">Create your account</h2>
               <p className="auth-shell-copy mt-2 text-sm">Register to access your dashboard.</p>
             </div>

@@ -181,7 +181,7 @@ export default function Navbar() {
       <div className="flex w-full items-center gap-2 py-3 pr-4 pl-3 sm:gap-3 sm:pr-6 sm:pl-4 lg:pr-8 lg:pl-4">
         <Link to="/dashboard" className={`mr-20 shrink-0 flex items-center gap-2.5 text-sm font-semibold tracking-tight sm:mr-28 sm:text-base ${isDark ? 'text-blue-300' : 'text-slate-900'}`}>
           <img src={ptLogo} alt="PT logo" className="h-[2.25rem] w-[2.25rem] rounded-full object-cover sm:h-[2.75rem] sm:w-[2.75rem]" />
-          <span>Placement Preparation Tracker</span>
+          <span>Placement Tracker</span>
         </Link>
 
         <nav aria-label="Student navigation" className="no-scrollbar min-w-0 flex flex-1 items-center gap-1 overflow-x-auto whitespace-nowrap sm:gap-2">
