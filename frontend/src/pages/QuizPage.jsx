@@ -1,11 +1,13 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useSelector } from 'react-redux'
 import './QuizPage.css'
 
 const HISTORY_KEY = 'quiz-history-v1'
 const BEST_SCORE_KEY = 'quiz-best-score-v1'
+const QUIZ_BANK_KEY = 'quiz-question-bank-v1'
 const TIME_PER_QUESTION = 45
 
-const questionBank = [
+const defaultQuestionBank = [
   {
     id: 'alg-1',
     category: 'Algorithms',
@@ -594,6 +596,16 @@ const getStoredHistory = () => {
 
 const getStoredBestScore = () => Number(localStorage.getItem(BEST_SCORE_KEY) || 0)
 
+const getStoredQuestionBank = () => {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(QUIZ_BANK_KEY) || '[]')
+    if (!Array.isArray(parsed) || parsed.length === 0) return defaultQuestionBank
+    return parsed
+  } catch {
+    return defaultQuestionBank
+  }
+}
+
 const buildAnalytics = (questions, answers, maxStreak) => {
   const categoryStats = {}
   const difficultyStats = {}
@@ -650,6 +662,9 @@ const buildAnalytics = (questions, answers, maxStreak) => {
 }
 
 export default function QuizPage() {
+  const role = useSelector((state) => state.auth.role)
+  const isAdmin = role === 'admin'
+  const [quizBank, setQuizBank] = useState(getStoredQuestionBank)
   const [phase, setPhase] = useState('setup')
   const [selectedCategory, setSelectedCategory] = useState('All')
   const [selectedDifficulty, setSelectedDifficulty] = useState('All')
@@ -664,27 +679,42 @@ export default function QuizPage() {
   const [maxStreak, setMaxStreak] = useState(0)
   const [history, setHistory] = useState(getStoredHistory)
   const [bestScore, setBestScore] = useState(getStoredBestScore)
+  const [editorOpen, setEditorOpen] = useState(false)
+  const [editingId, setEditingId] = useState('')
+  const [editorError, setEditorError] = useState('')
+  const [editorForm, setEditorForm] = useState({
+    category: 'Algorithms',
+    difficulty: 'Easy',
+    question: '',
+    optionsText: '',
+    answerIndex: 0,
+    explanation: '',
+  })
+
+  useEffect(() => {
+    localStorage.setItem(QUIZ_BANK_KEY, JSON.stringify(quizBank))
+  }, [quizBank])
 
   const categories = useMemo(
-    () => ['All', ...Array.from(new Set(questionBank.map((q) => q.category)))],
-    [],
+    () => ['All', ...Array.from(new Set(quizBank.map((q) => q.category)))],
+    [quizBank],
   )
 
   const difficulties = useMemo(
-    () => ['All', ...Array.from(new Set(questionBank.map((q) => q.difficulty)))],
-    [],
+    () => ['All', ...Array.from(new Set(quizBank.map((q) => q.difficulty)))],
+    [quizBank],
   )
 
   const filteredPool = useMemo(
     () =>
-      questionBank.filter(
+      quizBank.filter(
         (q) =>
           (selectedCategory === 'All' || q.category === selectedCategory) &&
           (selectedDifficulty === 'All' || q.difficulty === selectedDifficulty),
       ),
-    [selectedCategory, selectedDifficulty],
+    [selectedCategory, selectedDifficulty, quizBank],
   )
-  const maxQuestionCount = Math.min(30, questionBank.length)
+  const maxQuestionCount = Math.min(30, quizBank.length)
 
   useEffect(() => {
     setQuestionCount(Math.min(10, maxQuestionCount))
@@ -831,7 +861,7 @@ export default function QuizPage() {
     if (selectedCategory !== 'All') {
       pushUnique(
         shuffle(
-          questionBank.filter((question) => question.category === selectedCategory),
+          quizBank.filter((question) => question.category === selectedCategory),
         ),
       )
     }
@@ -839,12 +869,12 @@ export default function QuizPage() {
     if (selectedDifficulty !== 'All') {
       pushUnique(
         shuffle(
-          questionBank.filter((question) => question.difficulty === selectedDifficulty),
+          quizBank.filter((question) => question.difficulty === selectedDifficulty),
         ),
       )
     }
 
-    pushUnique(shuffle(questionBank))
+    pushUnique(shuffle(quizBank))
 
     const selectedQuestions = mergedPool.slice(0, totalQuestions)
 
@@ -868,6 +898,83 @@ export default function QuizPage() {
     setAnswers({})
     setStreak(0)
     setMaxStreak(0)
+  }
+
+  const openCreateEditor = () => {
+    setEditorOpen(true)
+    setEditingId('')
+    setEditorError('')
+    setEditorForm({
+      category: categories[1] || 'Algorithms',
+      difficulty: difficulties[1] || 'Easy',
+      question: '',
+      optionsText: '',
+      answerIndex: 0,
+      explanation: '',
+    })
+  }
+
+  const openEditEditor = (question) => {
+    if (!question) return
+    setEditorOpen(true)
+    setEditingId(question.id)
+    setEditorError('')
+    setEditorForm({
+      category: question.category,
+      difficulty: question.difficulty,
+      question: question.question,
+      optionsText: (question.options || []).join('\n'),
+      answerIndex: Number(question.answer || 0),
+      explanation: question.explanation || '',
+    })
+  }
+
+  const deleteQuestion = (questionId) => {
+    if (!questionId) return
+    const target = quizBank.find((item) => item.id === questionId)
+    const confirmed = window.confirm(`Delete quiz question: "${target?.question || 'selected question'}"?`)
+    if (!confirmed) return
+
+    setQuizBank((prev) => prev.filter((item) => item.id !== questionId))
+  }
+
+  const saveQuestion = () => {
+    const options = editorForm.optionsText
+      .split('\n')
+      .map((item) => item.trim())
+      .filter(Boolean)
+
+    if (!editorForm.question.trim()) {
+      setEditorError('Question text is required.')
+      return
+    }
+    if (options.length < 2) {
+      setEditorError('At least two options are required (one per line).')
+      return
+    }
+    if (editorForm.answerIndex < 0 || editorForm.answerIndex >= options.length) {
+      setEditorError('Correct option index is out of range.')
+      return
+    }
+
+    const payload = {
+      id: editingId || `quiz-${Date.now()}`,
+      category: editorForm.category,
+      difficulty: editorForm.difficulty,
+      question: editorForm.question.trim(),
+      options,
+      answer: Number(editorForm.answerIndex),
+      explanation: editorForm.explanation.trim() || 'No explanation provided.',
+    }
+
+    setQuizBank((prev) => {
+      if (!editingId) return [payload, ...prev]
+      return prev.map((item) => (item.id === editingId ? payload : item))
+    })
+
+    setEditorOpen(false)
+    setEditingId('')
+    setEditorError('')
   }
 
   return (
@@ -961,6 +1068,123 @@ export default function QuizPage() {
                     </li>
                   ))}
                 </ul>
+              </div>
+            )}
+
+            {isAdmin && (
+              <div className="qp-admin-panel">
+                <div className="qp-admin-panel-head">
+                  <h3>Admin Quiz Question Management</h3>
+                  <button type="button" className="qp-primary-btn" onClick={openCreateEditor}>Add Question</button>
+                </div>
+
+                {editorOpen && (
+                  <div className="qp-admin-form">
+                    <label>
+                      Category
+                      <input
+                        type="text"
+                        value={editorForm.category}
+                        onChange={(event) => setEditorForm((prev) => ({ ...prev, category: event.target.value }))}
+                        placeholder="e.g. Algorithms"
+                      />
+                    </label>
+                    <label>
+                      Difficulty
+                      <select
+                        value={editorForm.difficulty}
+                        onChange={(event) => setEditorForm((prev) => ({ ...prev, difficulty: event.target.value }))}
+                      >
+                        <option value="Easy">Easy</option>
+                        <option value="Medium">Medium</option>
+                        <option value="Hard">Hard</option>
+                      </select>
+                    </label>
+                    <label>
+                      Question
+                      <input
+                        type="text"
+                        value={editorForm.question}
+                        onChange={(event) => setEditorForm((prev) => ({ ...prev, question: event.target.value }))}
+                        placeholder="Enter quiz question"
+                      />
+                    </label>
+                    <label>
+                      Options (one per line)
+                      <textarea
+                        rows={4}
+                        value={editorForm.optionsText}
+                        onChange={(event) => setEditorForm((prev) => ({ ...prev, optionsText: event.target.value }))}
+                        placeholder={'Option 1\nOption 2\nOption 3\nOption 4'}
+                      />
+                    </label>
+                    <label>
+                      Correct Option Index (0-based)
+                      <input
+                        type="number"
+                        min="0"
+                        value={editorForm.answerIndex}
+                        onChange={(event) => setEditorForm((prev) => ({ ...prev, answerIndex: Number(event.target.value) }))}
+                      />
+                    </label>
+                    <label>
+                      Explanation
+                      <textarea
+                        rows={3}
+                        value={editorForm.explanation}
+                        onChange={(event) => setEditorForm((prev) => ({ ...prev, explanation: event.target.value }))}
+                        placeholder="Why this answer is correct"
+                      />
+                    </label>
+
+                    {editorError && <p className="qp-warning">{editorError}</p>}
+
+                    <div className="qp-actions">
+                      <button
+                        type="button"
+                        className="qp-secondary-btn"
+                        onClick={() => {
+                          setEditorOpen(false)
+                          setEditingId('')
+                          setEditorError('')
+                        }}
+                      >
+                        Cancel
+                      </button>
+                      <button type="button" className="qp-primary-btn" onClick={saveQuestion}>
+                        {editingId ? 'Update Question' : 'Create Question'}
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                <div className="qp-admin-table-wrap">
+                  <table className="qp-admin-table">
+                    <thead>
+                      <tr>
+                        <th>Question</th>
+                        <th>Category</th>
+                        <th>Difficulty</th>
+                        <th>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {quizBank.map((item) => (
+                        <tr key={item.id}>
+                          <td>{item.question}</td>
+                          <td>{item.category}</td>
+                          <td>{item.difficulty}</td>
+                          <td>
+                            <div className="qp-admin-actions">
+                              <button type="button" className="qp-secondary-btn" onClick={() => openEditEditor(item)}>Edit</button>
+                              <button type="button" className="qp-delete-btn" onClick={() => deleteQuestion(item.id)}>Delete</button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             )}
           </div>

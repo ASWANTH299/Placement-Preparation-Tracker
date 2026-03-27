@@ -879,7 +879,32 @@ async function seedLearningPaths() {
 }
 
 async function seedQuestions() {
-  for (const row of QUESTION_SEED) {
+  const seededByTitle = new Map(QUESTION_SEED.map((row) => [row[0], row]));
+  const fallbackCompanies = ['Amazon', 'Google', 'Microsoft', 'Meta'];
+  const fullQuestionSeed = [];
+  const seenTitles = new Set();
+
+  Object.entries(MUST_SOLVE_QUESTIONS).forEach(([topic, titles], topicIndex) => {
+    titles.forEach((title, titleIndex) => {
+      if (seenTitles.has(title)) return;
+      seenTitles.add(title);
+
+      const known = seededByTitle.get(title);
+      if (known) {
+        fullQuestionSeed.push(known);
+        return;
+      }
+
+      fullQuestionSeed.push([
+        title,
+        fallbackCompanies[(topicIndex + titleIndex) % fallbackCompanies.length],
+        topic,
+        'Medium'
+      ]);
+    });
+  });
+
+  for (const row of fullQuestionSeed) {
     await CompanyQuestion.updateOne(
       { title: row[0] },
       { $setOnInsert: questionEntry(row) },

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
-import { createForumMessage, getForumMessages } from '../../services/forumService'
+import { useSelector } from 'react-redux'
+import { createForumMessage, deleteForumMessage, getForumMessages, updateForumMessage } from '../../services/forumService'
 import { getErrorMessage } from '../../utils/errorHandler'
 
 const REACTIONS_STORAGE_KEY = 'forum-reactions-v1'
@@ -136,6 +137,9 @@ const flattenNodes = (nodes, acc = []) => {
 }
 
 export default function ForumChat() {
+  const currentUserId = useSelector((state) => state.auth.user?.id)
+  const role = useSelector((state) => state.auth.role)
+  const isAdmin = role === 'admin'
   const [messages, setMessages] = useState([])
   const [text, setText] = useState('')
   const [replyTo, setReplyTo] = useState(null)
@@ -150,6 +154,8 @@ export default function ForumChat() {
   const [collapsed, setCollapsed] = useState({})
   const [reactions, setReactions] = useState({})
   const [saved, setSaved] = useState({})
+  const [editingId, setEditingId] = useState('')
+  const [editingText, setEditingText] = useState('')
 
   const MAX_MESSAGE_LENGTH = 1000
 
@@ -318,6 +324,47 @@ export default function ForumChat() {
     }
   }
 
+  const startEdit = (message) => {
+    const messageId = getMessageId(message)
+    setEditingId(messageId)
+    setEditingText(String(message?.message || ''))
+  }
+
+  const cancelEdit = () => {
+    setEditingId('')
+    setEditingText('')
+  }
+
+  const saveEdit = async (messageId) => {
+    const nextMessage = editingText.trim()
+    if (!nextMessage) {
+      setError('Message is required')
+      return
+    }
+
+    try {
+      setError('')
+      await updateForumMessage(messageId, { message: nextMessage })
+      cancelEdit()
+      await loadMessages({ silent: true })
+    } catch (requestError) {
+      setError(getErrorMessage(requestError))
+    }
+  }
+
+  const removeMessage = async (messageId) => {
+    const confirmed = window.confirm('Delete this message? Replies under it will also be removed.')
+    if (!confirmed) return
+
+    try {
+      setError('')
+      await deleteForumMessage(messageId)
+      await loadMessages({ silent: true })
+    } catch (requestError) {
+      setError(getErrorMessage(requestError))
+    }
+  }
+
   const handleComposerKeyDown = (event) => {
     if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
       event.preventDefault()
@@ -335,6 +382,9 @@ export default function ForumChat() {
       const isCollapsed = Boolean(collapsed[messageId])
       const myReactions = reactions[messageId] || {}
       const isSaved = Boolean(saved[messageId])
+      const isEditing = editingId === messageId
+      const ownerId = message.userId?._id || message.userId
+      const canManage = isAdmin || (currentUserId && ownerId && String(ownerId) === String(currentUserId))
       const childList = hasChildren && !isCollapsed ? renderMessages(message.children, depth + 1) : null
 
       return (
@@ -357,9 +407,36 @@ export default function ForumChat() {
               </span>
             </div>
 
-            <p className="whitespace-pre-wrap text-sm leading-6 text-slate-700 dark:text-slate-200">
-              {highlightText(message.message, searchTerm)}
-            </p>
+            {isEditing ? (
+              <div className="space-y-2">
+                <textarea
+                  value={editingText}
+                  onChange={(event) => setEditingText(event.target.value)}
+                  rows={3}
+                  className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 outline-none ring-blue-500 transition focus:ring-2 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+                />
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={() => saveEdit(messageId)}
+                    className="rounded-lg border border-blue-300 bg-blue-50 px-2.5 py-1.5 text-xs font-medium text-blue-700 transition hover:bg-blue-100"
+                  >
+                    Save
+                  </button>
+                  <button
+                    type="button"
+                    onClick={cancelEdit}
+                    className="rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-700 transition hover:bg-slate-50"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <p className="whitespace-pre-wrap text-sm leading-6 text-slate-700 dark:text-slate-200">
+                {highlightText(message.message, searchTerm)}
+              </p>
+            )}
 
             <div className="mt-3 flex flex-wrap items-center gap-2">
               <button
@@ -377,6 +454,26 @@ export default function ForumChat() {
               >
                 {isSaved ? 'Unsave' : 'Save'}
               </button>
+
+              {canManage && !isEditing && (
+                <button
+                  type="button"
+                  onClick={() => startEdit(message)}
+                  className="rounded-lg border border-blue-300 bg-blue-50 px-2.5 py-1.5 text-xs font-medium text-blue-700 transition hover:bg-blue-100"
+                >
+                  Edit
+                </button>
+              )}
+
+              {canManage && !isEditing && (
+                <button
+                  type="button"
+                  onClick={() => removeMessage(messageId)}
+                  className="rounded-lg border border-red-300 bg-red-50 px-2.5 py-1.5 text-xs font-medium text-red-700 transition hover:bg-red-100"
+                >
+                  Delete
+                </button>
+              )}
 
               <button
                 type="button"

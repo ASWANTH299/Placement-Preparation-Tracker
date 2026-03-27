@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { getQuestionDetail, markQuestionSolved, toggleQuestionBookmark } from '../../services/questionService'
 import { getErrorMessage } from '../../utils/errorHandler'
-import { fallbackQuestionById, fallbackQuestions } from '../../utils/questionFallbackData'
 
 const isValidObjectId = (value) => /^[0-9a-fA-F]{24}$/.test(String(value || ''))
 
@@ -36,7 +35,8 @@ export default function QuestionDetail() {
 
     const load = async () => {
       if (!isValidObjectId(questionId)) {
-        setQuestion(fallbackQuestionById[questionId] || fallbackQuestions[0])
+        setError('Invalid question id.')
+        setQuestion(null)
         setLoading(false)
         return
       }
@@ -47,13 +47,13 @@ export default function QuestionDetail() {
         const response = await getQuestionDetail(questionId)
         const data = response?.data?.data
         if (!active) return
-        setQuestion(data || fallbackQuestions[0])
+        setQuestion(data || null)
         setSolved(Boolean(data?.userProgress?.isSolved))
         setBookmarked(Boolean(data?.userProgress?.isBookmarked))
       } catch (requestError) {
         if (active) {
           setError(getErrorMessage(requestError))
-          setQuestion(fallbackQuestionById[questionId] || fallbackQuestions[0])
+          setQuestion(null)
         }
       } finally {
         if (active) setLoading(false)
@@ -68,7 +68,7 @@ export default function QuestionDetail() {
 
   const markSolved = async () => {
     if (!isValidObjectId(questionId)) {
-      setSolved(true)
+      setError('Invalid question id.')
       return
     }
 
@@ -82,7 +82,7 @@ export default function QuestionDetail() {
 
   const toggleBookmark = async () => {
     if (!isValidObjectId(questionId)) {
-      setBookmarked((prev) => !prev)
+      setError('Invalid question id.')
       return
     }
 

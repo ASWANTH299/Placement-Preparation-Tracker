@@ -97,6 +97,13 @@ export const parseNoteBoxes = (content = '') => {
   ])
 }
 
+export const buildNoteContentFromBoxes = (sections = []) => {
+  const normalized = normalizeToSixBoxes(sections)
+  return normalized
+    .map((section) => `[Box ${section.number}] ${section.title}\n${String(section.content || '').trim()}`)
+    .join('\n\n')
+}
+
 const normalizeToSixBoxes = (sections = []) => {
   const map = new Map()
 

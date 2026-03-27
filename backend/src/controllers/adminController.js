@@ -426,3 +426,162 @@ exports.getAnalytics = async (req, res, next) => {
     next(error);
   }
 };
+
+// Get all mock interviews (admin-wide)
+exports.getAllMockInterviews = async (req, res, next) => {
+  try {
+    const { page = 1, limit = 25, search, company, sortBy = 'interviewDate', order = 'desc' } = req.query;
+
+    const query = {};
+    if (company && company !== 'All') {
+      query.company = company;
+    }
+
+    if (search) {
+      query.$or = [
+        { company: { $regex: search, $options: 'i' } },
+        { overallFeedback: { $regex: search, $options: 'i' } }
+      ];
+    }
+
+    const skip = (parseInt(page, 10) - 1) * parseInt(limit, 10);
+    const sortField = ['score', 'interviewDate', 'createdAt'].includes(sortBy) ? sortBy : 'interviewDate';
+    const sortObj = { [sortField]: order === 'asc' ? 1 : -1 };
+
+    const interviews = await MockInterview.find(query)
+      .populate('studentId', 'name email')
+      .skip(skip)
+      .limit(parseInt(limit, 10))
+      .sort(sortObj);
+
+    const total = await MockInterview.countDocuments(query);
+
+    res.status(200).json({
+      success: true,
+      data: interviews,
+      pagination: {
+        page: parseInt(page, 10),
+        limit: parseInt(limit, 10),
+        total,
+        pages: Math.ceil(total / parseInt(limit, 10))
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Create mock interview (admin-wide)
+exports.createMockInterview = async (req, res, next) => {
+  try {
+    const { studentId, company, interviewDate, score, overallFeedback, technicalSkills, communication, problemSolving, improvements, interviewerName, duration } = req.body;
+
+    if (!studentId || !company || !interviewDate || score === undefined) {
+      return next(new AppError('studentId, company, interviewDate, and score are required', 400, 'VALIDATION_ERROR'));
+    }
+
+    const student = await User.findOne({ _id: studentId, role: 'student' }).select('_id email');
+    if (!student) {
+      return next(new AppError('Student not found', 404, 'NOT_FOUND'));
+    }
+
+    if (score < 0 || score > 100) {
+      return next(new AppError('Score must be between 0-100', 400, 'VALIDATION_ERROR'));
+    }
+
+    const interview = new MockInterview({
+      studentId,
+      company,
+      interviewDate,
+      score,
+      overallFeedback,
+      technicalSkills,
+      communication,
+      problemSolving,
+      improvements,
+      interviewerName,
+      duration
+    });
+
+    await interview.save();
+
+    await logAdminAudit(req, {
+      action: 'CREATE_MOCK_INTERVIEW',
+      targetType: 'MockInterview',
+      targetId: interview._id,
+      status: 'SUCCESS',
+      metadata: { studentId }
+    });
+
+    res.status(201).json({
+      success: true,
+      data: interview,
+      message: 'Mock interview created successfully'
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Update mock interview (admin-wide)
+exports.updateMockInterview = async (req, res, next) => {
+  try {
+    const { interviewId } = req.params;
+    const updateData = req.body;
+
+    if (updateData.score !== undefined && (updateData.score < 0 || updateData.score > 100)) {
+      return next(new AppError('Score must be between 0-100', 400, 'VALIDATION_ERROR'));
+    }
+
+    const interview = await MockInterview.findByIdAndUpdate(interviewId, updateData, {
+      new: true,
+      runValidators: true
+    });
+
+    if (!interview) {
+      return next(new AppError('Interview not found', 404, 'NOT_FOUND'));
+    }
+
+    await logAdminAudit(req, {
+      action: 'UPDATE_MOCK_INTERVIEW',
+      targetType: 'MockInterview',
+      targetId: interviewId,
+      status: 'SUCCESS'
+    });
+
+    res.status(200).json({
+      success: true,
+      data: interview,
+      message: 'Mock interview updated successfully'
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Delete mock interview (admin-wide)
+exports.deleteMockInterview = async (req, res, next) => {
+  try {
+    const { interviewId } = req.params;
+
+    const interview = await MockInterview.findByIdAndDelete(interviewId);
+
+    if (!interview) {
+      return next(new AppError('Interview not found', 404, 'NOT_FOUND'));
+    }
+
+    await logAdminAudit(req, {
+      action: 'DELETE_MOCK_INTERVIEW',
+      targetType: 'MockInterview',
+      targetId: interviewId,
+      status: 'SUCCESS'
+    });
+
+    res.status(200).json({
+      success: true,
+      message: 'Mock interview deleted successfully'
+    });
+  } catch (error) {
+    next(error);
+  }
+};

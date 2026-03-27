@@ -14,6 +14,8 @@ export default function NoteDetail() {
   const { noteId } = useParams()
   const navigate = useNavigate()
   const userId = useSelector((state) => state.auth.user?.id)
+  const role = useSelector((state) => state.auth.role)
+  const isAdmin = role === 'admin'
   const [note, setNote] = useState(null)
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState('')
@@ -57,6 +59,8 @@ export default function NoteDetail() {
     return Boolean(ownerId && userId && ownerId === userId)
   }, [note, userId])
 
+  const canManage = isAdmin || isOwnNote
+
   const visibleBoxes = useMemo(() => (
     [1, 2, 3, 4, 5, 6].map((number) => ({
       number,
@@ -66,10 +70,11 @@ export default function NoteDetail() {
   ), [])
 
   const save = async () => {
-    if (!isOwnNote || !isValidObjectId(noteId)) return
+    if (!canManage || !isValidObjectId(noteId)) return
     try {
       setError('')
-      await updateNote(userId, noteId, { content: draft })
+      const ownerId = note?.studentId?._id || note?.studentId || userId
+      await updateNote(ownerId, noteId, { content: draft })
       const refreshed = await getNoteById(noteId)
       const data = refreshed?.data?.data
       setNote(data)
@@ -81,10 +86,11 @@ export default function NoteDetail() {
   }
 
   const remove = async () => {
-    if (!isOwnNote || !isValidObjectId(noteId)) return
+    if (!canManage || !isValidObjectId(noteId)) return
     try {
       setError('')
-      await deleteNote(userId, noteId)
+      const ownerId = note?.studentId?._id || note?.studentId || userId
+      await deleteNote(ownerId, noteId)
       navigate('/notes')
     } catch (requestError) {
       setError(getErrorMessage(requestError))
@@ -134,7 +140,7 @@ export default function NoteDetail() {
         </div>
       )}
 
-      {isOwnNote && (
+      {canManage && (
         <div className="mt-4 flex gap-2">
           {editing ? (
             <button type="button" onClick={save} className="rounded bg-blue-600 px-3 py-2 text-sm font-medium text-white">Save</button>

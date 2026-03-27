@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useSelector } from 'react-redux'
-import { deleteResume, downloadResume, getResumes, setActiveResume, uploadResume } from '../../services/resumeService'
+import { getAllUsers } from '../../services/adminService'
+import { deleteResume, downloadResume, getResumes, renameResume, setActiveResume, uploadResume } from '../../services/resumeService'
 import { getErrorMessage } from '../../utils/errorHandler'
 
 const allowedExtensions = ['pdf', 'docx']
@@ -16,7 +17,12 @@ const formatBytes = (bytes = 0) => {
 const getFileExtension = (name = '') => name.split('.').pop()?.toLowerCase() || ''
 
 export default function ResumeTracker() {
+  const role = useSelector((state) => state.auth.role)
   const studentId = useSelector((state) => state.auth.user?.id)
+  const isAdmin = role === 'admin'
+  const [managedStudents, setManagedStudents] = useState([])
+  const [managedStudentId, setManagedStudentId] = useState('')
+  const [studentsLoading, setStudentsLoading] = useState(false)
   const [files, setFiles] = useState([])
   const [loading, setLoading] = useState(false)
   const [uploading, setUploading] = useState(false)
@@ -29,11 +35,31 @@ export default function ResumeTracker() {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
 
+  const targetStudentId = isAdmin ? managedStudentId : studentId
+
+  const loadManagedStudents = async () => {
+    if (!isAdmin) return
+    try {
+      setStudentsLoading(true)
+      const response = await getAllUsers({ page: 1, limit: 500, order: 'desc', sortBy: 'created' })
+      const students = response?.data?.data || []
+      setManagedStudents(students)
+      setManagedStudentId((prev) => prev || students?.[0]?._id || '')
+    } catch (requestError) {
+      setError(getErrorMessage(requestError))
+    } finally {
+      setStudentsLoading(false)
+    }
+  }
+
   const loadResumes = async () => {
-    if (!studentId) return
+    if (!targetStudentId) {
+      setFiles([])
+      return
+    }
     try {
       setLoading(true)
-      const response = await getResumes(studentId)
+      const response = await getResumes(targetStudentId)
       setFiles(response?.data?.data || [])
     } catch (requestError) {
       setError(getErrorMessage(requestError))
@@ -43,12 +69,26 @@ export default function ResumeTracker() {
   }
 
   useEffect(() => {
+    if (isAdmin) {
+      loadManagedStudents()
+      return undefined
+    }
+
     if (!studentId) return undefined
     loadResumes()
     return () => {
       setDragActive(false)
     }
-  }, [studentId])
+  }, [studentId, isAdmin])
+
+  useEffect(() => {
+    if (!targetStudentId) {
+      setFiles([])
+      return
+    }
+
+    loadResumes()
+  }, [targetStudentId])
 
   const validateFile = (file) => {
     const extension = getFileExtension(file?.name)
@@ -68,7 +108,10 @@ export default function ResumeTracker() {
   }
 
   const uploadSelectedFile = async (file) => {
-    if (!file || !studentId) return
+    if (!file || !targetStudentId) {
+      if (isAdmin) setError('Select a student first to manage resumes.')
+      return
+    }
 
     const validationError = validateFile(file)
     if (validationError) {
@@ -84,7 +127,7 @@ export default function ResumeTracker() {
       setUploading(true)
       setError('')
       setSuccess('')
-      await uploadResume(studentId, formData)
+      await uploadResume(targetStudentId, formData)
       await loadResumes()
       setSuccess(`Uploaded ${file.name} successfully.`)
     } catch (requestError) {
@@ -121,26 +164,41 @@ export default function ResumeTracker() {
   }
 
   const onSetActive = async (resumeId) => {
+    if (!targetStudentId) return
     await runWithLoading(`active-${resumeId}`, async () => {
-      await setActiveResume(studentId, resumeId)
+      await setActiveResume(targetStudentId, resumeId)
       await loadResumes()
       setSuccess('Active resume updated.')
     })
   }
 
   const onDelete = async (resumeId) => {
+    if (!targetStudentId) return
     const isConfirmed = window.confirm('Delete this resume permanently?')
     if (!isConfirmed) return
     await runWithLoading(`delete-${resumeId}`, async () => {
-      await deleteResume(studentId, resumeId)
+      await deleteResume(targetStudentId, resumeId)
       setFiles((prev) => prev.filter((file) => file._id !== resumeId))
       setSuccess('Resume deleted successfully.')
     })
   }
 
+  const onRename = async (resumeId, currentName) => {
+    if (!targetStudentId) return
+    const newName = window.prompt('Enter new resume name', currentName || '')
+    if (!newName || !newName.trim()) return
+
+    await runWithLoading(`rename-${resumeId}`, async () => {
+      await renameResume(targetStudentId, resumeId, newName.trim())
+      await loadResumes()
+      setSuccess('Resume name updated successfully.')
+    })
+  }
+
   const onDownload = async (resumeId, fileName) => {
+    if (!targetStudentId) return
     await runWithLoading(`download-${resumeId}`, async () => {
-      const response = await downloadResume(studentId, resumeId)
+      const response = await downloadResume(targetStudentId, resumeId)
       const url = window.URL.createObjectURL(new Blob([response.data]))
       const link = document.createElement('a')
       link.href = url
@@ -200,6 +258,9 @@ export default function ResumeTracker() {
         <div>
           <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Resume Management</h1>
           <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">Max 5 resumes, up to 5MB each, and only PDF or DOCX.</p>
+          {isAdmin && (
+            <p className="mt-1 text-sm text-blue-700 dark:text-blue-300">Admin mode: choose a student to perform resume CRUD actions.</p>
+          )}
         </div>
         <button
           type="button"
@@ -213,6 +274,29 @@ export default function ResumeTracker() {
 
       {error && <p className="mt-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
       {success && <p className="mt-3 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">{success}</p>}
+
+      {isAdmin && (
+        <div className="mt-4 rounded-xl border border-blue-200 bg-blue-50/70 p-3 dark:border-blue-700 dark:bg-blue-900/20">
+          <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-blue-700 dark:text-blue-300">Target Student</label>
+          <select
+            value={managedStudentId}
+            onChange={(event) => {
+              setManagedStudentId(event.target.value)
+              setError('')
+              setSuccess('')
+            }}
+            disabled={studentsLoading}
+            className="w-full rounded-lg border border-blue-300 bg-white px-3 py-2 text-sm text-slate-800 outline-none ring-blue-500 transition focus:ring-2 dark:border-blue-700 dark:bg-slate-900 dark:text-slate-100"
+          >
+            {managedStudents.length === 0 && <option value="">No students found</option>}
+            {managedStudents.map((student) => (
+              <option key={student._id} value={student._id}>
+                {student.name} ({student.email})
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
 
       <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <article className="rounded-xl border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-900">
@@ -250,7 +334,7 @@ export default function ResumeTracker() {
       >
         <p className="text-sm font-semibold text-slate-800 dark:text-slate-100">{uploading ? 'Uploading...' : 'Click or Drag & Drop to upload resume'}</p>
         <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Supported: PDF, DOCX • Max size: 5MB per file</p>
-        <input type="file" accept=".pdf,.docx" className="hidden" onChange={onFilePick} disabled={uploading || files.length >= maxResumeCount} />
+        <input type="file" accept=".pdf,.docx" className="hidden" onChange={onFilePick} disabled={uploading || files.length >= maxResumeCount || !targetStudentId} />
       </label>
 
       <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
@@ -309,6 +393,7 @@ export default function ResumeTracker() {
             const isDownloading = Boolean(actionLoading[`download-${file._id}`])
             const isSettingActive = Boolean(actionLoading[`active-${file._id}`])
             const isDeleting = Boolean(actionLoading[`delete-${file._id}`])
+            const isRenaming = Boolean(actionLoading[`rename-${file._id}`])
 
             return (
               <article key={file._id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white p-4 text-sm shadow-sm dark:border-slate-700 dark:bg-slate-900">
@@ -341,6 +426,17 @@ export default function ResumeTracker() {
                   >
                     {isSettingActive ? 'Updating...' : isActive ? 'Current Active' : 'Set Active'}
                   </button>
+
+                  {isAdmin && (
+                    <button
+                      type="button"
+                      onClick={() => onRename(file._id, displayName)}
+                      disabled={isRenaming}
+                      className="rounded-md border border-amber-300 bg-amber-50 px-3 py-1.5 text-xs font-medium text-amber-700 transition hover:bg-amber-100 disabled:opacity-60 dark:border-amber-700 dark:bg-amber-900/20 dark:text-amber-300"
+                    >
+                      {isRenaming ? 'Renaming...' : 'Rename'}
+                    </button>
+                  )}
 
                   <button
                     type="button"

@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useSelector } from 'react-redux'
 import { getCodingProfiles, linkCodingProfile, refreshCodingProfile, unlinkCodingProfile } from '../../services/codingProfileService'
+import { getAllUsers } from '../../services/adminService'
 import { getErrorMessage } from '../../utils/errorHandler'
 
 const platforms = ['LeetCode', 'CodeChef', 'HackerRank', 'Codeforces']
+const ALL_ACCOUNTS_OPTION = '__all_accounts__'
 
 const platformUrlBuilders = {
   LeetCode: (username) => `https://leetcode.com/${username}`,
@@ -73,6 +75,8 @@ const formatRelativeTime = (value) => {
 
 export default function CodingProfilesPage() {
   const studentId = useSelector((state) => state.auth.user?.id)
+  const role = useSelector((state) => state.auth.role)
+  const isAdmin = role === 'admin'
   const [profiles, setProfiles] = useState([])
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(true)
@@ -81,12 +85,41 @@ export default function CodingProfilesPage() {
   const [searchTerm, setSearchTerm] = useState('')
   const [sortBy, setSortBy] = useState('platform')
   const [showLinkedOnly, setShowLinkedOnly] = useState(false)
+  const [managedStudents, setManagedStudents] = useState([])
+  const [managedStudentId, setManagedStudentId] = useState('')
+
+  const targetStudentId = isAdmin && managedStudentId ? managedStudentId : studentId
 
   const refreshProfiles = async () => {
-    if (!studentId) return
-    const response = await getCodingProfiles(studentId)
+    if (!targetStudentId) return
+    const response = await getCodingProfiles(targetStudentId)
     setProfiles(response?.data?.data || [])
   }
+
+  useEffect(() => {
+    let active = true
+
+    const loadManagedStudents = async () => {
+      if (!isAdmin) return
+      try {
+        const response = await getAllUsers()
+        if (active) {
+          setManagedStudents(response?.data?.data || [])
+          if (!managedStudentId) {
+            setManagedStudentId((response?.data?.data || [])[0]?._id || '')
+          }
+        }
+      } catch (requestError) {
+        console.error('Failed to load students:', requestError)
+      }
+    }
+
+    if (isAdmin) loadManagedStudents()
+
+    return () => {
+      active = false
+    }
+  }, [isAdmin])
 
   const profileMap = useMemo(() => {
     return profiles.reduce((map, profile) => {
@@ -99,10 +132,10 @@ export default function CodingProfilesPage() {
     let active = true
 
     const load = async () => {
-      if (!studentId) return
+      if (!targetStudentId) return
       try {
         setLoading(true)
-        const response = await getCodingProfiles(studentId)
+        const response = await getCodingProfiles(targetStudentId)
         if (active) {
           setProfiles(response?.data?.data || [])
           setError('')
@@ -118,18 +151,33 @@ export default function CodingProfilesPage() {
     return () => {
       active = false
     }
-  }, [studentId])
+  }, [targetStudentId])
 
   const setBusy = (key, value) => {
     setActionState((prev) => ({ ...prev, [key]: value }))
   }
 
   const link = async (platform, inputValue) => {
-    if (!inputValue || !studentId) return
+    if (!inputValue) return
+
     try {
       setError('')
       setBusy(`link:${platform}`, true)
-      await linkCodingProfile(studentId, { platform, profileUrl: inputValue, username: inputValue })
+
+      if (managedStudentId === ALL_ACCOUNTS_OPTION) {
+        // Link for all students
+        await Promise.all(
+          managedStudents.map((student) =>
+            linkCodingProfile(student._id, { platform, profileUrl: inputValue, username: inputValue }).catch((err) => {
+              console.error(`Failed to link for ${student._id}:`, err)
+            })
+          )
+        )
+      } else {
+        // Link for single student
+        await linkCodingProfile(targetStudentId, { platform, profileUrl: inputValue, username: inputValue })
+      }
+
       setFormValues((prev) => ({ ...prev, [platform]: '' }))
       await refreshProfiles()
     } catch (requestError) {
@@ -143,7 +191,7 @@ export default function CodingProfilesPage() {
     try {
       setError('')
       setBusy(`unlink:${profileId}`, true)
-      await unlinkCodingProfile(studentId, profileId)
+      await unlinkCodingProfile(targetStudentId, profileId)
       setProfiles((prev) => prev.filter((profile) => profile._id !== profileId))
     } catch (requestError) {
       setError(getErrorMessage(requestError))
@@ -157,7 +205,7 @@ export default function CodingProfilesPage() {
     try {
       setError('')
       setBusy(`refresh:${profileId}`, true)
-      await refreshCodingProfile(studentId, profileId)
+      await refreshCodingProfile(targetStudentId, profileId)
       await refreshProfiles()
     } catch (requestError) {
       setError(getErrorMessage(requestError))
@@ -171,7 +219,7 @@ export default function CodingProfilesPage() {
     try {
       setError('')
       setBusy('refresh-all', true)
-      await Promise.all(profiles.map((profile) => refreshCodingProfile(studentId, profile._id)))
+      await Promise.all(profiles.map((profile) => refreshCodingProfile(targetStudentId, profile._id)))
       await refreshProfiles()
     } catch (requestError) {
       setError(getErrorMessage(requestError))
@@ -257,6 +305,39 @@ export default function CodingProfilesPage() {
           </div>
         </div>
       </div>
+
+      {error && <p className="mt-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
+
+      {isAdmin && (
+        <div className="mt-4 rounded-2xl border border-blue-200 bg-blue-50 p-4 dark:border-blue-700 dark:bg-blue-900/20">
+          <h3 className="mb-3 font-semibold text-blue-900 dark:text-blue-100">Admin: Manage Profiles</h3>
+          <div className="grid gap-3 md:grid-cols-2">
+            <div>
+              <label className="mb-1 block text-sm font-medium text-blue-900 dark:text-blue-100">Select Student</label>
+              <select
+                value={managedStudentId}
+                onChange={(event) => setManagedStudentId(event.target.value)}
+                className="w-full rounded-lg border border-blue-300 bg-white px-3 py-2 text-sm text-slate-900 dark:border-blue-600 dark:bg-slate-900 dark:text-slate-100"
+              >
+                <option value="">-- Choose Student --</option>
+                {managedStudents.map((student) => (
+                  <option key={student._id} value={student._id}>
+                    {student.name || student.email}
+                  </option>
+                ))}
+                <option value={ALL_ACCOUNTS_OPTION}>All Accounts (all student logins)</option>
+              </select>
+            </div>
+            {managedStudentId === ALL_ACCOUNTS_OPTION && (
+              <div className="rounded-lg border border-amber-300 bg-amber-50 p-2 p-3 dark:border-amber-700 dark:bg-amber-900/20">
+                <p className="text-sm font-medium text-amber-900 dark:text-amber-100">
+                  ✓ Profiles will be linked for all {managedStudents.length} student accounts
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {error && <p className="mt-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
 

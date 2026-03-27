@@ -151,11 +151,11 @@ exports.updateNote = async (req, res, next) => {
       return next(new AppError('You do not have permission to update notes', 403, 'UNAUTHORIZED'));
     }
 
-    const note = await Note.findOneAndUpdate(
-      { _id: noteId, studentId: id },
-      req.body,
-      { new: true, runValidators: true }
-    );
+    const filter = req.user.role === 'admin'
+      ? { _id: noteId }
+      : { _id: noteId, studentId: id };
+
+    const note = await Note.findOneAndUpdate(filter, req.body, { new: true, runValidators: true });
 
     if (!note) {
       return next(new AppError('Note not found', 404, 'NOT_FOUND'));
@@ -181,7 +181,11 @@ exports.deleteNote = async (req, res, next) => {
       return next(new AppError('You do not have permission to delete notes', 403, 'UNAUTHORIZED'));
     }
 
-    const note = await Note.findOneAndDelete({ _id: noteId, studentId: id });
+    const filter = req.user.role === 'admin'
+      ? { _id: noteId }
+      : { _id: noteId, studentId: id };
+
+    const note = await Note.findOneAndDelete(filter);
 
     if (!note) {
       return next(new AppError('Note not found', 404, 'NOT_FOUND'));

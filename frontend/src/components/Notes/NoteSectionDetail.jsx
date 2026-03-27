@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useSelector } from 'react-redux'
 import { useNavigate, useParams } from 'react-router-dom'
-import { getNoteById } from '../../services/noteService'
+import { getNoteById, updateNote } from '../../services/noteService'
 import { getErrorMessage } from '../../utils/errorHandler'
 import { fallbackNoteById, fallbackNotes } from '../../utils/noteFallbackData'
-import { DEFAULT_BOX_TITLES, getBoxTag, parseNoteBoxes } from '../../utils/noteSections'
+import { DEFAULT_BOX_TITLES, buildNoteContentFromBoxes, getBoxTag, parseNoteBoxes } from '../../utils/noteSections'
 
 const fallbackNote = fallbackNotes[0]
 
@@ -24,8 +25,14 @@ const parseFirstPseudocodeBlock = (content = '') => {
 export default function NoteSectionDetail() {
   const { noteId, sectionId } = useParams()
   const navigate = useNavigate()
+  const userId = useSelector((state) => state.auth.user?.id)
+  const role = useSelector((state) => state.auth.role)
+  const isAdmin = role === 'admin'
   const [note, setNote] = useState(null)
   const [error, setError] = useState('')
+  const [editing, setEditing] = useState(false)
+  const [draftTitle, setDraftTitle] = useState('')
+  const [draftContent, setDraftContent] = useState('')
 
   useEffect(() => {
     let active = true
@@ -62,6 +69,41 @@ export default function NoteSectionDetail() {
     () => boxes.find((box) => box.number === boxNumber) || null,
     [boxes, boxNumber]
   )
+  const canManage = useMemo(() => {
+    const ownerId = note?.studentId?._id || note?.studentId
+    return isAdmin || Boolean(ownerId && userId && ownerId === userId)
+  }, [isAdmin, note, userId])
+
+  useEffect(() => {
+    setDraftTitle(selected?.title || DEFAULT_BOX_TITLES[boxNumber] || 'Section')
+    setDraftContent(selected?.content || '')
+    setEditing(false)
+  }, [selected?.title, selected?.content, boxNumber])
+
+  const saveSection = async () => {
+    if (!canManage || !isValidObjectId(noteId) || !selected) return
+
+    try {
+      setError('')
+      const nextBoxes = boxes.map((box) => {
+        if (box.number !== boxNumber) return box
+        return {
+          ...box,
+          title: draftTitle.trim() || DEFAULT_BOX_TITLES[boxNumber],
+          content: draftContent
+        }
+      })
+
+      const ownerId = note?.studentId?._id || note?.studentId || userId
+      await updateNote(ownerId, noteId, { content: buildNoteContentFromBoxes(nextBoxes) })
+      const refreshed = await getNoteById(noteId)
+      setNote(refreshed?.data?.data || note)
+      setEditing(false)
+    } catch (requestError) {
+      setError(getErrorMessage(requestError))
+    }
+  }
+
   const firstPseudoBlock = useMemo(() => parseFirstPseudocodeBlock(selected?.content), [selected?.content])
   const isPseudocodeSection = String(selected?.title || '').toLowerCase().includes('pseudocode')
 
@@ -86,6 +128,40 @@ export default function NoteSectionDetail() {
         <h2 className="note-section-title mt-2 text-2xl font-bold text-slate-900 dark:text-white">
           {selected?.title || DEFAULT_BOX_TITLES[boxNumber] || 'Section'}
         </h2>
+        {canManage && (
+          <div className="mt-3 flex gap-2">
+            {!editing ? (
+              <button
+                type="button"
+                onClick={() => setEditing(true)}
+                className="rounded border border-blue-300 bg-blue-50 px-3 py-1.5 text-sm font-medium text-blue-700"
+              >
+                Edit This Part
+              </button>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  onClick={saveSection}
+                  className="rounded bg-blue-600 px-3 py-1.5 text-sm font-medium text-white"
+                >
+                  Save Part
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEditing(false)
+                    setDraftTitle(selected?.title || DEFAULT_BOX_TITLES[boxNumber] || 'Section')
+                    setDraftContent(selected?.content || '')
+                  }}
+                  className="rounded border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700"
+                >
+                  Cancel
+                </button>
+              </>
+            )}
+          </div>
+        )}
         {isPseudocodeSection && firstPseudoBlock && (
           <div className="mt-4 grid gap-3">
             <section className="note-section-subpanel rounded-xl border border-slate-200 bg-white/70 p-4 dark:border-slate-700/80 dark:bg-slate-900/50">
@@ -102,9 +178,28 @@ export default function NoteSectionDetail() {
             </section>
           </div>
         )}
-        <pre className="note-section-content mt-4 overflow-auto whitespace-pre-wrap rounded-xl border border-slate-200 bg-white/70 p-4 text-sm leading-7 text-slate-700 dark:border-slate-700/80 dark:bg-slate-900/40 dark:text-slate-200">
-          {selected?.content || 'No content available for this section.'}
-        </pre>
+        {editing ? (
+          <div className="mt-4 grid gap-3">
+            <input
+              type="text"
+              value={draftTitle}
+              onChange={(event) => setDraftTitle(event.target.value)}
+              className="w-full rounded border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+              placeholder="Section title"
+            />
+            <textarea
+              rows={14}
+              value={draftContent}
+              onChange={(event) => setDraftContent(event.target.value)}
+              className="w-full rounded border border-slate-300 bg-white p-3 text-sm text-slate-900 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+              placeholder="Section content"
+            />
+          </div>
+        ) : (
+          <pre className="note-section-content mt-4 overflow-auto whitespace-pre-wrap rounded-xl border border-slate-200 bg-white/70 p-4 text-sm leading-7 text-slate-700 dark:border-slate-700/80 dark:bg-slate-900/40 dark:text-slate-200">
+            {selected?.content || 'No content available for this section.'}
+          </pre>
+        )}
       </article>
     </section>
   )

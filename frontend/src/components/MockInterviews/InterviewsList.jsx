@@ -1,31 +1,18 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useSelector } from 'react-redux'
-import { getMockInterviews } from '../../services/interviewService'
+import {
+  createAdminMockInterview,
+  deleteAdminMockInterview,
+  getAllUsers,
+  getAdminMockInterviews,
+  updateAdminMockInterview,
+} from '../../services/adminService'
+import { createMockInterview, deleteMockInterview, getMockInterviews, updateMockInterview } from '../../services/interviewService'
+import { getErrorMessage } from '../../utils/errorHandler'
+import Modal from '../Common/Modal'
 
-const fallbackRows = [
-  { id: 'm1', company: 'Google', date: '2026-03-01', score: 82, feedback: 'Strong DSA, improve communication clarity.' },
-  { id: 'm2', company: 'Amazon', date: '2026-02-20', score: 76, feedback: 'Good approach, optimize complexity explanation.' },
-  { id: 'm3', company: 'Microsoft', date: '2026-01-29', score: 80, feedback: 'Clean code, improve edge-case handling.' },
-  { id: 'm4', company: 'Meta', date: '2026-01-18', score: 84, feedback: 'Excellent problem decomposition and communication.' },
-  { id: 'm5', company: 'Adobe', date: '2026-01-11', score: 73, feedback: 'Good fundamentals, revise graph patterns.' },
-  { id: 'm6', company: 'Flipkart', date: '2025-12-28', score: 78, feedback: 'Solid attempt, faster implementation needed.' },
-  { id: 'm7', company: 'Uber', date: '2025-12-15', score: 81, feedback: 'Great optimization, explain tradeoffs better.' },
-  { id: 'm8', company: 'Atlassian', date: '2025-12-05', score: 74, feedback: 'Good logic, improve test case coverage.' },
-  { id: 'm9', company: 'PayPal', date: '2025-11-26', score: 79, feedback: 'Balanced performance, stronger communication recommended.' },
-  { id: 'm10', company: 'Goldman Sachs', date: '2025-11-14', score: 77, feedback: 'Correct approach, reduce time spent on brute force.' },
-  { id: 'm11', company: 'Apple', date: '2025-11-02', score: 83, feedback: 'Strong coding, explain memory decisions better.' },
-  { id: 'm12', company: 'Netflix', date: '2025-10-25', score: 75, feedback: 'Good implementation, improve communication during edge cases.' },
-  { id: 'm13', company: 'NVIDIA', date: '2025-10-10', score: 72, feedback: 'Revise system fundamentals and optimization patterns.' },
-  { id: 'm14', company: 'Salesforce', date: '2025-10-01', score: 80, feedback: 'Good quality answers, improve speed in coding round.' },
-  { id: 'm15', company: 'Oracle', date: '2025-09-19', score: 71, feedback: 'Need stronger SQL and DBMS articulation.' },
-  { id: 'm16', company: 'JPMorgan', date: '2025-09-07', score: 78, feedback: 'Good OOP and DSA basics, improve depth in follow-up questions.' },
-  { id: 'm17', company: 'Walmart Global Tech', date: '2025-08-29', score: 79, feedback: 'Solid coding, improve concurrency explanation.' },
-  { id: 'm18', company: 'Zoho', date: '2025-08-14', score: 74, feedback: 'Good problem solving, improve test coverage and code clarity.' },
-  { id: 'm19', company: 'TCS', date: '2025-08-03', score: 69, feedback: 'Revise aptitude style coding and communication confidence.' },
-  { id: 'm20', company: 'Infosys', date: '2025-07-22', score: 70, feedback: 'Need better pace and cleaner explanation structure.' },
-  { id: 'm21', company: 'Morgan Stanley', date: '2025-07-10', score: 77, feedback: 'Strong arrays/strings, improve dynamic programming confidence.' },
-  { id: 'm22', company: 'ServiceNow', date: '2025-06-27', score: 81, feedback: 'Good practical reasoning, explain trade-offs explicitly.' },
-]
+const fallbackRows = []
+const ALL_ACCOUNTS_OPTION = '__all_accounts__'
 
 const companyResourceLinks = {
   Google: ['https://careers.google.com', 'https://www.geeksforgeeks.org/google-interview-questions/'],
@@ -88,9 +75,23 @@ const buildSparklinePoints = (scores = []) => {
 }
 
 export default function InterviewsList() {
+  const role = useSelector((state) => state.auth.role)
   const userId = useSelector((state) => state.auth.user?.id)
+  const isAdmin = role === 'admin'
+  const [managedStudents, setManagedStudents] = useState([])
+  const [createOpen, setCreateOpen] = useState(false)
+  const [createForm, setCreateForm] = useState({
+    studentId: '',
+    company: '',
+    interviewDate: new Date().toISOString().slice(0, 10),
+    score: '',
+    overallFeedback: '',
+  })
   const [rows, setRows] = useState(fallbackRows)
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+  const [success, setSuccess] = useState('')
+  const [actionLoading, setActionLoading] = useState({})
   const [search, setSearch] = useState('')
   const [companyFilter, setCompanyFilter] = useState('All')
   const [scoreFilter, setScoreFilter] = useState('All')
@@ -98,46 +99,257 @@ export default function InterviewsList() {
   const [selectedCompany, setSelectedCompany] = useState('')
   const companyInsightRef = useRef(null)
 
+  const loadManagedStudents = async () => {
+    if (!isAdmin) return []
+
+    const response = await getAllUsers({ page: 1, limit: 500, sortBy: 'created', order: 'desc' })
+    const students = response?.data?.data || []
+    setManagedStudents(students)
+    return students
+  }
+
+  const normalizeRows = (list = []) => list.map((row, index) => ({
+    id: row._id || row.id || `live-${index}`,
+    company: row.company ?? 'Unknown',
+    date: row.interviewDate ?? row.date ?? row.createdAt?.slice(0, 10) ?? 'N/A',
+    score: Number(row.score ?? 0),
+    feedback: row.overallFeedback ?? row.feedback ?? 'No feedback available',
+    studentName: row.studentId?.name || 'Unknown student',
+    studentEmail: row.studentId?.email || '-',
+    studentId: row.studentId?._id || row.studentId || '',
+  }))
+
+  const loadAdminInterviewsFromStudentEndpoints = async (existingStudents = []) => {
+    const students = existingStudents.length > 0 ? existingStudents : await loadManagedStudents()
+    if (!students.length) return []
+
+    const interviewsPerStudent = await Promise.all(
+      students.map(async (student) => {
+        try {
+          const response = await getMockInterviews(student._id, { page: 1, limit: 500, sortBy: 'date', order: 'desc' })
+          const list = response?.data?.data || []
+          return list.map((item) => ({
+            ...item,
+            studentId: {
+              _id: student._id,
+              name: student.name,
+              email: student.email,
+            },
+          }))
+        } catch {
+          return []
+        }
+      })
+    )
+
+    return interviewsPerStudent.flat()
+  }
+
+  const runWithLoading = async (key, operation) => {
+    try {
+      setActionLoading((prev) => ({ ...prev, [key]: true }))
+      setError('')
+      setSuccess('')
+      await operation()
+    } catch (requestError) {
+      setError(getErrorMessage(requestError))
+    } finally {
+      setActionLoading((prev) => ({ ...prev, [key]: false }))
+    }
+  }
+
+  const loadInterviews = async () => {
+    try {
+      setLoading(true)
+      if (isAdmin) {
+        const students = await loadManagedStudents()
+        let list = []
+
+        try {
+          const response = await getAdminMockInterviews({ page: 1, limit: 500, sortBy: 'interviewDate', order: 'desc' })
+          list = response?.data?.data || response?.data || []
+        } catch {
+          list = await loadAdminInterviewsFromStudentEndpoints(students)
+        }
+
+        if (!Array.isArray(list) || list.length === 0) {
+          setRows([])
+          return
+        }
+
+        setRows(normalizeRows(list))
+        return
+      }
+
+      const response = await getMockInterviews(userId)
+      const list = response?.data?.data || response?.data || []
+
+      if (!Array.isArray(list) || list.length === 0) {
+        setRows(fallbackRows)
+        return
+      }
+
+      setRows(normalizeRows(list))
+    } catch {
+      setRows(isAdmin ? [] : fallbackRows)
+    } finally {
+      setLoading(false)
+    }
+  }
+
   useEffect(() => {
-    let active = true
     if (!userId) {
       setRows(fallbackRows)
       return undefined
     }
 
-    const load = async () => {
-      try {
-        setLoading(true)
-        const response = await getMockInterviews(userId)
-        const list = response?.data?.data || response?.data || []
-        if (!active) return
+    loadInterviews()
+    return undefined
+  }, [userId, isAdmin])
 
-        if (!Array.isArray(list) || list.length === 0) {
-          setRows(fallbackRows)
+  const onOpenCreate = () => {
+    setError('')
+    setSuccess('')
+    setCreateForm((prev) => ({
+      ...prev,
+      studentId: prev.studentId || managedStudents?.[0]?._id || '',
+      company: '',
+      score: '',
+      overallFeedback: '',
+      interviewDate: new Date().toISOString().slice(0, 10),
+    }))
+    setCreateOpen(true)
+  }
+
+  const onCreateSubmit = async (event) => {
+    event.preventDefault()
+
+    const score = Number(createForm.score)
+    if (isAdmin && !createForm.studentId) {
+      setError('Please select a student.')
+      return
+    }
+    if (!createForm.company.trim()) {
+      setError('Company is required.')
+      return
+    }
+    if (!createForm.interviewDate) {
+      setError('Interview date is required.')
+      return
+    }
+    if (Number.isNaN(score) || score < 0 || score > 100) {
+      setError('Score must be between 0 and 100.')
+      return
+    }
+    if (!createForm.overallFeedback.trim()) {
+      setError('Overall feedback is required.')
+      return
+    }
+
+    await runWithLoading('create', async () => {
+      if (isAdmin) {
+        if (createForm.studentId === ALL_ACCOUNTS_OPTION) {
+          if (!managedStudents.length) {
+            setError('No student accounts available.')
+            return
+          }
+
+          await Promise.all(
+            managedStudents.map((student) => createAdminMockInterview({
+              studentId: student._id,
+              company: createForm.company.trim(),
+              interviewDate: createForm.interviewDate,
+              score,
+              overallFeedback: createForm.overallFeedback.trim(),
+            }))
+          )
+
+          await loadInterviews()
+          setCreateOpen(false)
+          setSuccess(`Mock interview created for ${managedStudents.length} student accounts.`)
           return
         }
 
-        const normalized = list.map((row, index) => ({
-          id: row._id || row.id || `live-${index}`,
-          company: row.company ?? 'Unknown',
-          date: row.interviewDate ?? row.date ?? row.createdAt?.slice(0, 10) ?? 'N/A',
-          score: Number(row.score ?? 0),
-          feedback: row.overallFeedback ?? row.feedback ?? 'No feedback available',
-        }))
-
-        setRows(normalized)
-      } catch {
-        if (active) setRows(fallbackRows)
-      } finally {
-        if (active) setLoading(false)
+        await createAdminMockInterview({
+          studentId: createForm.studentId,
+          company: createForm.company.trim(),
+          interviewDate: createForm.interviewDate,
+          score,
+          overallFeedback: createForm.overallFeedback.trim(),
+        })
+      } else {
+        await createMockInterview(userId, {
+          company: createForm.company.trim(),
+          interviewDate: createForm.interviewDate,
+          score,
+          overallFeedback: createForm.overallFeedback.trim(),
+        })
       }
+      await loadInterviews()
+      setCreateOpen(false)
+      setSuccess('Mock interview created successfully.')
+    })
+  }
+
+  const onCreateInterview = async () => {
+    onOpenCreate()
+  }
+
+  const onEditInterview = async (row) => {
+    if (!row?.id) return
+
+    const company = window.prompt('Company name', row.company)
+    if (!company || !company.trim()) return
+
+    const interviewDate = window.prompt('Interview date (YYYY-MM-DD)', String(row.date).slice(0, 10))
+    if (!interviewDate || !interviewDate.trim()) return
+
+    const scoreInput = window.prompt('Score (0-100)', String(row.score))
+    const score = Number(scoreInput)
+    if (Number.isNaN(score) || score < 0 || score > 100) {
+      setError('Score must be between 0 and 100.')
+      return
     }
 
-    load()
-    return () => {
-      active = false
-    }
-  }, [userId])
+    const feedback = window.prompt('Overall feedback', row.feedback || '')
+    if (!feedback || !feedback.trim()) return
+
+    await runWithLoading(`edit-${row.id}`, async () => {
+      if (isAdmin) {
+        await updateAdminMockInterview(row.id, {
+          company: company.trim(),
+          interviewDate: interviewDate.trim(),
+          score,
+          overallFeedback: feedback.trim(),
+        })
+      } else {
+        await updateMockInterview(userId, row.id, {
+          company: company.trim(),
+          interviewDate: interviewDate.trim(),
+          score,
+          overallFeedback: feedback.trim(),
+        })
+      }
+      await loadInterviews()
+      setSuccess('Mock interview updated successfully.')
+    })
+  }
+
+  const onDeleteInterview = async (row) => {
+    if (!row?.id) return
+    const confirmed = window.confirm(`Delete interview for ${row.company} on ${formatDate(row.date)}?`)
+    if (!confirmed) return
+
+    await runWithLoading(`delete-${row.id}`, async () => {
+      if (isAdmin) {
+        await deleteAdminMockInterview(row.id)
+      } else {
+        await deleteMockInterview(userId, row.id)
+      }
+      await loadInterviews()
+      setSuccess('Mock interview deleted successfully.')
+    })
+  }
 
   const companies = useMemo(() => {
     const unique = Array.from(new Set(rows.map((row) => row.company).filter(Boolean)))
@@ -147,8 +359,12 @@ export default function InterviewsList() {
   const filteredRows = useMemo(() => {
     const query = search.trim().toLowerCase()
 
-    const base = rows.filter((row) => {
-      const bySearch = !query || row.company.toLowerCase().includes(query) || row.feedback.toLowerCase().includes(query)
+      const base = rows.filter((row) => {
+      const bySearch = !query
+        || row.company.toLowerCase().includes(query)
+        || row.feedback.toLowerCase().includes(query)
+        || (row.studentName || '').toLowerCase().includes(query)
+        || (row.studentEmail || '').toLowerCase().includes(query)
       const byCompany = companyFilter === 'All' || row.company === companyFilter
       const byScore =
         scoreFilter === 'All' ||
@@ -257,8 +473,23 @@ export default function InterviewsList() {
           <h1 className="text-3xl font-bold text-slate-900">Mock Interview Tracker</h1>
           <p className="mt-1 text-sm text-slate-600">Track performance by company, measure growth trends, and identify weak spots.</p>
         </div>
-        <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">Advanced Analytics</span>
+        <div className="flex items-center gap-2">
+          {isAdmin && (
+            <button
+              type="button"
+              onClick={onCreateInterview}
+              disabled={Boolean(actionLoading.create)}
+              className="rounded-lg border border-blue-300 bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-700 transition hover:bg-blue-100 disabled:opacity-60"
+            >
+              {actionLoading.create ? 'Adding...' : 'Add Interview'}
+            </button>
+          )}
+          <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">Advanced Analytics</span>
+        </div>
       </div>
+
+      {error && <p className="mt-3 rounded border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
+      {success && <p className="mt-3 rounded border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">{success}</p>}
 
       <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
         <MetricCard title="Total Interviews" value={String(filteredRows.length)} note="Across filtered view" />
@@ -331,11 +562,13 @@ export default function InterviewsList() {
         <table className="w-full text-left text-sm">
           <thead>
             <tr className="border-b border-slate-200 text-slate-600">
+              {isAdmin && <th className="py-2">Student</th>}
               <th className="py-2">Company</th>
               <th className="py-2">Date</th>
               <th className="py-2">Score</th>
               <th className="py-2">Band</th>
               <th className="py-2">Feedback</th>
+              {isAdmin && <th className="py-2 text-right">Actions</th>}
             </tr>
           </thead>
           <tbody>
@@ -343,6 +576,12 @@ export default function InterviewsList() {
               const band = getScoreBand(row.score)
               return (
                 <tr key={row.id || `${row.company}-${row.date}`} className="border-b border-slate-100 hover:bg-slate-50/70">
+                  {isAdmin && (
+                    <td className="py-2 text-slate-700">
+                      <p className="font-medium text-slate-900">{row.studentName}</p>
+                      <p className="text-xs text-slate-500">{row.studentEmail}</p>
+                    </td>
+                  )}
                   <td className="py-2 font-medium text-slate-900">
                     <button
                       type="button"
@@ -358,6 +597,28 @@ export default function InterviewsList() {
                     <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${band.tone}`}>{band.label}</span>
                   </td>
                   <td className="py-2 text-slate-700">{row.feedback}</td>
+                  {isAdmin && (
+                    <td className="py-2 text-right">
+                      <div className="inline-flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => onEditInterview(row)}
+                          disabled={Boolean(actionLoading[`edit-${row.id}`])}
+                          className="rounded-md border border-blue-300 bg-blue-50 px-3 py-1 text-xs font-medium text-blue-700 hover:bg-blue-100 disabled:opacity-60"
+                        >
+                          {actionLoading[`edit-${row.id}`] ? 'Saving...' : 'Edit'}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => onDeleteInterview(row)}
+                          disabled={Boolean(actionLoading[`delete-${row.id}`])}
+                          className="rounded-md border border-red-300 bg-red-50 px-3 py-1 text-xs font-medium text-red-700 hover:bg-red-100 disabled:opacity-60"
+                        >
+                          {actionLoading[`delete-${row.id}`] ? 'Deleting...' : 'Delete'}
+                        </button>
+                      </div>
+                    </td>
+                  )}
                 </tr>
               )
             })}
@@ -368,6 +629,83 @@ export default function InterviewsList() {
           <p className="mt-3 rounded border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-600">No interviews matched your filters.</p>
         )}
       </div>
+
+      <Modal isOpen={createOpen} onClose={() => setCreateOpen(false)} title="Add Mock Interview">
+        <form onSubmit={onCreateSubmit} className="space-y-3">
+          {isAdmin && (
+            <div>
+              <label className="mb-1 block text-sm font-medium text-slate-700">Student</label>
+              <select
+                value={createForm.studentId}
+                onChange={(event) => setCreateForm((prev) => ({ ...prev, studentId: event.target.value }))}
+                className="w-full rounded border border-slate-300 px-3 py-2 text-sm"
+                required
+              >
+                <option value="">Select student</option>
+                <option value={ALL_ACCOUNTS_OPTION}>All Accounts (all student logins)</option>
+                {managedStudents.map((student) => (
+                  <option key={student._id} value={student._id}>{student.name} ({student.email})</option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          <div>
+            <label className="mb-1 block text-sm font-medium text-slate-700">Company</label>
+            <input
+              type="text"
+              value={createForm.company}
+              onChange={(event) => setCreateForm((prev) => ({ ...prev, company: event.target.value }))}
+              className="w-full rounded border border-slate-300 px-3 py-2 text-sm"
+              required
+            />
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div>
+              <label className="mb-1 block text-sm font-medium text-slate-700">Interview Date</label>
+              <input
+                type="date"
+                value={createForm.interviewDate}
+                onChange={(event) => setCreateForm((prev) => ({ ...prev, interviewDate: event.target.value }))}
+                className="w-full rounded border border-slate-300 px-3 py-2 text-sm"
+                required
+              />
+            </div>
+            <div>
+              <label className="mb-1 block text-sm font-medium text-slate-700">Score (0-100)</label>
+              <input
+                type="number"
+                min="0"
+                max="100"
+                step="0.1"
+                value={createForm.score}
+                onChange={(event) => setCreateForm((prev) => ({ ...prev, score: event.target.value }))}
+                className="w-full rounded border border-slate-300 px-3 py-2 text-sm"
+                required
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="mb-1 block text-sm font-medium text-slate-700">Overall Feedback</label>
+            <textarea
+              rows={4}
+              value={createForm.overallFeedback}
+              onChange={(event) => setCreateForm((prev) => ({ ...prev, overallFeedback: event.target.value }))}
+              className="w-full rounded border border-slate-300 px-3 py-2 text-sm"
+              required
+            />
+          </div>
+
+          <div className="flex justify-end gap-2">
+            <button type="button" onClick={() => setCreateOpen(false)} className="rounded border border-slate-300 px-3 py-2 text-sm">Cancel</button>
+            <button type="submit" disabled={Boolean(actionLoading.create)} className="rounded bg-blue-600 px-3 py-2 text-sm font-medium text-white disabled:opacity-60">
+              {actionLoading.create ? 'Saving...' : 'Save Interview'}
+            </button>
+          </div>
+        </form>
+      </Modal>
 
       {selectedCompanyInsight && (
         <article ref={companyInsightRef} className="mt-5 rounded-xl border border-slate-200 bg-slate-50 p-4">

@@ -24,4 +24,10 @@ router.post('/company-questions', adminController.createQuestion);
 router.put('/company-questions/:questionId', adminController.updateQuestion);
 router.delete('/company-questions/:questionId', adminController.deleteQuestion);
 
+// Mock Interviews Management
+router.get('/mock-interviews', adminController.getAllMockInterviews);
+router.post('/mock-interviews', adminController.createMockInterview);
+router.put('/mock-interviews/:interviewId', adminController.updateMockInterview);
+router.delete('/mock-interviews/:interviewId', adminController.deleteMockInterview);
+
 module.exports = router;

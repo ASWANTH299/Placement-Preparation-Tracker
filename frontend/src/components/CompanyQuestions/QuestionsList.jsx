@@ -3,19 +3,6 @@ import { useNavigate } from 'react-router-dom'
 import SearchBar from '../Common/SearchBar'
 import useDebounce from '../../hooks/useDebounce'
 import { getQuestions } from '../../services/questionService'
-import { fallbackQuestions } from '../../utils/questionFallbackData'
-
-const mergeQuestionBanks = (primary = [], backup = []) => {
-  const map = new Map()
-
-  for (const question of [...primary, ...backup]) {
-    const key = (question?.title || '').trim().toLowerCase() || question?._id
-    if (!key || map.has(key)) continue
-    map.set(key, question)
-  }
-
-  return Array.from(map.values())
-}
 
 export default function QuestionsList() {
   const navigate = useNavigate()
@@ -34,14 +21,13 @@ export default function QuestionsList() {
         const response = await getQuestions({
           search: debounced || undefined,
           difficulty: difficulty === 'All' ? undefined : difficulty,
-          limit: 100
+          limit: 1000
         })
         const list = response?.data?.data || []
         if (!active) return
-        const merged = mergeQuestionBanks(Array.isArray(list) ? list : [], fallbackQuestions)
-        setItems(merged.length > 0 ? merged : fallbackQuestions)
+        setItems(Array.isArray(list) ? list : [])
       } catch {
-        if (active) setItems(fallbackQuestions)
+        if (active) setItems([])
       } finally {
         if (active) setLoading(false)
       }

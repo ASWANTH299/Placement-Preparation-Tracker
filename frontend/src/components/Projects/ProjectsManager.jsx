@@ -1,11 +1,13 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useSelector } from 'react-redux'
-import { deleteProject, downloadProject, getProjects, uploadProject } from '../../services/projectService'
+import { getAllUsers } from '../../services/adminService'
+import { deleteProject, downloadProject, getProjects, updateProject, uploadProject } from '../../services/projectService'
 import { getErrorMessage } from '../../utils/errorHandler'
 
 const MAX_PROJECT_COUNT = 5
 const MAX_PROJECT_SIZE_BYTES = 5 * 1024 * 1024
+const ALL_ACCOUNTS_OPTION = '__all_accounts__'
 
 const formatBytes = (bytes = 0) => {
   if (bytes < 1024) return `${bytes} B`
@@ -17,9 +19,13 @@ export default function ProjectsManager() {
   const navigate = useNavigate()
   const location = useLocation()
   const studentId = useSelector((state) => state.auth.user?.id)
+  const role = useSelector((state) => state.auth.role)
+  const isAdmin = role === 'admin'
   const fileInputRef = useRef(null)
 
   const [projects, setProjects] = useState([])
+  const [managedStudents, setManagedStudents] = useState([])
+  const [managedStudentId, setManagedStudentId] = useState(ALL_ACCOUNTS_OPTION)
   const [projectName, setProjectName] = useState('')
   const [description, setDescription] = useState('')
   const [technologyStack, setTechnologyStack] = useState('')
@@ -31,6 +37,7 @@ export default function ProjectsManager() {
   const [success, setSuccess] = useState('')
 
   const isUploadRoute = location.pathname === '/projects/upload'
+  const targetStudentId = isAdmin ? managedStudentId : studentId
 
   useEffect(() => {
     const input = fileInputRef.current
@@ -41,23 +48,44 @@ export default function ProjectsManager() {
     input.setAttribute('multiple', '')
   }, [])
 
+  const loadManagedStudents = useCallback(async () => {
+    if (!isAdmin) return []
+
+    const response = await getAllUsers({ page: 1, limit: 500, sortBy: 'created', order: 'desc' })
+    const students = response?.data?.data || []
+    setManagedStudents(students)
+    return students
+  }, [isAdmin])
+
   const loadProjects = useCallback(async () => {
-    if (!studentId) return
+    if (!targetStudentId) return
 
     try {
       setLoading(true)
-      const response = await getProjects(studentId)
+      const response = await getProjects(targetStudentId)
       setProjects(response?.data?.data || [])
     } catch (requestError) {
       setError(getErrorMessage(requestError))
     } finally {
       setLoading(false)
     }
-  }, [studentId])
+  }, [targetStudentId])
 
   useEffect(() => {
+    if (!studentId) return
+
+    if (isAdmin) {
+      loadManagedStudents()
+      return
+    }
+
     loadProjects()
-  }, [loadProjects])
+  }, [studentId, isAdmin, loadManagedStudents, loadProjects])
+
+  useEffect(() => {
+    if (!targetStudentId) return
+    loadProjects()
+  }, [targetStudentId, loadProjects])
 
   const selectedSize = useMemo(
     () => selectedFiles.reduce((sum, file) => sum + (file.size || 0), 0),
@@ -82,8 +110,8 @@ export default function ProjectsManager() {
   const handleUpload = async (event) => {
     event.preventDefault()
 
-    if (!studentId) return
-    if (projects.length >= MAX_PROJECT_COUNT) {
+    if (!targetStudentId) return
+    if (targetStudentId !== ALL_ACCOUNTS_OPTION && projects.length >= MAX_PROJECT_COUNT) {
       setError('Maximum 5 projects allowed. Delete an existing project before uploading a new one.')
       return
     }
@@ -105,20 +133,47 @@ export default function ProjectsManager() {
       setError('')
       setSuccess('')
 
-      const formData = new FormData()
-      formData.append('project_name', projectName.trim())
-      formData.append('description', description.trim())
-      formData.append('technology_stack', technologyStack.trim())
+      if (isAdmin && targetStudentId === ALL_ACCOUNTS_OPTION) {
+        if (!managedStudents.length) {
+          setError('No student accounts found.')
+          return
+        }
 
-      selectedFiles.forEach((file) => {
-        const relativeName = file.webkitRelativePath || file.name
-        formData.append('files', file, relativeName)
-      })
+        await Promise.all(
+          managedStudents.map(async (student) => {
+            const perStudentData = new FormData()
+            perStudentData.append('project_name', projectName.trim())
+            perStudentData.append('description', description.trim())
+            perStudentData.append('technology_stack', technologyStack.trim())
+            selectedFiles.forEach((file) => {
+              const relativeName = file.webkitRelativePath || file.name
+              perStudentData.append('files', file, relativeName)
+            })
+            await uploadProject(student._id, perStudentData)
+          })
+        )
+      } else {
+        const formData = new FormData()
+        formData.append('project_name', projectName.trim())
+        formData.append('description', description.trim())
+        formData.append('technology_stack', technologyStack.trim())
 
-      await uploadProject(studentId, formData)
+        selectedFiles.forEach((file) => {
+          const relativeName = file.webkitRelativePath || file.name
+          formData.append('files', file, relativeName)
+        })
+
+        await uploadProject(targetStudentId, formData)
+      }
+
       await loadProjects()
       resetUploadForm()
-      setSuccess('Project uploaded successfully')
+      if (isAdmin && targetStudentId === ALL_ACCOUNTS_OPTION) {
+        setSuccess(`Project uploaded for ${managedStudents.length} student accounts`)
+      } else {
+        setSuccess('Project uploaded successfully')
+      }
+
       if (isUploadRoute) {
         navigate('/projects')
       }
@@ -143,19 +198,24 @@ export default function ProjectsManager() {
   }
 
   const handleDelete = async (projectId) => {
+    if (!targetStudentId) return
     const confirmed = window.confirm('Delete this project and all uploaded files?')
     if (!confirmed) return
 
     await runWithLoading(`delete-${projectId}`, async () => {
-      await deleteProject(studentId, projectId)
-      setProjects((prev) => prev.filter((project) => project._id !== projectId))
+      const project = projects.find((item) => item._id === projectId)
+      const ownerId = isAdmin ? (project?.studentId?._id || targetStudentId) : targetStudentId
+      await deleteProject(ownerId, projectId)
+      setProjects((prev) => prev.filter((item) => item._id !== projectId))
       setSuccess('Project deleted successfully')
     })
   }
 
   const handleDownload = async (project) => {
+    if (!targetStudentId) return
     await runWithLoading(`download-${project._id}`, async () => {
-      const response = await downloadProject(studentId, project._id)
+      const ownerId = isAdmin ? (project?.studentId?._id || targetStudentId) : targetStudentId
+      const response = await downloadProject(ownerId, project._id)
       const blob = new Blob([response.data], { type: 'application/zip' })
       const url = window.URL.createObjectURL(blob)
       const link = document.createElement('a')
@@ -165,6 +225,33 @@ export default function ProjectsManager() {
       link.click()
       link.remove()
       window.URL.revokeObjectURL(url)
+    })
+  }
+
+  const handleEdit = async (project) => {
+    if (!project?._id || !targetStudentId) return
+
+    const nextName = window.prompt('Project name', project.projectName || '')
+    if (!nextName || !nextName.trim()) return
+
+    const nextDescription = window.prompt('Description', project.description || '')
+    if (nextDescription === null) return
+
+    const nextTech = window.prompt(
+      'Technology stack (comma separated)',
+      Array.isArray(project.technologyStack) ? project.technologyStack.join(', ') : ''
+    )
+    if (nextTech === null) return
+
+    await runWithLoading(`edit-${project._id}`, async () => {
+      const ownerId = isAdmin ? (project?.studentId?._id || targetStudentId) : targetStudentId
+      await updateProject(ownerId, project._id, {
+        project_name: nextName.trim(),
+        description: nextDescription,
+        technology_stack: nextTech
+      })
+      await loadProjects()
+      setSuccess('Project updated successfully')
     })
   }
 
@@ -187,6 +274,24 @@ export default function ProjectsManager() {
 
       {error && <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
       {success && <p className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">{success}</p>}
+
+      {isAdmin && (
+        <div className="rounded-xl border border-blue-200 bg-blue-50/70 p-4 dark:border-blue-700 dark:bg-blue-900/20">
+          <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-blue-700 dark:text-blue-200">Target Student</label>
+          <select
+            value={managedStudentId}
+            onChange={(event) => setManagedStudentId(event.target.value)}
+            className="w-full rounded-lg border border-blue-300 bg-white px-3 py-2 text-sm text-slate-800 outline-none ring-blue-500 transition focus:ring-2 dark:border-blue-700 dark:bg-slate-900 dark:text-slate-100"
+          >
+            <option value={ALL_ACCOUNTS_OPTION}>All Accounts (all student logins)</option>
+            {managedStudents.map((student) => (
+              <option key={student._id} value={student._id}>
+                {student.name} ({student.email})
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
 
       {(isUploadRoute || projects.length === 0) && (
         <form onSubmit={handleUpload} className="projects-upload-form grid gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800/40 md:grid-cols-2">
@@ -249,6 +354,7 @@ export default function ProjectsManager() {
           projects.map((project) => {
             const deleting = Boolean(actionLoading[`delete-${project._id}`])
             const downloading = Boolean(actionLoading[`download-${project._id}`])
+            const editing = Boolean(actionLoading[`edit-${project._id}`])
 
             return (
               <article key={project._id} className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
@@ -259,6 +365,9 @@ export default function ProjectsManager() {
                     <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
                       Files: {project.files?.length || 0} • Size: {formatBytes(project.totalSize)} • Uploaded: {new Date(project.uploadDate || project.createdAt).toLocaleDateString()}
                     </p>
+                    {isAdmin && project?.studentId?.name && (
+                      <p className="mt-1 text-xs text-blue-700 dark:text-blue-300">Owner: {project.studentId.name} ({project.studentId.email || 'no email'})</p>
+                    )}
                     {project.technologyStack?.length > 0 && (
                       <div className="mt-2 flex flex-wrap gap-1">
                         {project.technologyStack.map((tech) => (
@@ -271,8 +380,15 @@ export default function ProjectsManager() {
                   </div>
 
                   <div className="flex flex-wrap gap-2">
-                    <button type="button" onClick={() => navigate(`/projects/${project._id}`)} className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-600 dark:bg-transparent dark:text-slate-200 dark:hover:bg-slate-800">
+                    <button
+                      type="button"
+                      onClick={() => navigate(`/projects/${project._id}`, { state: { ownerId: project?.studentId?._id || targetStudentId } })}
+                      className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-600 dark:bg-transparent dark:text-slate-200 dark:hover:bg-slate-800"
+                    >
                       Open
+                    </button>
+                    <button type="button" onClick={() => handleEdit(project)} disabled={editing} className="rounded-md border border-amber-300 bg-amber-50 px-3 py-1.5 text-xs font-medium text-amber-700 transition hover:bg-amber-100 disabled:opacity-60 dark:border-amber-700 dark:bg-amber-900/20 dark:text-amber-300">
+                      {editing ? 'Saving...' : 'Edit'}
                     </button>
                     <button type="button" onClick={() => handleDownload(project)} disabled={downloading} className="rounded-md border border-blue-300 bg-blue-50 px-3 py-1.5 text-xs font-medium text-blue-700 transition hover:bg-blue-100 disabled:opacity-60 dark:border-blue-700 dark:bg-blue-900/20 dark:text-blue-300">
                       {downloading ? 'Downloading...' : 'Download'}

@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { getPracticeToolchains, getQuestionDetail, runPracticeCode, submitPracticeCode } from '../../services/questionService'
 import { getErrorMessage } from '../../utils/errorHandler'
-import { fallbackQuestionById, fallbackQuestions } from '../../utils/questionFallbackData'
 
 const languageOptions = ['Java', 'Python', 'JavaScript', 'TypeScript', 'C', 'C++', 'C#', 'Go', 'Rust', 'Kotlin']
 
@@ -241,18 +240,19 @@ export default function PracticeWorkspace() {
 
     const load = async () => {
       if (!isValidObjectId(questionId)) {
-        setQuestion(fallbackQuestionById[questionId] || fallbackQuestions[0])
+        setError('Invalid question id.')
+        setQuestion(null)
         return
       }
 
       try {
         const response = await getQuestionDetail(questionId)
         if (!active) return
-        setQuestion(response?.data?.data || fallbackQuestions[0])
+        setQuestion(response?.data?.data || null)
       } catch (requestError) {
         if (active) {
           setError(getErrorMessage(requestError))
-          setQuestion(fallbackQuestionById[questionId] || fallbackQuestions[0])
+          setQuestion(null)
         }
       }
     }

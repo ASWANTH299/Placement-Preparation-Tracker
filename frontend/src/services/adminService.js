@@ -16,3 +16,8 @@ export const deleteLearningPath = (topicId) => api.delete(`/admin/learning-paths
 export const createCompanyQuestion = (payload) => api.post('/admin/company-questions', payload)
 export const updateCompanyQuestion = (questionId, payload) => api.put(`/admin/company-questions/${questionId}`, payload)
 export const deleteCompanyQuestion = (questionId) => api.delete(`/admin/company-questions/${questionId}`)
+
+export const getAdminMockInterviews = (params) => api.get('/admin/mock-interviews', { params })
+export const createAdminMockInterview = (payload) => api.post('/admin/mock-interviews', payload)
+export const updateAdminMockInterview = (interviewId, payload) => api.put(`/admin/mock-interviews/${interviewId}`, payload)
+export const deleteAdminMockInterview = (interviewId) => api.delete(`/admin/mock-interviews/${interviewId}`)

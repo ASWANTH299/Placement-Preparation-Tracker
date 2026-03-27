@@ -55,3 +55,80 @@ exports.createForumMessage = async (req, res, next) => {
     next(error);
   }
 };
+
+exports.updateForumMessage = async (req, res, next) => {
+  try {
+    const { messageId } = req.params;
+    const message = String(req.body?.message || '').trim();
+
+    if (!message) {
+      return next(new AppError('Message is required', 400, 'VALIDATION_ERROR'));
+    }
+
+    if (message.length > 1000) {
+      return next(new AppError('Message must not exceed 1000 characters', 400, 'VALIDATION_ERROR'));
+    }
+
+    const existing = await ForumMessage.findById(messageId);
+    if (!existing) {
+      return next(new AppError('Message not found', 404, 'NOT_FOUND'));
+    }
+
+    const isOwner = existing.userId?.toString() === req.user?._id?.toString();
+    const isAdmin = req.user?.role === 'admin';
+    if (!isOwner && !isAdmin) {
+      return next(new AppError('You do not have permission to update this message', 403, 'UNAUTHORIZED'));
+    }
+
+    existing.message = message;
+    await existing.save();
+
+    const populated = await ForumMessage.findById(existing._id).populate('userId', 'name email');
+
+    res.status(200).json({
+      success: true,
+      data: populated,
+      message: 'Message updated successfully'
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.deleteForumMessage = async (req, res, next) => {
+  try {
+    const { messageId } = req.params;
+
+    const existing = await ForumMessage.findById(messageId);
+    if (!existing) {
+      return next(new AppError('Message not found', 404, 'NOT_FOUND'));
+    }
+
+    const isOwner = existing.userId?.toString() === req.user?._id?.toString();
+    const isAdmin = req.user?.role === 'admin';
+    if (!isOwner && !isAdmin) {
+      return next(new AppError('You do not have permission to delete this message', 403, 'UNAUTHORIZED'));
+    }
+
+    const idsToDelete = [existing._id];
+    const queue = [existing._id];
+
+    while (queue.length > 0) {
+      const current = queue.shift();
+      const children = await ForumMessage.find({ parentMessageId: current }).select('_id');
+      children.forEach((child) => {
+        idsToDelete.push(child._id);
+        queue.push(child._id);
+      });
+    }
+
+    await ForumMessage.deleteMany({ _id: { $in: idsToDelete } });
+
+    res.status(200).json({
+      success: true,
+      message: 'Message deleted successfully'
+    });
+  } catch (error) {
+    next(error);
+  }
+};

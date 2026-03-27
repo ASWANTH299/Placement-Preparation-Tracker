@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { useSelector } from 'react-redux'
 import { downloadProject, getProjectById } from '../../services/projectService'
 import { getErrorMessage } from '../../utils/errorHandler'
@@ -12,8 +12,13 @@ const formatBytes = (bytes = 0) => {
 
 export default function ProjectDetail() {
   const navigate = useNavigate()
+  const location = useLocation()
   const { projectId } = useParams()
   const studentId = useSelector((state) => state.auth.user?.id)
+  const role = useSelector((state) => state.auth.role)
+  const isAdmin = role === 'admin'
+  const ownerId = location.state?.ownerId
+  const targetStudentId = isAdmin ? (ownerId || studentId) : studentId
 
   const [project, setProject] = useState(null)
   const [loading, setLoading] = useState(false)
@@ -21,12 +26,12 @@ export default function ProjectDetail() {
   const [error, setError] = useState('')
 
   useEffect(() => {
-    if (!studentId || !projectId) return
+    if (!targetStudentId || !projectId) return
 
     const load = async () => {
       try {
         setLoading(true)
-        const response = await getProjectById(studentId, projectId)
+        const response = await getProjectById(targetStudentId, projectId)
         setProject(response?.data?.data || null)
       } catch (requestError) {
         setError(getErrorMessage(requestError))
@@ -36,14 +41,14 @@ export default function ProjectDetail() {
     }
 
     load()
-  }, [studentId, projectId])
+  }, [targetStudentId, projectId])
 
   const onDownload = async () => {
     if (!project) return
 
     try {
       setDownloading(true)
-      const response = await downloadProject(studentId, project._id)
+      const response = await downloadProject(targetStudentId, project._id)
       const blob = new Blob([response.data], { type: 'application/zip' })
       const url = window.URL.createObjectURL(blob)
       const link = document.createElement('a')

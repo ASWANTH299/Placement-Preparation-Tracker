@@ -140,6 +140,7 @@ router.post('/students/:id/projects/upload', projectUpload.array('files', 200), 
 router.get('/students/:id/projects', projectController.getProjects);
 router.get('/students/:id/projects/:projectId', projectController.getProjectById);
 router.get('/students/:id/projects/:projectId/download', projectController.downloadProject);
+router.put('/students/:id/projects/:projectId', projectController.updateProject);
 router.delete('/students/:id/projects/:projectId', projectController.deleteProject);
 
 // Notes Routes (specific routes before generic ones)
@@ -162,5 +163,7 @@ router.delete('/students/:id/coding-profiles/:platformId', codingProfileControll
 // Forum / chat routes
 router.get('/forum/messages', forumController.getForumMessages);
 router.post('/forum/messages', forumController.createForumMessage);
+router.put('/forum/messages/:messageId', forumController.updateForumMessage);
+router.delete('/forum/messages/:messageId', forumController.deleteForumMessage);
 
 module.exports = router;

@@ -109,7 +109,19 @@ exports.uploadProject = async (req, res, next) => {
 
 exports.getProjects = async (req, res, next) => {
   try {
-    const targetStudentId = resolveTargetStudentId(req, req.params.id);
+    const requestedId = req.params.id;
+    if (req.user?.role === 'admin' && requestedId === 'all') {
+      const projects = await StudentProject.find({})
+        .populate('studentId', 'name email')
+        .sort({ createdAt: -1 });
+
+      return res.status(200).json({
+        success: true,
+        data: projects
+      });
+    }
+
+    const targetStudentId = resolveTargetStudentId(req, requestedId);
     if (!targetStudentId) return next(new AppError('Invalid student context', 400, 'VALIDATION_ERROR'));
 
     const projects = await StudentProject.find({ studentId: targetStudentId }).sort({ createdAt: -1 });
@@ -117,6 +129,49 @@ exports.getProjects = async (req, res, next) => {
     res.status(200).json({
       success: true,
       data: projects
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.updateProject = async (req, res, next) => {
+  try {
+    const targetStudentId = resolveTargetStudentId(req, req.params.id);
+    if (!targetStudentId) return next(new AppError('Invalid student context', 400, 'VALIDATION_ERROR'));
+
+    const updateData = {};
+
+    if (req.body?.project_name !== undefined || req.body?.projectName !== undefined) {
+      const projectName = String(req.body?.project_name || req.body?.projectName || '').trim();
+      if (!projectName) {
+        return next(new AppError('Project name is required', 400, 'VALIDATION_ERROR'));
+      }
+      updateData.projectName = projectName;
+    }
+
+    if (req.body?.description !== undefined) {
+      updateData.description = String(req.body.description || '').trim();
+    }
+
+    if (req.body?.technology_stack !== undefined || req.body?.technologyStack !== undefined) {
+      updateData.technologyStack = normalizeTechnologyStack(req.body?.technology_stack || req.body?.technologyStack);
+    }
+
+    const project = await StudentProject.findOneAndUpdate(
+      { _id: req.params.projectId, studentId: targetStudentId },
+      updateData,
+      { new: true, runValidators: true }
+    );
+
+    if (!project) {
+      return next(new AppError('Project not found', 404, 'NOT_FOUND'));
+    }
+
+    res.status(200).json({
+      success: true,
+      data: project,
+      message: 'Project updated successfully'
     });
   } catch (error) {
     next(error);
