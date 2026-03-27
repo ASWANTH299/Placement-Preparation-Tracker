@@ -6,6 +6,7 @@ require('dotenv').config();
 
 const authMiddleware = require('./middlewares/authMiddleware');
 const roleMiddleware = require('./middlewares/roleMiddleware');
+const adminRateLimit = require('./middlewares/adminRateLimit');
 const errorHandler = require('./middlewares/errorHandler');
 
 const authRoutes = require('./routes/authRoutes');
@@ -88,7 +89,7 @@ app.use('/api/v1', authMiddleware);
 app.use('/api/v1', studentRoutes);
 
 // Admin routes - require admin role
-app.use('/api/v1/admin', authMiddleware, roleMiddleware(['admin']), adminRoutes);
+app.use('/api/v1/admin', adminRateLimit, authMiddleware, roleMiddleware(['admin']), adminRoutes);
 
 // 404 handler
 app.use((req, res) => {

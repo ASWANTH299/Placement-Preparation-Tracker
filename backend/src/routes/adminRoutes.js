@@ -5,9 +5,11 @@ const router = express.Router();
 
 // Dashboard
 router.get('/dashboard/stats', adminController.getDashboardStats);
+router.get('/analytics', adminController.getAnalytics);
 
 // User Management
 router.get('/users', adminController.getAllUsers);
+router.post('/users', adminController.createUser);
 router.get('/users/:userId', adminController.getUserDetail);
 router.put('/users/:userId', adminController.updateUser);
 router.delete('/users/:userId', adminController.deleteUser);

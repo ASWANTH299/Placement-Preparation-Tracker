@@ -122,6 +122,7 @@ exports.login = async (req, res, next) => {
         name: user.name,
         email: user.email,
         role: user.role,
+        mustResetPassword: Boolean(user.mustResetPassword),
         token
       },
       message: 'Login successful'
