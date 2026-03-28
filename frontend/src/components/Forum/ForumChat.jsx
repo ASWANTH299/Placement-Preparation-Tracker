@@ -156,8 +156,28 @@ export default function ForumChat() {
   const [saved, setSaved] = useState({})
   const [editingId, setEditingId] = useState('')
   const [editingText, setEditingText] = useState('')
+  const [savedTheme, setSavedTheme] = useState(() => localStorage.getItem('theme') || 'light')
 
   const MAX_MESSAGE_LENGTH = 1000
+
+  useEffect(() => {
+    const syncTheme = () => {
+      setSavedTheme(localStorage.getItem('theme') || 'light')
+    }
+
+    syncTheme()
+    window.addEventListener('storage', syncTheme)
+
+    const observer = new MutationObserver(syncTheme)
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] })
+
+    return () => {
+      window.removeEventListener('storage', syncTheme)
+      observer.disconnect()
+    }
+  }, [])
+
+  const isDarkTheme = savedTheme === 'dark'
 
   useEffect(() => {
     try {
@@ -510,11 +530,17 @@ export default function ForumChat() {
 
   return (
     <section className="forum-shell space-y-5 rounded-3xl border border-slate-200 bg-white p-6 text-slate-900 shadow-xl shadow-slate-200/60 dark:border-slate-700 dark:bg-slate-900/90 dark:text-slate-100 dark:shadow-none">
-      <div className="rounded-2xl border border-slate-200 bg-gradient-to-r from-sky-50 via-cyan-50 to-emerald-50 p-5 dark:border-slate-700 dark:from-slate-800 dark:via-slate-800 dark:to-slate-800">
+      <div
+        className={`rounded-2xl p-5 ${
+          isDarkTheme
+            ? 'border border-slate-700 bg-gradient-to-r from-slate-800 via-slate-800 to-slate-800'
+            : 'border border-slate-300 bg-gradient-to-r from-sky-100 via-cyan-100 to-emerald-100'
+        }`}
+      >
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Student Forum</h1>
-            <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">Threaded discussions, smart filters, and cleaner collaboration for placement prep.</p>
+            <h1 className={`text-2xl font-bold ${isDarkTheme ? 'text-slate-100' : 'text-slate-900'}`}>Student Forum</h1>
+            <p className={`mt-1 text-sm ${isDarkTheme ? 'text-slate-400' : 'text-slate-700'}`}>Threaded discussions, smart filters, and cleaner collaboration for placement prep.</p>
           </div>
           <div className="flex items-center gap-2">
             <button

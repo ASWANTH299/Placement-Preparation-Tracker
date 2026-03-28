@@ -87,8 +87,28 @@ export default function CodingProfilesPage() {
   const [showLinkedOnly, setShowLinkedOnly] = useState(false)
   const [managedStudents, setManagedStudents] = useState([])
   const [managedStudentId, setManagedStudentId] = useState('')
+  const [savedTheme, setSavedTheme] = useState(() => localStorage.getItem('theme') || 'light')
 
   const targetStudentId = isAdmin && managedStudentId ? managedStudentId : studentId
+
+  useEffect(() => {
+    const syncTheme = () => {
+      setSavedTheme(localStorage.getItem('theme') || 'light')
+    }
+
+    syncTheme()
+    window.addEventListener('storage', syncTheme)
+
+    const observer = new MutationObserver(syncTheme)
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] })
+
+    return () => {
+      window.removeEventListener('storage', syncTheme)
+      observer.disconnect()
+    }
+  }, [])
+
+  const isDarkTheme = savedTheme === 'dark'
 
   const refreshProfiles = async () => {
     if (!targetStudentId) return
@@ -288,13 +308,19 @@ export default function CodingProfilesPage() {
 
   return (
     <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-xl shadow-slate-200/60 dark:border-slate-700 dark:bg-slate-900/90 dark:shadow-none">
-      <div className="relative overflow-hidden rounded-2xl border border-slate-200 bg-gradient-to-r from-blue-100 via-cyan-100 to-teal-100 p-5 dark:border-slate-700 dark:from-slate-800 dark:via-slate-800 dark:to-slate-800">
-        <div className="pointer-events-none absolute -right-8 -top-10 h-40 w-40 rounded-full bg-sky-300/20 blur-2xl" />
-        <div className="pointer-events-none absolute -left-8 -bottom-10 h-36 w-36 rounded-full bg-emerald-300/20 blur-2xl" />
+      <div
+        className={`relative overflow-hidden rounded-2xl p-5 ${
+          isDarkTheme
+            ? 'border border-slate-700 bg-gradient-to-r from-slate-800 via-slate-800 to-slate-800'
+            : 'border border-slate-300 bg-gradient-to-r from-sky-100 via-cyan-100 to-teal-100'
+        }`}
+      >
+        <div className="pointer-events-none absolute -right-8 -top-10 h-40 w-40 rounded-full bg-sky-400/25 blur-2xl" />
+        <div className="pointer-events-none absolute -left-8 -bottom-10 h-36 w-36 rounded-full bg-emerald-400/25 blur-2xl" />
 
         <div className="relative">
-          <h1 className="text-3xl font-black tracking-tight text-slate-900 dark:text-slate-100">Coding Platform Profiles</h1>
-          <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">Link your handles, track sync health, and keep every profile interview-ready.</p>
+          <h1 className={`text-3xl font-black tracking-tight ${isDarkTheme ? 'text-slate-100' : 'text-slate-900'}`}>Coding Platform Profiles</h1>
+          <p className={`mt-1 text-sm ${isDarkTheme ? 'text-slate-400' : 'text-slate-700'}`}>Link your handles, track sync health, and keep every profile interview-ready.</p>
 
           <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-5">
             <StatCard label="Linked" value={`${stats.linked}/${stats.total}`} />
