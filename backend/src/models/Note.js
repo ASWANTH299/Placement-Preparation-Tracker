@@ -18,7 +18,7 @@ const noteSchema = new mongoose.Schema(
     content: {
       type: String,
       required: [true, 'Content is required'],
-      maxlength: 10000
+      maxlength: 200000
     },
     topics: [String],
     companies: [String],

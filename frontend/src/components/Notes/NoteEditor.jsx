@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 
 const draftKey = 'note-draft'
+const MAX_NOTE_CONTENT_LENGTH = 200000
 
 const getInitialDraft = () => {
   try {
@@ -36,9 +37,9 @@ export default function NoteEditor() {
     <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
       <h1 className="text-2xl font-bold text-slate-900">Create Note</h1>
       <input value={title} onChange={(event) => setTitle(event.target.value)} placeholder="Title" className="mt-4 w-full rounded border border-slate-300 px-3 py-2 text-sm" />
-      <textarea value={content} onChange={(event) => setContent(event.target.value)} maxLength={10000} className="mt-3 h-48 w-full rounded border border-slate-300 px-3 py-2 text-sm" />
+      <textarea value={content} onChange={(event) => setContent(event.target.value)} maxLength={MAX_NOTE_CONTENT_LENGTH} className="mt-3 h-48 w-full rounded border border-slate-300 px-3 py-2 text-sm" />
       <div className="mt-2 flex items-center justify-between text-xs text-slate-500">
-        <span>{content.length}/10000</span>
+        <span>{content.length}/{MAX_NOTE_CONTENT_LENGTH}</span>
         <span>{saved ? 'Draft saved' : 'Autosaving...'}</span>
       </div>
     </section>

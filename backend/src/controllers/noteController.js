@@ -1,6 +1,8 @@
 const Note = require('../models/Note');
 const { AppError } = require('../utils/errorHandler');
 
+const MAX_NOTE_CONTENT_LENGTH = 200000;
+
 // Get notes
 exports.getNotes = async (req, res, next) => {
   try {
@@ -111,8 +113,8 @@ exports.createNote = async (req, res, next) => {
       return next(new AppError('Title must be between 5-200 characters', 400, 'VALIDATION_ERROR'));
     }
 
-    if (!content || content.length > 10000) {
-      return next(new AppError('Content is required and must not exceed 10000 characters', 400, 'VALIDATION_ERROR'));
+    if (!content || content.length > MAX_NOTE_CONTENT_LENGTH) {
+      return next(new AppError(`Content is required and must not exceed ${MAX_NOTE_CONTENT_LENGTH} characters`, 400, 'VALIDATION_ERROR'));
     }
 
     const note = new Note({
