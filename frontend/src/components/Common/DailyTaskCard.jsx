@@ -4,123 +4,134 @@ const dailyQuestionBank = [
   {
     id: 'dq-1',
     title: 'Two Sum with Indices',
+    platform: 'LeetCode',
     difficulty: 'Easy',
     company: 'Amazon',
     time: '20 min',
     tags: ['Array', 'HashMap'],
     prompt: 'Given an array of integers and a target, return the indices of two numbers whose sum is target.',
-    practiceUrl: 'https://leetcode.com/problems/two-sum/',
+    practiceUrl: 'https://leetcode.com/problems/two-sum/'
   },
   {
     id: 'dq-2',
     title: 'Longest Substring Without Repeating Characters',
+    platform: 'LeetCode',
     difficulty: 'Medium',
     company: 'Google',
     time: '35 min',
     tags: ['Sliding Window', 'String'],
     prompt: 'Find the length of the longest substring without repeating characters.',
-    practiceUrl: 'https://leetcode.com/problems/longest-substring-without-repeating-characters/',
+    practiceUrl: 'https://leetcode.com/problems/longest-substring-without-repeating-characters/'
   },
   {
     id: 'dq-3',
     title: 'Valid Parentheses',
+    platform: 'LeetCode',
     difficulty: 'Easy',
     company: 'Microsoft',
     time: '15 min',
     tags: ['Stack'],
     prompt: 'Given a string of brackets, determine whether the input string is valid.',
-    practiceUrl: 'https://leetcode.com/problems/valid-parentheses/',
+    practiceUrl: 'https://leetcode.com/problems/valid-parentheses/'
   },
   {
     id: 'dq-4',
     title: 'Merge Intervals',
+    platform: 'LeetCode',
     difficulty: 'Medium',
     company: 'Meta',
     time: '30 min',
     tags: ['Intervals', 'Sorting'],
     prompt: 'Merge all overlapping intervals and return an array of non-overlapping intervals.',
-    practiceUrl: 'https://leetcode.com/problems/merge-intervals/',
+    practiceUrl: 'https://leetcode.com/problems/merge-intervals/'
   },
   {
     id: 'dq-5',
-    title: 'Kth Largest Element in an Array',
+    title: 'Add Two Numbers',
+    platform: 'LeetCode',
     difficulty: 'Medium',
-    company: 'Netflix',
+    company: 'Microsoft',
     time: '30 min',
-    tags: ['Heap', 'Quickselect'],
-    prompt: 'Find the kth largest element in an unsorted array.',
-    practiceUrl: 'https://leetcode.com/problems/kth-largest-element-in-an-array/',
+    tags: ['Linked List'],
+    prompt: 'Add two numbers represented as linked lists and return the sum as a linked list.',
+    practiceUrl: 'https://leetcode.com/problems/add-two-numbers/'
   },
   {
     id: 'dq-6',
-    title: 'Number of Islands',
-    difficulty: 'Medium',
-    company: 'Uber',
-    time: '35 min',
-    tags: ['Graph', 'DFS/BFS'],
-    prompt: 'Given a 2D grid map of 1s and 0s, count the number of islands.',
-    practiceUrl: 'https://leetcode.com/problems/number-of-islands/',
+    title: 'Add Two Numbers',
+    platform: 'CodeChef',
+    difficulty: 'Easy',
+    company: 'CodeChef',
+    time: '10 min',
+    tags: ['Math'],
+    prompt: 'Read two integers and print their sum for each test case.',
+    practiceUrl: 'https://www.codechef.com/problems/FLOW001'
   },
   {
     id: 'dq-7',
-    title: 'LRU Cache',
-    difficulty: 'Medium',
-    company: 'Adobe',
-    time: '40 min',
-    tags: ['Design', 'HashMap', 'LinkedList'],
-    prompt: 'Design and implement a data structure for Least Recently Used (LRU) cache.',
-    practiceUrl: 'https://leetcode.com/problems/lru-cache/',
+    title: 'Enormous Input Test',
+    platform: 'CodeChef',
+    difficulty: 'Easy',
+    company: 'CodeChef',
+    time: '20 min',
+    tags: ['Implementation'],
+    prompt: 'Count how many numbers are divisible by K from a large list of inputs.',
+    practiceUrl: 'https://www.codechef.com/problems/INTEST'
   },
   {
     id: 'dq-8',
+    title: 'Chef and Remissness',
+    platform: 'CodeChef',
+    difficulty: 'Easy',
+    company: 'CodeChef',
+    time: '10 min',
+    tags: ['Math'],
+    prompt: 'Find minimum and maximum possible time given two reported values.',
+    practiceUrl: 'https://www.codechef.com/problems/REMISS'
+  },
+  {
+    id: 'dq-9',
+    title: 'Life, the Universe, and Everything',
+    platform: 'CodeChef',
+    difficulty: 'Easy',
+    company: 'CodeChef',
+    time: '15 min',
+    tags: ['Input/Output'],
+    prompt: 'Print each number until 42 appears in the input stream.',
+    practiceUrl: 'https://www.codechef.com/problems/TEST'
+  },
+  {
+    id: 'dq-10',
     title: 'Top K Frequent Elements',
+    platform: 'LeetCode',
     difficulty: 'Medium',
     company: 'Atlassian',
     time: '30 min',
     tags: ['Heap', 'HashMap'],
     prompt: 'Return the k most frequent elements in any order.',
-    practiceUrl: 'https://leetcode.com/problems/top-k-frequent-elements/',
+    practiceUrl: 'https://leetcode.com/problems/top-k-frequent-elements/'
   },
   {
-    id: 'dq-9',
+    id: 'dq-11',
     title: 'Course Schedule',
+    platform: 'LeetCode',
     difficulty: 'Medium',
     company: 'Apple',
     time: '35 min',
     tags: ['Graph', 'Topological Sort'],
     prompt: 'Determine if it is possible to finish all courses given prerequisites.',
-    practiceUrl: 'https://leetcode.com/problems/course-schedule/',
+    practiceUrl: 'https://leetcode.com/problems/course-schedule/'
   },
   {
-    id: 'dq-10',
     title: 'Trapping Rain Water',
+    platform: 'LeetCode',
     difficulty: 'Hard',
     company: 'Goldman Sachs',
     time: '45 min',
     tags: ['Two Pointers', 'Array'],
     prompt: 'Compute how much water can be trapped after raining for elevation bars.',
-    practiceUrl: 'https://leetcode.com/problems/trapping-rain-water/',
-  },
-  {
-    id: 'dq-11',
-    title: 'Product of Array Except Self',
-    difficulty: 'Medium',
-    company: 'PayPal',
-    time: '25 min',
-    tags: ['Prefix/Suffix', 'Array'],
-    prompt: 'Return an array answer such that answer[i] is product of all elements except nums[i].',
-    practiceUrl: 'https://leetcode.com/problems/product-of-array-except-self/',
-  },
-  {
-    id: 'dq-12',
-    title: 'Binary Tree Level Order Traversal',
-    difficulty: 'Medium',
-    company: 'Oracle',
-    time: '30 min',
-    tags: ['Tree', 'BFS'],
-    prompt: 'Return the level order traversal of binary tree node values.',
-    practiceUrl: 'https://leetcode.com/problems/binary-tree-level-order-traversal/',
-  },
+    practiceUrl: 'https://leetcode.com/problems/trapping-rain-water/'
+  }
 ]
 
 const hashString = (value) => {
@@ -138,10 +149,11 @@ const getLocalDateKey = (date = new Date()) => {
   return `${year}-${month}-${day}`
 }
 
-const getQuestionForDay = (userSeed, dateKey) => {
+const getQuestionForDay = (userSeed, dateKey, bank) => {
   const seed = `${userSeed}|${dateKey}`
-  const index = hashString(seed) % dailyQuestionBank.length
-  return dailyQuestionBank[index]
+  const safeBank = Array.isArray(bank) && bank.length > 0 ? bank : dailyQuestionBank
+  const index = hashString(seed) % safeBank.length
+  return safeBank[index]
 }
 
 const getDifficultyTone = (difficulty) => {
@@ -152,13 +164,17 @@ const getDifficultyTone = (difficulty) => {
 
 export default function DailyTaskCard({ user, period = 'Today', className = '' }) {
   const [now, setNow] = useState(() => new Date())
+  const [submissionUrl, setSubmissionUrl] = useState('')
   const [isCompleted, setIsCompleted] = useState(false)
+  const [completionError, setCompletionError] = useState('')
 
   const userSeed = user?.id || user?._id || user?.email || user?.name || 'guest-user'
   const dateKey = useMemo(() => getLocalDateKey(now), [now])
-  const question = useMemo(() => getQuestionForDay(userSeed, dateKey), [userSeed, dateKey])
+
+  const question = useMemo(() => getQuestionForDay(userSeed, dateKey, dailyQuestionBank), [userSeed, dateKey])
 
   const completionStorageKey = useMemo(() => `daily-task:${userSeed}:${dateKey}:${question.id}`, [userSeed, dateKey, question.id])
+  const submissionStorageKey = useMemo(() => `daily-task:submission:${userSeed}:${dateKey}:${question.id}`, [userSeed, dateKey, question.id])
 
   useEffect(() => {
     const timerId = window.setInterval(() => {
@@ -170,11 +186,22 @@ export default function DailyTaskCard({ user, period = 'Today', className = '' }
 
   useEffect(() => {
     try {
-      setIsCompleted(window.localStorage.getItem(completionStorageKey) === 'true')
+      const storedSubmission = window.localStorage.getItem(submissionStorageKey) || ''
+      const storedCompletion = window.localStorage.getItem(completionStorageKey) === 'true'
+
+      setSubmissionUrl(storedSubmission)
+
+      if (storedCompletion && !storedSubmission) {
+        window.localStorage.removeItem(completionStorageKey)
+        setIsCompleted(false)
+      } else {
+        setIsCompleted(storedCompletion)
+      }
     } catch {
+      setSubmissionUrl('')
       setIsCompleted(false)
     }
-  }, [completionStorageKey])
+  }, [completionStorageKey, submissionStorageKey])
 
   const remainingMs = useMemo(() => {
     const tomorrow = new Date(now)
@@ -199,12 +226,29 @@ export default function DailyTaskCard({ user, period = 'Today', className = '' }
     ? 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/30 dark:text-emerald-300'
     : 'border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-900/60 dark:bg-blue-950/30 dark:text-blue-300'
 
+  const isValidSubmissionUrl = (value) => {
+    const raw = String(value || '').trim()
+    if (!raw) return false
+
+    // Accept common accepted-submission URL shapes for LeetCode and CodeChef.
+    const leetCodeAccepted = /^https?:\/\/(www\.)?leetcode\.com\/(submissions\/detail\/|problems\/.+\/submissions\/?).+/i
+    const codeChefAccepted = /^https?:\/\/(www\.)?codechef\.com\/viewsolution\/.+/i
+    return leetCodeAccepted.test(raw) || codeChefAccepted.test(raw)
+  }
+
   const toggleCompletion = () => {
+    if (!isCompleted && !isValidSubmissionUrl(submissionUrl)) {
+      setCompletionError('Please finish the problem and paste your accepted LeetCode or CodeChef submission link to mark it complete.')
+      return
+    }
+
+    setCompletionError('')
     const next = !isCompleted
     setIsCompleted(next)
 
     try {
       window.localStorage.setItem(completionStorageKey, String(next))
+      window.localStorage.setItem(submissionStorageKey, submissionUrl.trim())
     } catch {
       // ignore storage errors to keep UX responsive
     }
@@ -225,6 +269,7 @@ export default function DailyTaskCard({ user, period = 'Today', className = '' }
       <div className="daily-task-question-panel mt-4 rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-gradient-to-br dark:from-slate-900 dark:to-slate-800">
         <div className="flex flex-wrap items-center gap-2">
           <span className={`daily-task-difficulty-chip rounded-full px-2.5 py-1 text-xs font-semibold ${getDifficultyTone(question.difficulty)}`}>{question.difficulty}</span>
+          <span className="daily-task-meta-chip rounded-full bg-indigo-100 px-2.5 py-1 text-xs font-medium text-indigo-700 dark:bg-indigo-950/50 dark:text-indigo-200">{question.platform}</span>
           <span className="daily-task-meta-chip rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700 dark:bg-slate-800 dark:text-slate-300">{question.company}</span>
           <span className="daily-task-meta-chip rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700 dark:bg-slate-800 dark:text-slate-300">{question.time}</span>
         </div>
@@ -242,7 +287,33 @@ export default function DailyTaskCard({ user, period = 'Today', className = '' }
       </div>
 
       <div className={`mt-4 rounded-lg border px-3 py-2 text-sm ${completionTone}`}>
-        {isCompleted ? 'Completed for today. New question unlocks at midnight.' : 'Not completed yet. Solve this before midnight to maintain consistency.'}
+        {isCompleted
+          ? 'Completed for today. New question unlocks at midnight.'
+          : isValidSubmissionUrl(submissionUrl)
+            ? 'Accepted submission link added. You can now mark this daily task as complete.'
+            : 'Not completed yet. Solve this before midnight to maintain consistency.'}
+      </div>
+      {completionError && (
+        <p className="mt-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800 dark:border-amber-900/70 dark:bg-amber-950/40 dark:text-amber-200">
+          {completionError}
+        </p>
+      )}
+
+      <div className="mt-3">
+        <label htmlFor="daily-task-submission" className="mb-1 block text-xs font-semibold uppercase tracking-[0.15em] text-slate-600 dark:text-slate-300">
+          Accepted submission URL (LeetCode/CodeChef)
+        </label>
+        <input
+          id="daily-task-submission"
+          type="url"
+          value={submissionUrl}
+          onChange={(event) => {
+            setSubmissionUrl(event.target.value)
+            if (completionError) setCompletionError('')
+          }}
+          placeholder="https://leetcode.com/submissions/detail/... or https://www.codechef.com/viewsolution/..."
+          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-cyan-500 focus:outline-none dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+        />
       </div>
 
       <div className="mt-3">
