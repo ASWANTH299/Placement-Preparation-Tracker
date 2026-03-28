@@ -32,7 +32,7 @@ const maskEmail = (email = '') => {
 // ─── Register ────────────────────────────────────────────────────────────────
 exports.register = async (req, res, next) => {
   try {
-    const { name, email, phoneNumber, password, confirmPassword } = req.body;
+    const { name, email, password, confirmPassword } = req.body;
 
     if (!validateName(name)) {
       return next(new AppError('Name must be between 2-100 characters', 400, 'VALIDATION_ERROR'));
@@ -40,13 +40,6 @@ exports.register = async (req, res, next) => {
 
     if (!validateEmail(email)) {
       return next(new AppError('Please provide a valid email', 400, 'VALIDATION_ERROR'));
-    }
-
-    const hasPhone = Boolean(phoneNumber);
-    const normalizedPhone = hasPhone ? normalizePhoneNumber(phoneNumber) : null;
-
-    if (hasPhone && !validatePhoneNumber(phoneNumber)) {
-      return next(new AppError('Please provide a valid phone number', 400, 'VALIDATION_ERROR'));
     }
 
     if (!validatePassword(password)) {
@@ -62,18 +55,10 @@ exports.register = async (req, res, next) => {
       return next(new AppError('Email already exists', 409, 'EMAIL_EXISTS'));
     }
 
-    if (normalizedPhone) {
-      const existingPhone = await User.findOne({ phoneNumber: normalizedPhone });
-      if (existingPhone) {
-        return next(new AppError('Phone number already exists', 409, 'PHONE_EXISTS'));
-      }
-    }
-
     // Role is always 'student' (schema default) — never taken from request
     const user = new User({
       name: name.trim(),
       email: email.toLowerCase(),
-      phoneNumber: normalizedPhone || null,
       password,
     });
 
@@ -85,7 +70,6 @@ exports.register = async (req, res, next) => {
         id: user._id,
         name: user.name,
         email: user.email,
-        phoneNumber: user.phoneNumber,
         role: user.role
       },
       message: 'Registration successful. Please login.'

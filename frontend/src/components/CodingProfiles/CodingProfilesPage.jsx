@@ -288,7 +288,7 @@ export default function CodingProfilesPage() {
 
   return (
     <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-xl shadow-slate-200/60 dark:border-slate-700 dark:bg-slate-900/90 dark:shadow-none">
-      <div className="relative overflow-hidden rounded-2xl border border-slate-200 bg-gradient-to-r from-sky-50 via-cyan-50 to-teal-50 p-5 dark:border-slate-700 dark:from-slate-800 dark:via-slate-800 dark:to-slate-800">
+      <div className="relative overflow-hidden rounded-2xl border border-slate-200 bg-gradient-to-r from-blue-100 via-cyan-100 to-teal-100 p-5 dark:border-slate-700 dark:from-slate-800 dark:via-slate-800 dark:to-slate-800">
         <div className="pointer-events-none absolute -right-8 -top-10 h-40 w-40 rounded-full bg-sky-300/20 blur-2xl" />
         <div className="pointer-events-none absolute -left-8 -bottom-10 h-36 w-36 rounded-full bg-emerald-300/20 blur-2xl" />
 

@@ -67,6 +67,7 @@ export default function QuestionsList() {
         <table className="w-full text-left text-sm">
           <thead>
             <tr className="border-b border-slate-200 text-slate-700 dark:border-slate-700 dark:text-slate-300">
+              <th className="w-12 py-2 text-center">#</th>
               <th className="py-2">Question</th>
               <th className="py-2">Company</th>
               <th className="py-2">Topic</th>
@@ -75,12 +76,13 @@ export default function QuestionsList() {
             </tr>
           </thead>
           <tbody>
-            {filtered.map((question) => (
+            {filtered.map((question, index) => (
               <tr
                 key={question._id}
                 className="cursor-pointer border-b border-slate-100 transition hover:bg-slate-50/90 dark:border-slate-800 dark:hover:bg-slate-800/70"
                 onClick={() => navigate(`/questions/${question._id}`)}
               >
+                <td className="w-12 py-2 text-center font-medium text-slate-900 dark:text-slate-100">{index + 1}</td>
                 <td className="py-2 font-medium text-slate-900 dark:text-slate-100">{question.title}</td>
                 <td className="py-2 text-slate-700 dark:text-slate-300">{question.company}</td>
                 <td className="py-2 text-slate-700 dark:text-slate-300">{question.topic || question.topics?.[0] || 'General'}</td>
