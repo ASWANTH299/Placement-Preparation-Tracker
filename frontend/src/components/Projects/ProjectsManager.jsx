@@ -263,7 +263,7 @@ export default function ProjectsManager() {
           <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">Upload and manage up to 5 project folders. Each folder can have multiple files and must stay within 5MB.</p>
         </div>
         <div className="flex gap-2">
-          <button type="button" onClick={() => navigate('/projects/upload')} className="rounded-lg border border-blue-300 bg-blue-50 px-3 py-2 text-sm font-medium text-blue-700 transition hover:bg-blue-100 dark:border-blue-700 dark:bg-blue-900/20 dark:text-blue-300">
+          <button type="button" onClick={() => navigate('/projects/upload')} className="rounded-lg border border-blue-500 bg-blue-100 px-3 py-2 text-sm font-semibold text-slate-900 transition hover:bg-blue-200 dark:border-blue-700 dark:bg-blue-900/20 dark:text-blue-300">
             Upload Project
           </button>
           <button type="button" onClick={loadProjects} disabled={loading} className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:opacity-60 dark:border-slate-600 dark:bg-transparent dark:text-slate-200 dark:hover:bg-slate-800">
@@ -338,7 +338,7 @@ export default function ProjectsManager() {
             <button type="button" onClick={resetUploadForm} className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-600 dark:bg-transparent dark:text-slate-200 dark:hover:bg-slate-800">
               Clear
             </button>
-            <button type="submit" disabled={uploading} className="rounded-lg border border-emerald-300 bg-emerald-50 px-3 py-2 text-sm font-medium text-emerald-700 transition hover:bg-emerald-100 disabled:opacity-60 dark:border-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-300">
+            <button type="submit" disabled={uploading} className="rounded-lg border border-emerald-500 bg-emerald-100 px-3 py-2 text-sm font-semibold text-slate-900 transition hover:bg-emerald-200 disabled:opacity-60 dark:border-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-300">
               {uploading ? 'Uploading...' : 'Upload Folder'}
             </button>
           </div>
@@ -387,13 +387,13 @@ export default function ProjectsManager() {
                     >
                       Open
                     </button>
-                    <button type="button" onClick={() => handleEdit(project)} disabled={editing} className="rounded-md border border-amber-300 bg-amber-50 px-3 py-1.5 text-xs font-medium text-amber-700 transition hover:bg-amber-100 disabled:opacity-60 dark:border-amber-700 dark:bg-amber-900/20 dark:text-amber-300">
+                    <button type="button" onClick={() => handleEdit(project)} disabled={editing} className="rounded-md border border-amber-400 bg-amber-100 px-3 py-1.5 text-xs font-semibold text-slate-900 transition hover:bg-amber-200 disabled:opacity-60 dark:border-amber-700 dark:bg-amber-900/20 dark:text-amber-300">
                       {editing ? 'Saving...' : 'Edit'}
                     </button>
-                    <button type="button" onClick={() => handleDownload(project)} disabled={downloading} className="rounded-md border border-blue-300 bg-blue-50 px-3 py-1.5 text-xs font-medium text-blue-700 transition hover:bg-blue-100 disabled:opacity-60 dark:border-blue-700 dark:bg-blue-900/20 dark:text-blue-300">
+                    <button type="button" onClick={() => handleDownload(project)} disabled={downloading} className="rounded-md border border-blue-400 bg-blue-100 px-3 py-1.5 text-xs font-semibold text-slate-900 transition hover:bg-blue-200 disabled:opacity-60 dark:border-blue-700 dark:bg-blue-900/20 dark:text-blue-300">
                       {downloading ? 'Downloading...' : 'Download'}
                     </button>
-                    <button type="button" onClick={() => handleDelete(project._id)} disabled={deleting} className="rounded-md border border-red-300 bg-red-50 px-3 py-1.5 text-xs font-medium text-red-700 transition hover:bg-red-100 disabled:opacity-60 dark:border-red-700 dark:bg-red-900/20 dark:text-red-300">
+                    <button type="button" onClick={() => handleDelete(project._id)} disabled={deleting} className="rounded-md border border-red-400 bg-red-100 px-3 py-1.5 text-xs font-semibold text-slate-900 transition hover:bg-red-200 disabled:opacity-60 dark:border-red-700 dark:bg-red-900/20 dark:text-red-300">
                       {deleting ? 'Deleting...' : 'Delete'}
                     </button>
                   </div>

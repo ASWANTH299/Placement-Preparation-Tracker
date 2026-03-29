@@ -18,25 +18,25 @@ const platformMeta = {
   LeetCode: {
     icon: 'LC',
     hue: 'from-amber-500 to-orange-600',
-    badge: 'bg-amber-50 text-amber-700 dark:bg-amber-900/20 dark:text-amber-300',
+    badge: 'bg-amber-100 text-slate-900 dark:bg-amber-900/20 dark:text-amber-300',
     placeholder: 'e.g. leetcode.com/john_doe'
   },
   CodeChef: {
     icon: 'CC',
     hue: 'from-rose-500 to-red-600',
-    badge: 'bg-rose-50 text-rose-700 dark:bg-rose-900/20 dark:text-rose-300',
+    badge: 'bg-rose-100 text-slate-900 dark:bg-rose-900/20 dark:text-rose-300',
     placeholder: 'e.g. codechef.com/users/john_doe'
   },
   HackerRank: {
     icon: 'HR',
     hue: 'from-emerald-500 to-green-600',
-    badge: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-300',
+    badge: 'bg-emerald-100 text-slate-900 dark:bg-emerald-900/20 dark:text-emerald-300',
     placeholder: 'e.g. hackerrank.com/john_doe'
   },
   Codeforces: {
     icon: 'CF',
     hue: 'from-blue-500 to-indigo-600',
-    badge: 'bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-300',
+    badge: 'bg-blue-100 text-slate-900 dark:bg-blue-900/20 dark:text-blue-300',
     placeholder: 'e.g. codeforces.com/profile/john_doe'
   }
 }
@@ -406,7 +406,7 @@ export default function CodingProfilesPage() {
           type="button"
           onClick={refreshAll}
           disabled={actionState['refresh-all'] || !profiles.length}
-          className="rounded-lg border border-teal-300 bg-teal-50 px-3 py-2 text-sm font-semibold text-teal-700 transition hover:bg-teal-100 disabled:cursor-not-allowed disabled:opacity-60 dark:border-teal-700 dark:bg-teal-900/20 dark:text-teal-300"
+          className="rounded-lg border border-teal-500 bg-teal-100 px-3 py-2 text-sm font-semibold text-slate-900 transition hover:bg-teal-200 disabled:cursor-not-allowed disabled:opacity-60 dark:border-teal-700 dark:bg-teal-900/20 dark:text-teal-300"
         >
           {actionState['refresh-all'] ? 'Refreshing all...' : 'Refresh all'}
         </button>
@@ -485,7 +485,7 @@ export default function CodingProfilesPage() {
                       type="button"
                       disabled={isRefreshing}
                       onClick={() => refresh(profile._id)}
-                      className="rounded border border-cyan-300 bg-cyan-50 px-3 py-1 text-sm font-medium text-cyan-700 transition hover:bg-cyan-100 disabled:opacity-60 dark:border-cyan-700 dark:bg-cyan-900/20 dark:text-cyan-300"
+                      className="rounded border border-cyan-500 bg-cyan-100 px-3 py-1 text-sm font-semibold text-slate-900 transition hover:bg-cyan-200 disabled:opacity-60 dark:border-cyan-700 dark:bg-cyan-900/20 dark:text-cyan-300"
                     >
                       {isRefreshing ? 'Refreshing...' : 'Refresh'}
                     </button>
@@ -493,7 +493,7 @@ export default function CodingProfilesPage() {
                       type="button"
                       disabled={isUnlinking}
                       onClick={() => unlink(profile._id, platform)}
-                      className="rounded border border-rose-300 bg-rose-50 px-3 py-1 text-sm font-medium text-rose-700 transition hover:bg-rose-100 disabled:opacity-60 dark:border-rose-700 dark:bg-rose-900/20 dark:text-rose-300"
+                      className="rounded border border-rose-500 bg-rose-100 px-3 py-1 text-sm font-semibold text-slate-900 transition hover:bg-rose-200 disabled:opacity-60 dark:border-rose-700 dark:bg-rose-900/20 dark:text-rose-300"
                     >
                       {isUnlinking ? 'Unlinking...' : 'Unlink'}
                     </button>

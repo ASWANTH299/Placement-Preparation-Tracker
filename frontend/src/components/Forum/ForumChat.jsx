@@ -470,7 +470,7 @@ export default function ForumChat() {
               <button
                 type="button"
                 onClick={() => toggleSaved(messageId)}
-                className="rounded-lg border border-amber-300 bg-amber-50 px-2.5 py-1.5 text-xs font-medium text-amber-700 transition hover:bg-amber-100 dark:border-amber-700 dark:bg-amber-900/20 dark:text-amber-300"
+                className="rounded-lg border border-amber-500 bg-amber-100 px-2.5 py-1.5 text-xs font-semibold text-slate-900 transition hover:bg-amber-200 dark:border-amber-700 dark:bg-amber-900/20 dark:text-amber-300"
               >
                 {isSaved ? 'Unsave' : 'Save'}
               </button>
@@ -553,7 +553,7 @@ export default function ForumChat() {
             <button
               type="button"
               onClick={() => setAutoRefresh((prev) => !prev)}
-              className={`rounded-lg border px-3 py-2 text-sm font-medium transition ${autoRefresh ? 'border-emerald-300 bg-emerald-50 text-emerald-700 dark:border-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-300' : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-transparent dark:text-slate-200 dark:hover:bg-slate-800'}`}
+              className={`rounded-lg border px-3 py-2 text-sm font-semibold transition ${autoRefresh ? 'border-emerald-500 bg-emerald-100 text-slate-900 dark:border-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-300' : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-transparent dark:text-slate-200 dark:hover:bg-slate-800'}`}
             >
               Auto refresh: {autoRefresh ? 'On' : 'Off'}
             </button>
@@ -641,7 +641,7 @@ export default function ForumChat() {
             key={tag}
             type="button"
             onClick={() => setActiveTag(tag)}
-            className={`rounded-full border px-3 py-1.5 text-xs font-semibold transition ${activeTag === tag ? 'border-cyan-500 bg-cyan-50 text-cyan-700 dark:bg-cyan-900/20 dark:text-cyan-300' : 'border-slate-300 bg-white text-slate-600 hover:bg-slate-50 dark:border-slate-600 dark:bg-transparent dark:text-slate-300 dark:hover:bg-slate-800'}`}
+            className={`rounded-full border px-3 py-1.5 text-xs font-semibold transition ${activeTag === tag ? 'border-cyan-600 bg-cyan-100 text-slate-900 dark:bg-cyan-900/20 dark:text-cyan-300' : 'border-slate-300 bg-white text-slate-600 hover:bg-slate-50 dark:border-slate-600 dark:bg-transparent dark:text-slate-300 dark:hover:bg-slate-800'}`}
           >
             {tag}
           </button>
@@ -670,7 +670,7 @@ export default function ForumChat() {
           <p className="text-xs text-slate-500">
             {text.trim().length}/{MAX_MESSAGE_LENGTH} characters. Press Ctrl+Enter to send quickly.
           </p>
-          <button type="submit" disabled={sending} className="rounded-lg border border-emerald-300 bg-emerald-50 px-3 py-2 text-sm font-medium text-emerald-700 transition hover:bg-emerald-100 disabled:opacity-60 dark:border-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-300">
+          <button type="submit" disabled={sending} className="rounded-lg border border-emerald-500 bg-emerald-100 px-3 py-2 text-sm font-semibold text-slate-900 transition hover:bg-emerald-200 disabled:opacity-60 dark:border-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-300">
             {sending ? 'Sending...' : 'Send'}
           </button>
         </div>
