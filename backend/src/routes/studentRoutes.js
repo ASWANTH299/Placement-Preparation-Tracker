@@ -114,6 +114,7 @@ router.get('/company-questions', questionController.getQuestions);
 router.get('/practice/toolchains', questionController.getPracticeToolchains);
 router.post('/practice/run-code', questionController.runCode);
 router.post('/practice/submit-code', questionController.submitCode);
+router.post('/practice/validate-submission-link', questionController.validateDailySubmissionLink);
 router.post('/company-questions/:questionId/mark-solved', questionController.markSolved);
 router.post('/company-questions/:questionId/mark-attempted', questionController.markAttempted);
 router.post('/company-questions/:questionId/bookmark', questionController.toggleBookmark);
@@ -131,6 +132,7 @@ router.delete('/students/:id/mock-interviews/:interviewId', interviewController.
 router.post('/students/:id/resumes/upload', upload.single('file'), resumeController.uploadResume);
 router.put('/students/:id/resumes/:resumeId/set-active', resumeController.setActiveResume);
 router.put('/students/:id/resumes/:resumeId/rename', resumeController.renameResume);
+router.get('/students/:id/resumes/:resumeId/review', resumeController.reviewResume);
 router.get('/students/:id/resumes', resumeController.getResumes);
 router.get('/students/:id/resumes/:resumeId/download', resumeController.downloadResume);
 router.delete('/students/:id/resumes/:resumeId', resumeController.deleteResume);

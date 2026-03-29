@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useSelector } from 'react-redux'
 import { getAllUsers } from '../../services/adminService'
-import { deleteResume, downloadResume, getResumes, renameResume, setActiveResume, uploadResume } from '../../services/resumeService'
+import { deleteResume, downloadResume, getResumes, renameResume, reviewResume, setActiveResume, uploadResume } from '../../services/resumeService'
 import { getErrorMessage } from '../../utils/errorHandler'
 
 const allowedExtensions = ['pdf', 'docx']
@@ -34,6 +34,7 @@ export default function ResumeTracker() {
   const [sortBy, setSortBy] = useState('newest')
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
+  const [reviewResult, setReviewResult] = useState(null)
 
   const targetStudentId = isAdmin ? managedStudentId : studentId
 
@@ -84,6 +85,7 @@ export default function ResumeTracker() {
   useEffect(() => {
     if (!targetStudentId) {
       setFiles([])
+      setReviewResult(null)
       return
     }
 
@@ -179,6 +181,7 @@ export default function ResumeTracker() {
     await runWithLoading(`delete-${resumeId}`, async () => {
       await deleteResume(targetStudentId, resumeId)
       setFiles((prev) => prev.filter((file) => file._id !== resumeId))
+      setReviewResult((prev) => (prev?.resumeId === resumeId ? null : prev))
       setSuccess('Resume deleted successfully.')
     })
   }
@@ -207,6 +210,19 @@ export default function ResumeTracker() {
       link.click()
       link.remove()
       window.URL.revokeObjectURL(url)
+    })
+  }
+
+  const onReview = async (file) => {
+    if (!targetStudentId || !file?._id) return
+    await runWithLoading(`review-${file._id}`, async () => {
+      const response = await reviewResume(targetStudentId, file._id)
+      setReviewResult({
+        ...response?.data?.data,
+        resumeId: file._id,
+        resumeName: file.customName || file.fileName,
+      })
+      setSuccess('Resume review generated successfully.')
     })
   }
 
@@ -251,6 +267,43 @@ export default function ResumeTracker() {
       newestDate: newest?.createdAt ? new Date(newest.createdAt).toLocaleDateString() : 'N/A',
     }
   }, [files])
+
+  const reviewSummary = useMemo(() => {
+    if (!reviewResult) return null
+
+    const score = Number(reviewResult.atsScore || 0)
+    const scoreBand = score >= 85 ? 'Excellent' : score >= 70 ? 'Strong' : score >= 55 ? 'Average' : 'Needs work'
+    const tone = reviewResult.verdict === 'good'
+      ? {
+        panel: 'border-slate-300 bg-white shadow-[0_18px_34px_rgba(15,23,42,0.08)] dark:border-emerald-500/25 dark:bg-slate-900/70',
+        badge: 'border border-emerald-300 bg-emerald-50 text-slate-900 dark:border-emerald-500/40 dark:bg-emerald-900/25 dark:text-emerald-200',
+        statusText: 'text-slate-800 dark:text-emerald-300',
+        focusCard: 'border-slate-200 bg-slate-50',
+        actionCard: 'border-emerald-200 bg-emerald-50',
+        actionText: 'text-slate-900 dark:text-emerald-200',
+        status: 'Ready for applications',
+      }
+      : {
+        panel: 'border-slate-300 bg-white shadow-[0_18px_34px_rgba(15,23,42,0.08)] dark:border-amber-500/25 dark:bg-slate-900/70',
+        badge: 'border border-amber-300 bg-amber-50 text-slate-900 dark:border-amber-500/40 dark:bg-amber-900/25 dark:text-amber-200',
+        statusText: 'text-slate-800 dark:text-amber-300',
+        focusCard: 'border-slate-200 bg-slate-50',
+        actionCard: 'border-amber-200 bg-amber-50',
+        actionText: 'text-slate-900 dark:text-amber-200',
+        status: 'Improve before applying',
+      }
+
+    const topFixes = Array.isArray(reviewResult.improvements)
+      ? reviewResult.improvements.slice(0, 3)
+      : []
+
+    return {
+      score,
+      scoreBand,
+      tone,
+      topFixes,
+    }
+  }, [reviewResult])
 
   return (
     <section className="rounded-2xl border border-slate-200 bg-white p-6 text-slate-900 shadow-xl shadow-slate-200/60 dark:border-slate-700 dark:bg-slate-900/90 dark:text-slate-100 dark:shadow-none">
@@ -381,6 +434,64 @@ export default function ResumeTracker() {
       </div>
 
       <div className="mt-5 space-y-2">
+        {reviewResult && reviewSummary && (
+          <article className={`mb-4 rounded-2xl border p-4 ${reviewSummary.tone.panel}`}>
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-300">ATS Resume Review</p>
+                <h3 className="text-[1.75rem] font-extrabold leading-tight text-slate-900 dark:text-slate-100">{reviewResult.resumeName}</h3>
+                <p className={`mt-2 text-sm font-semibold ${reviewSummary.tone.statusText}`}>{reviewSummary.tone.status}</p>
+              </div>
+
+              <div className={`rounded-xl px-3 py-2 text-sm font-bold ${reviewSummary.tone.badge}`}>
+                ATS Score: {reviewSummary.score}/100 ({reviewSummary.scoreBand})
+              </div>
+            </div>
+
+            <div className={`mt-3 rounded-xl border p-3 ${reviewSummary.tone.focusCard} dark:border-sky-500/30 dark:bg-slate-900/55`}>
+              <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">Overall feedback</p>
+              <p className="mt-1 text-sm text-slate-800 dark:text-slate-300">{reviewResult.description}</p>
+            </div>
+
+            {reviewResult.verdict === 'good' ? (
+              <div className={`mt-3 rounded-xl border p-3 text-sm ${reviewSummary.tone.actionCard} ${reviewSummary.tone.actionText} dark:border-emerald-500/40 dark:bg-emerald-900/30`}>
+                Resume is properly built and looks interview-ready. Keep customizing keywords based on each job description.
+              </div>
+            ) : (
+              <div className={`mt-3 rounded-xl border p-3 ${reviewSummary.tone.actionCard} dark:border-amber-500/40 dark:bg-amber-900/30`}>
+                <p className={`text-sm font-semibold ${reviewSummary.tone.actionText}`}>Priority fixes (do these first)</p>
+                <ul className={`mt-1 list-decimal space-y-1 pl-5 text-sm font-semibold ${reviewSummary.tone.actionText}`}>
+                  {reviewSummary.topFixes.map((item) => (
+                    <li key={item}>{item}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {Array.isArray(reviewResult.strengths) && reviewResult.strengths.length > 0 && (
+              <div className="mt-3">
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-800 dark:text-emerald-300">Strengths</p>
+                <ul className="mt-1 list-disc space-y-1 pl-5 text-sm text-slate-700 dark:text-slate-300">
+                  {reviewResult.strengths.map((item) => (
+                    <li key={item}>{item}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {Array.isArray(reviewResult.improvements) && reviewResult.improvements.length > 0 && (
+              <div className="mt-3">
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-800 dark:text-amber-300">Improvement plan</p>
+                <ul className="mt-1 list-disc space-y-1 pl-5 text-sm text-slate-700 dark:text-slate-300">
+                  {reviewResult.improvements.map((item) => (
+                    <li key={item}>{item}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </article>
+        )}
+
         {filteredAndSortedFiles.length === 0 ? (
           <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 p-6 text-center text-sm text-slate-600 dark:border-slate-600 dark:bg-slate-800/40 dark:text-slate-300">
             {loading ? 'Loading resumes...' : 'No resumes match your current filters.'}
@@ -416,6 +527,15 @@ export default function ResumeTracker() {
                     className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-800 transition hover:bg-slate-50 disabled:opacity-60 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
                   >
                     {isDownloading ? 'Downloading...' : 'Download'}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => onReview(file)}
+                    disabled={Boolean(actionLoading[`review-${file._id}`])}
+                    className="rounded-md border border-teal-700 bg-white px-3 py-1.5 text-xs font-bold text-slate-900 transition hover:bg-teal-50 hover:text-slate-950 disabled:opacity-60 dark:border-teal-700 dark:bg-teal-900/20 dark:text-teal-300"
+                  >
+                    {actionLoading[`review-${file._id}`] ? 'Reviewing...' : 'Review'}
                   </button>
 
                   <button

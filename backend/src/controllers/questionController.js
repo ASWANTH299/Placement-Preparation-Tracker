@@ -3,6 +3,129 @@ const QuestionProgress = require('../models/QuestionProgress');
 const { AppError } = require('../utils/errorHandler');
 const { executeCode, SUPPORTED_LANGUAGES, getAvailableToolchains } = require('../utils/codeExecutor');
 
+const normalizeHost = (host = '') => String(host || '').trim().toLowerCase().replace(/^www\./, '');
+
+const extractLeetCodeSlug = (value = '') => {
+  try {
+    const parsed = new URL(value);
+    const match = parsed.pathname.match(/^\/problems\/([a-z0-9-]+)\/?$/i);
+    return match ? match[1].toLowerCase() : '';
+  } catch {
+    return '';
+  }
+};
+
+const validateSubmissionUrlShape = ({ submissionUrl, platform, practiceUrl }) => {
+  try {
+    const parsed = new URL(String(submissionUrl || '').trim());
+    const host = normalizeHost(parsed.hostname);
+    const path = parsed.pathname;
+
+    if (parsed.protocol !== 'https:') {
+      return { valid: false, reason: 'Submission URL must start with https://' };
+    }
+
+    if (platform === 'LeetCode') {
+      if (host !== 'leetcode.com') {
+        return { valid: false, reason: 'Please provide a valid LeetCode submission URL.' };
+      }
+
+      const expectedSlug = extractLeetCodeSlug(practiceUrl);
+      const detailPattern = /^\/submissions\/detail\/([1-9]\d{9,})\/?$/i;
+      const problemSubmissionPattern = /^\/problems\/([a-z0-9-]+)\/submissions\/([1-9]\d{9,})\/?$/i;
+
+      if (detailPattern.test(path)) {
+        return { valid: true };
+      }
+
+      const match = path.match(problemSubmissionPattern);
+      if (!match) {
+        return { valid: false, reason: 'Use a full LeetCode accepted submission URL with a realistic submission id (10+ digits).' };
+      }
+
+      const submittedSlug = match[1].toLowerCase();
+      if (expectedSlug && submittedSlug !== expectedSlug) {
+        return { valid: false, reason: 'Submission URL must match today\'s LeetCode problem.' };
+      }
+
+      return { valid: true };
+    }
+
+    if (platform === 'CodeChef') {
+      if (host !== 'codechef.com') {
+        return { valid: false, reason: 'Please provide a valid CodeChef solution URL.' };
+      }
+
+      const codeChefPattern = /^\/viewsolution\/([1-9]\d{7,})\/?$/i;
+      if (!codeChefPattern.test(path)) {
+        return { valid: false, reason: 'Use a CodeChef viewsolution URL with 8+ digit solution id.' };
+      }
+
+      return { valid: true };
+    }
+
+    return { valid: false, reason: 'Unsupported platform for daily task validation.' };
+  } catch {
+    return { valid: false, reason: 'Please enter a valid URL.' };
+  }
+};
+
+const verifySubmissionUrlExists = async ({ submissionUrl, platform }) => {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 7000);
+
+  try {
+    const response = await fetch(submissionUrl, {
+      method: 'GET',
+      redirect: 'follow',
+      signal: controller.signal,
+      headers: {
+        'User-Agent': 'Mozilla/5.0 DailyTaskValidator/1.0'
+      }
+    });
+
+    const finalUrl = response.url || submissionUrl;
+    const finalParsed = new URL(finalUrl);
+    const finalHost = normalizeHost(finalParsed.hostname);
+    const finalPath = (finalParsed.pathname || '').toLowerCase();
+
+    // LeetCode often returns Cloudflare 403 to automated server checks.
+    // In that case, rely on strict URL-shape validation instead of hard failing.
+    if (!response.ok && platform !== 'LeetCode') {
+      return { valid: false, reason: 'Submission link is not reachable. Please check and paste the exact accepted link.' };
+    }
+
+    // Reject login redirects and obvious not-found pages.
+    if (platform === 'LeetCode' && (finalHost !== 'leetcode.com' || finalPath.includes('/accounts/login'))) {
+      return { valid: false, reason: 'LeetCode link redirected to login or invalid page. Paste the exact accepted submission URL.' };
+    }
+
+    const html = (await response.text()).toLowerCase();
+
+    if (platform === 'LeetCode' && html.includes('just a moment')) {
+      return { valid: true };
+    }
+
+    if (html.includes('page not found') || html.includes('404') || html.includes('not found')) {
+      return { valid: false, reason: 'Submission page was not found. Use the exact accepted submission link.' };
+    }
+
+    if (platform === 'CodeChef' && !html.includes('view solution')) {
+      return { valid: false, reason: 'CodeChef solution page content could not be verified.' };
+    }
+
+    if (platform === 'LeetCode' && !html.includes('submission')) {
+      return { valid: false, reason: 'LeetCode submission page content could not be verified.' };
+    }
+
+    return { valid: true };
+  } catch {
+    return { valid: false, reason: 'Could not verify the submission link right now. Please try again with the exact URL.' };
+  } finally {
+    clearTimeout(timeout);
+  }
+};
+
 const markAttemptProgress = async (studentId, questionId) => {
   if (!studentId || !questionId) return;
 
@@ -340,6 +463,39 @@ exports.getPracticeToolchains = async (req, res, next) => {
     res.status(200).json({
       success: true,
       data: toolchains
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Validate external accepted submission URL for daily task completion
+exports.validateDailySubmissionLink = async (req, res, next) => {
+  try {
+    const { submissionUrl, platform, practiceUrl } = req.body;
+
+    if (!submissionUrl || !platform) {
+      return next(new AppError('submissionUrl and platform are required', 400, 'VALIDATION_ERROR'));
+    }
+
+    const shape = validateSubmissionUrlShape({ submissionUrl, platform, practiceUrl });
+    if (!shape.valid) {
+      return res.status(200).json({
+        success: true,
+        data: {
+          isValid: false,
+          reason: shape.reason
+        }
+      });
+    }
+
+    const verified = await verifySubmissionUrlExists({ submissionUrl, platform });
+    return res.status(200).json({
+      success: true,
+      data: {
+        isValid: verified.valid,
+        reason: verified.reason || ''
+      }
     });
   } catch (error) {
     next(error);

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { validateDailySubmissionLink } from '../../services/questionService'
 
 const dailyQuestionBank = [
   {
@@ -123,6 +124,7 @@ const dailyQuestionBank = [
     practiceUrl: 'https://leetcode.com/problems/course-schedule/'
   },
   {
+    id: 'dq-12',
     title: 'Trapping Rain Water',
     platform: 'LeetCode',
     difficulty: 'Hard',
@@ -156,6 +158,18 @@ const getQuestionForDay = (userSeed, dateKey, bank) => {
   return safeBank[index]
 }
 
+const normalizeHost = (host = '') => String(host || '').trim().toLowerCase().replace(/^www\./, '')
+
+const extractLeetCodeSlug = (value = '') => {
+  try {
+    const parsed = new URL(value)
+    const match = parsed.pathname.match(/^\/problems\/([a-z0-9-]+)\/?$/i)
+    return match ? match[1].toLowerCase() : ''
+  } catch {
+    return ''
+  }
+}
+
 const getDifficultyTone = (difficulty) => {
   if (difficulty === 'Easy') return 'bg-emerald-200 text-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-300'
   if (difficulty === 'Medium') return 'bg-amber-200 text-amber-900 dark:bg-amber-950/40 dark:text-amber-300'
@@ -166,6 +180,7 @@ export default function DailyTaskCard({ user, period = 'Today', className = '' }
   const [now, setNow] = useState(() => new Date())
   const [submissionUrl, setSubmissionUrl] = useState('')
   const [isCompleted, setIsCompleted] = useState(false)
+  const [isValidatingSubmission, setIsValidatingSubmission] = useState(false)
   const [completionError, setCompletionError] = useState('')
 
   const userSeed = user?.id || user?._id || user?.email || user?.name || 'guest-user'
@@ -191,7 +206,7 @@ export default function DailyTaskCard({ user, period = 'Today', className = '' }
 
       setSubmissionUrl(storedSubmission)
 
-      if (storedCompletion && !storedSubmission) {
+      if (storedCompletion && !isValidSubmissionUrl(storedSubmission)) {
         window.localStorage.removeItem(completionStorageKey)
         setIsCompleted(false)
       } else {
@@ -227,19 +242,72 @@ export default function DailyTaskCard({ user, period = 'Today', className = '' }
     : 'border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-900/60 dark:bg-blue-950/30 dark:text-blue-300'
 
   const isValidSubmissionUrl = (value) => {
-    const raw = String(value || '').trim()
-    if (!raw) return false
+    try {
+      const raw = String(value || '').trim()
+      if (!raw) return false
 
-    // Accept common accepted-submission URL shapes for LeetCode and CodeChef.
-    const leetCodeAccepted = /^https?:\/\/(www\.)?leetcode\.com\/(submissions\/detail\/|problems\/.+\/submissions\/?).+/i
-    const codeChefAccepted = /^https?:\/\/(www\.)?codechef\.com\/viewsolution\/.+/i
-    return leetCodeAccepted.test(raw) || codeChefAccepted.test(raw)
+      const parsed = new URL(raw)
+      const host = normalizeHost(parsed.hostname)
+      const path = parsed.pathname
+
+      if (parsed.protocol !== 'https:') return false
+
+      if (question.platform === 'LeetCode') {
+        if (host !== 'leetcode.com') return false
+
+        const expectedSlug = extractLeetCodeSlug(question.practiceUrl)
+        // LeetCode submission IDs are currently long numeric values (typically 10+ digits).
+        const detailPattern = /^\/submissions\/detail\/([1-9]\d{9,})\/?$/i
+        const problemSubmissionPattern = /^\/problems\/([a-z0-9-]+)\/submissions\/([1-9]\d{9,})\/?$/i
+
+        if (detailPattern.test(path)) return true
+
+        const problemMatch = path.match(problemSubmissionPattern)
+        if (!problemMatch) return false
+
+        const submittedSlug = problemMatch[1].toLowerCase()
+        return !expectedSlug || submittedSlug === expectedSlug
+      }
+
+      if (question.platform === 'CodeChef') {
+        if (host !== 'codechef.com') return false
+
+        const codeChefSolutionPattern = /^\/viewsolution\/([1-9]\d{7,})\/?$/i
+        return codeChefSolutionPattern.test(path)
+      }
+
+      return false
+    } catch {
+      return false
+    }
   }
 
-  const toggleCompletion = () => {
+  const toggleCompletion = async () => {
     if (!isCompleted && !isValidSubmissionUrl(submissionUrl)) {
-      setCompletionError('Please finish the problem and paste your accepted LeetCode or CodeChef submission link to mark it complete.')
+      setCompletionError(`Please add a valid accepted ${question.platform} submission URL before marking this task complete.`)
       return
+    }
+
+    if (!isCompleted) {
+      try {
+        setIsValidatingSubmission(true)
+        const response = await validateDailySubmissionLink({
+          submissionUrl: submissionUrl.trim(),
+          platform: question.platform,
+          practiceUrl: question.practiceUrl
+        })
+
+        const validation = response?.data?.data
+        if (!validation?.isValid) {
+          setCompletionError(validation?.reason || 'Submission link validation failed. Please use the exact accepted link.')
+          return
+        }
+      } catch {
+        setCompletionError('Unable to verify the submission URL right now. Please try again.')
+        return
+      } finally {
+        setIsValidatingSubmission(false)
+      }
     }
 
     setCompletionError('')
@@ -309,9 +377,11 @@ export default function DailyTaskCard({ user, period = 'Today', className = '' }
           value={submissionUrl}
           onChange={(event) => {
             setSubmissionUrl(event.target.value)
-            if (completionError) setCompletionError('')
+            if (completionError) {
+              setCompletionError('')
+            }
           }}
-          placeholder="https://leetcode.com/submissions/detail/... or https://www.codechef.com/viewsolution/..."
+          placeholder={question.platform === 'LeetCode' ? 'https://leetcode.com/submissions/detail/123456789/' : 'https://www.codechef.com/viewsolution/123456789'}
           className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-cyan-500 focus:outline-none dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
         />
       </div>
@@ -330,9 +400,10 @@ export default function DailyTaskCard({ user, period = 'Today', className = '' }
         <button
           type="button"
           onClick={toggleCompletion}
+          disabled={isValidatingSubmission}
           className={`rounded-lg px-3 py-2 text-sm font-medium ${isCompleted ? 'bg-emerald-600 text-white hover:bg-emerald-700' : 'bg-blue-600 text-white hover:bg-blue-700'}`}
         >
-          {isCompleted ? 'Completed' : 'Mark Complete'}
+          {isValidatingSubmission ? 'Validating Link...' : isCompleted ? 'Completed' : 'Mark Complete'}
         </button>
         <a
           href={question.practiceUrl}

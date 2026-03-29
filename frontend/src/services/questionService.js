@@ -8,3 +8,4 @@ export const toggleQuestionBookmark = (questionId, isBookmarked) => api.post(`/c
 export const getPracticeToolchains = () => api.get('/practice/toolchains')
 export const runPracticeCode = (payload) => api.post('/practice/run-code', payload)
 export const submitPracticeCode = (payload) => api.post('/practice/submit-code', payload)
+export const validateDailySubmissionLink = (payload) => api.post('/practice/validate-submission-link', payload)
