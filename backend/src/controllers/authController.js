@@ -185,20 +185,23 @@ exports.forgotPassword = async (req, res, next) => {
       } catch (mailError) {
         console.error('[auth.forgotPassword] Failed to send email:', mailError.message);
 
-        // Clear the token since email failed
+        if (process.env.NODE_ENV !== 'production') {
+          return res.status(200).json({
+            success: true,
+            message: 'Email delivery failed in development. Use the provided reset link.',
+            dev: {
+              reason: mailError.message,
+              resetUrl,
+            },
+          });
+        }
+
+        // In production, clear token and return controlled error.
         user.passwordResetToken = undefined;
         user.passwordResetExpiry = undefined;
         await user.save({ validateBeforeSave: false });
 
-        return next(
-          new AppError(
-            process.env.NODE_ENV === 'production'
-              ? 'Unable to send reset email. Please try again later.'
-              : `Email send failed: ${mailError.message}`,
-            500,
-            'EMAIL_SEND_FAILED'
-          )
-        );
+        return next(new AppError('Unable to send reset email. Please try again later.', 500, 'EMAIL_SEND_FAILED'));
       }
     }
 

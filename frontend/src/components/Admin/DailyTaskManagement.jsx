@@ -33,6 +33,30 @@ const toPayload = (form) => ({
   isActive: form.isActive,
 })
 
+const normalizeTaskListResponse = (response) => {
+  const envelope = response?.data || {}
+  const payload = envelope?.data
+
+  const list =
+    (Array.isArray(payload) && payload) ||
+    (Array.isArray(payload?.rows) && payload.rows) ||
+    (Array.isArray(payload?.tasks) && payload.tasks) ||
+    (Array.isArray(envelope?.rows) && envelope.rows) ||
+    (Array.isArray(envelope?.tasks) && envelope.tasks) ||
+    []
+
+  const pages =
+    envelope?.pagination?.pages ||
+    payload?.pagination?.pages ||
+    envelope?.meta?.pages ||
+    1
+
+  return {
+    list,
+    pages: Number.isFinite(Number(pages)) ? Math.max(Number(pages), 1) : 1,
+  }
+}
+
 export default function DailyTaskManagement() {
   const [search, setSearch] = useState('')
   const [rows, setRows] = useState([])
@@ -55,8 +79,9 @@ export default function DailyTaskManagement() {
       limit: 10,
       search: currentSearch,
     })
-    setRows(response?.data?.data || [])
-    setTotalPages(response?.data?.pagination?.pages || 1)
+    const normalized = normalizeTaskListResponse(response)
+    setRows(normalized.list)
+    setTotalPages(normalized.pages)
   }
 
   useEffect(() => {
@@ -187,6 +212,13 @@ export default function DailyTaskManagement() {
                 </td>
               </tr>
             ))}
+            {!loading && rows.length === 0 && (
+              <tr>
+                <td colSpan={6} className="py-8 text-center text-sm text-slate-500">
+                  No daily tasks found. Click "Create Daily Task" to add your first task.
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>

@@ -23,6 +23,12 @@ export const createAdminDailyTask = (payload) => api.post('/admin/daily-tasks', 
 export const updateAdminDailyTask = (taskId, payload) => api.put(`/admin/daily-tasks/${taskId}`, payload)
 export const deleteAdminDailyTask = (taskId) => api.delete(`/admin/daily-tasks/${taskId}`)
 
+export const getAdminConceptVideos = (params) => api.get('/admin/concept-videos', { params })
+export const getAdminConceptVideoById = (videoId) => api.get(`/admin/concept-videos/${videoId}`)
+export const createAdminConceptVideo = (payload) => api.post('/admin/concept-videos', payload)
+export const updateAdminConceptVideo = (videoId, payload) => api.put(`/admin/concept-videos/${videoId}`, payload)
+export const deleteAdminConceptVideo = (videoId) => api.delete(`/admin/concept-videos/${videoId}`)
+
 export const getAdminProfiles = (params) => api.get('/admin/profiles', { params })
 export const getAdminProfileById = (userId) => api.get(`/admin/profiles/${userId}`)
 export const createAdminProfile = (payload) => api.post('/admin/profiles', payload)

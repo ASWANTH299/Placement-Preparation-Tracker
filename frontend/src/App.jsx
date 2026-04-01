@@ -39,10 +39,11 @@ import AdminLearningPathPage from './pages/AdminLearningPathPage'
 import AdminCompanyQuestionsPage from './pages/AdminCompanyQuestionsPage'
 import AdminDailyTaskPage from './pages/AdminDailyTaskPage'
 import AdminProfilesPage from './pages/AdminProfilesPage'
+import AdminConceptVideosPage from './pages/AdminConceptVideosPage'
 import QuizPage from './pages/QuizPage'
 
 const authRoutes = ['/login', '/register', '/forgot-password', '/reset-password']
-const adminRoutes = ['/admin-dashboard', '/admin-users', '/admin-learning-path', '/admin-company-questions', '/admin-daily-task', '/admin-profiles']
+const adminRoutes = ['/admin-dashboard', '/admin-users', '/admin-learning-path', '/admin-company-questions', '/admin-daily-task', '/admin-profiles', '/admin-concept-videos']
 
 function ProtectedRoute({ children }) {
   const token = useSelector((state) => state.auth.token)
@@ -119,6 +120,7 @@ function AppLayout() {
           <Route path="/admin-company-questions" element={<AdminRoute><AdminCompanyQuestionsPage /></AdminRoute>} />
           <Route path="/admin-daily-task" element={<AdminRoute><AdminDailyTaskPage /></AdminRoute>} />
           <Route path="/admin-profiles" element={<AdminRoute><AdminProfilesPage /></AdminRoute>} />
+          <Route path="/admin-concept-videos" element={<AdminRoute><AdminConceptVideosPage /></AdminRoute>} />
 
           <Route path="/500" element={<ServerErrorPage />} />
           <Route path="/403" element={<UnauthorizedPage />} />

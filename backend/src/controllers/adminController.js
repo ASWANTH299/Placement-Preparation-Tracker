@@ -7,8 +7,48 @@ const MockInterview = require('../models/MockInterview');
 const Resume = require('../models/Resume');
 const Note = require('../models/Note');
 const DailyTask = require('../models/DailyTask');
+const ConceptVideo = require('../models/ConceptVideo');
 const { AppError } = require('../utils/errorHandler');
 const { logAdminAudit } = require('../utils/adminAuditLogger');
+
+const escapeRegex = (value = '') => String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+const DEFAULT_CONCEPT_VIDEOS = [
+  { title: 'Arrays - Complete Concept Review', topic: 'Arrays', level: 'Beginner', youtubeUrl: 'https://www.youtube.com/watch?v=37E9ckMDdTk' },
+  { title: 'Linked Lists Explained', topic: 'Linked Lists', level: 'Beginner', youtubeUrl: 'https://www.youtube.com/watch?v=lj_ExDKL9BM' },
+  { title: 'Stacks Data Structure', topic: 'Stacks', level: 'Beginner', youtubeUrl: 'https://www.youtube.com/watch?v=F1F2imiOJfk' },
+  { title: 'Queues in Data Structures', topic: 'Queues', level: 'Beginner', youtubeUrl: 'https://www.youtube.com/watch?v=okr-XE8yTO8' },
+  { title: 'Sliding Window Technique', topic: 'Sliding Window', level: 'Intermediate', youtubeUrl: 'https://www.youtube.com/watch?v=MK-NZ4hN7rs' },
+  { title: 'Two Pointer Technique Patterns', topic: 'Two Pointer Technique', level: 'Intermediate', youtubeUrl: 'https://www.youtube.com/watch?v=QzZ7nmouLTI' },
+  { title: 'Binary Search Patterns', topic: 'Binary Search', level: 'Beginner', youtubeUrl: 'https://www.youtube.com/watch?v=4sQL7R5ySUU' },
+  { title: 'Recursion Fundamentals', topic: 'Recursion', level: 'Intermediate', youtubeUrl: 'https://www.youtube.com/watch?v=IJDJ0kBx2LM' },
+  { title: 'Backtracking Complete Guide', topic: 'Backtracking', level: 'Intermediate', youtubeUrl: 'https://www.youtube.com/watch?v=DKCbsiDBN6c' },
+  { title: 'Trees and Traversals', topic: 'Trees', level: 'Intermediate', youtubeUrl: 'https://www.youtube.com/watch?v=_ANrF3FJm7I' },
+  { title: 'Binary Search Trees (BST) Concepts', topic: 'Binary Search Trees', level: 'Intermediate', youtubeUrl: 'https://www.youtube.com/watch?v=aQYz2qpmzEw' },
+  { title: 'Heaps and Priority Queue', topic: 'Heaps', level: 'Intermediate', youtubeUrl: 'https://www.youtube.com/watch?v=HqPJF2L5h9U' },
+  { title: 'Graph Algorithms Essentials', topic: 'Graphs', level: 'Intermediate', youtubeUrl: 'https://www.youtube.com/watch?v=tWVWeAqZ0WU' },
+  { title: 'Dynamic Programming Patterns', topic: 'Dynamic Programming', level: 'Advanced', youtubeUrl: 'https://www.youtube.com/watch?v=oBt53YbR9Kk' },
+  { title: 'Greedy Algorithms Explained', topic: 'Greedy Algorithms', level: 'Advanced', youtubeUrl: 'https://www.youtube.com/watch?v=ARvQcqJ_-NY' },
+  { title: 'Trie Data Structure for Strings', topic: 'Trie', level: 'Advanced', youtubeUrl: 'https://www.youtube.com/watch?v=zIjfhVPRZCg' },
+  { title: 'Segment Tree Full Tutorial', topic: 'Segment Trees', level: 'Advanced', youtubeUrl: 'https://www.youtube.com/watch?v=ZBHKZF5w4YU' },
+  { title: 'Bit Manipulation Essentials', topic: 'Bit Manipulation', level: 'Advanced', youtubeUrl: 'https://www.youtube.com/watch?v=5rtVTYAk9KQ' },
+  { title: 'System Design Basics for Placements', topic: 'System Design Basics', level: 'Advanced', youtubeUrl: 'https://www.youtube.com/watch?v=xpDnVSmNFX0' },
+  { title: 'Concurrency and Multithreading Basics', topic: 'Concurrency Basics', level: 'Advanced', youtubeUrl: 'https://www.youtube.com/watch?v=r_MbozD32eo' }
+];
+
+const ensureDefaultConceptVideos = async () => {
+  const total = await ConceptVideo.countDocuments();
+  if (total > 0) return;
+
+  await ConceptVideo.insertMany(
+    DEFAULT_CONCEPT_VIDEOS.map((video) => ({
+      ...video,
+      description: '',
+      tags: [],
+      isActive: true
+    }))
+  );
+};
 
 const buildTempPassword = () => {
   const randomPart = Math.random().toString(36).slice(-6);
@@ -594,10 +634,11 @@ exports.getDailyTasks = async (req, res, next) => {
 
     const query = {};
     if (search) {
+      const safeSearch = escapeRegex(search);
       query.$or = [
-        { title: { $regex: search, $options: 'i' } },
-        { company: { $regex: search, $options: 'i' } },
-        { tags: { $elemMatch: { $regex: search, $options: 'i' } } }
+        { title: { $regex: safeSearch, $options: 'i' } },
+        { company: { $regex: safeSearch, $options: 'i' } },
+        { tags: { $regex: safeSearch, $options: 'i' } }
       ];
     }
     if (platform && platform !== 'All') query.platform = platform;
@@ -605,8 +646,8 @@ exports.getDailyTasks = async (req, res, next) => {
     if (isActive === 'true') query.isActive = true;
     if (isActive === 'false') query.isActive = false;
 
-    const safePage = parseInt(page, 10);
-    const safeLimit = parseInt(limit, 10);
+    const safePage = Math.max(parseInt(page, 10) || 1, 1);
+    const safeLimit = Math.max(parseInt(limit, 10) || 25, 1);
     const skip = (safePage - 1) * safeLimit;
 
     const [rows, total] = await Promise.all([
@@ -621,7 +662,7 @@ exports.getDailyTasks = async (req, res, next) => {
         page: safePage,
         limit: safeLimit,
         total,
-        pages: Math.ceil(total / safeLimit)
+        pages: Math.max(Math.ceil(total / safeLimit), 1)
       }
     });
   } catch (error) {
@@ -730,6 +771,158 @@ exports.deleteDailyTask = async (req, res, next) => {
     res.status(200).json({
       success: true,
       message: 'Daily task deleted successfully'
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Concept video management (Learn Concepts with YouTube)
+exports.getConceptVideos = async (req, res, next) => {
+  try {
+    await ensureDefaultConceptVideos();
+
+    const { page = 1, limit = 25, search, topic, level, isActive } = req.query;
+
+    const query = {};
+    if (search) {
+      const safeSearch = escapeRegex(search);
+      query.$or = [
+        { title: { $regex: safeSearch, $options: 'i' } },
+        { topic: { $regex: safeSearch, $options: 'i' } },
+        { tags: { $regex: safeSearch, $options: 'i' } }
+      ];
+    }
+    if (topic && topic !== 'All') query.topic = topic;
+    if (level && level !== 'All') query.level = level;
+    if (isActive === 'true') query.isActive = true;
+    if (isActive === 'false') query.isActive = false;
+
+    const safePage = Math.max(parseInt(page, 10) || 1, 1);
+    const safeLimit = Math.max(parseInt(limit, 10) || 25, 1);
+    const skip = (safePage - 1) * safeLimit;
+
+    const [rows, total] = await Promise.all([
+      ConceptVideo.find(query).sort({ createdAt: -1 }).skip(skip).limit(safeLimit),
+      ConceptVideo.countDocuments(query)
+    ]);
+
+    res.status(200).json({
+      success: true,
+      data: rows,
+      pagination: {
+        page: safePage,
+        limit: safeLimit,
+        total,
+        pages: Math.max(Math.ceil(total / safeLimit), 1)
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.getConceptVideoById = async (req, res, next) => {
+  try {
+    const { videoId } = req.params;
+    const video = await ConceptVideo.findById(videoId);
+
+    if (!video) {
+      return next(new AppError('Concept video not found', 404, 'NOT_FOUND'));
+    }
+
+    res.status(200).json({
+      success: true,
+      data: video
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.createConceptVideo = async (req, res, next) => {
+  try {
+    const payload = {
+      ...req.body,
+      tags: Array.isArray(req.body.tags)
+        ? req.body.tags.map((tag) => String(tag).trim()).filter(Boolean)
+        : []
+    };
+
+    const video = await ConceptVideo.create(payload);
+
+    await logAdminAudit(req, {
+      action: 'CREATE_CONCEPT_VIDEO',
+      targetType: 'ConceptVideo',
+      targetId: video._id,
+      status: 'SUCCESS'
+    });
+
+    res.status(201).json({
+      success: true,
+      data: video,
+      message: 'Concept video created successfully'
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.updateConceptVideo = async (req, res, next) => {
+  try {
+    const { videoId } = req.params;
+    const payload = {
+      ...req.body,
+      tags: Array.isArray(req.body.tags)
+        ? req.body.tags.map((tag) => String(tag).trim()).filter(Boolean)
+        : req.body.tags
+    };
+
+    const video = await ConceptVideo.findByIdAndUpdate(videoId, payload, {
+      new: true,
+      runValidators: true
+    });
+
+    if (!video) {
+      return next(new AppError('Concept video not found', 404, 'NOT_FOUND'));
+    }
+
+    await logAdminAudit(req, {
+      action: 'UPDATE_CONCEPT_VIDEO',
+      targetType: 'ConceptVideo',
+      targetId: videoId,
+      status: 'SUCCESS'
+    });
+
+    res.status(200).json({
+      success: true,
+      data: video,
+      message: 'Concept video updated successfully'
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.deleteConceptVideo = async (req, res, next) => {
+  try {
+    const { videoId } = req.params;
+    const video = await ConceptVideo.findByIdAndDelete(videoId);
+
+    if (!video) {
+      return next(new AppError('Concept video not found', 404, 'NOT_FOUND'));
+    }
+
+    await logAdminAudit(req, {
+      action: 'DELETE_CONCEPT_VIDEO',
+      targetType: 'ConceptVideo',
+      targetId: videoId,
+      status: 'SUCCESS'
+    });
+
+    res.status(200).json({
+      success: true,
+      message: 'Concept video deleted successfully'
     });
   } catch (error) {
     next(error);

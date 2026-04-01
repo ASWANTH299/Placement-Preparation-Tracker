@@ -31,6 +31,13 @@ router.post('/daily-tasks', adminController.createDailyTask);
 router.put('/daily-tasks/:taskId', adminController.updateDailyTask);
 router.delete('/daily-tasks/:taskId', adminController.deleteDailyTask);
 
+// Learn Concepts with YouTube Management
+router.get('/concept-videos', adminController.getConceptVideos);
+router.get('/concept-videos/:videoId', adminController.getConceptVideoById);
+router.post('/concept-videos', adminController.createConceptVideo);
+router.put('/concept-videos/:videoId', adminController.updateConceptVideo);
+router.delete('/concept-videos/:videoId', adminController.deleteConceptVideo);
+
 // Student Profiles Management
 router.get('/profiles', adminController.getAllProfiles);
 router.get('/profiles/:userId', adminController.getProfileById);

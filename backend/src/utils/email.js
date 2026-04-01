@@ -1,20 +1,39 @@
 const nodemailer = require('nodemailer');
+const path = require('path');
+const dotenv = require('dotenv');
+
+// Load backend .env explicitly so this utility works regardless of import order/cwd.
+dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 
 /**
  * Create a Nodemailer transporter configured for Gmail.
- * Reads EMAIL_USER / EMAIL_PASS from environment.
+ * Supports SMTP_* variables and falls back to EMAIL_* variables.
  */
 function createTransporter() {
-  const user = process.env.EMAIL_USER;
-  const rawPass = process.env.EMAIL_PASS;
+  const userRaw = process.env.SMTP_USER || process.env.EMAIL_USER;
+  const rawPass = process.env.SMTP_PASS || process.env.EMAIL_PASS;
+  const user = String(userRaw || '').trim().replace(/^['\"]|['\"]$/g, '');
 
   if (!user || !rawPass) {
-    console.error('[email] Email configuration error: EMAIL_USER or EMAIL_PASS is missing in .env');
+    console.error('[email] Email configuration error: SMTP_USER/SMTP_PASS or EMAIL_USER/EMAIL_PASS is missing in .env');
     throw new Error('Email configuration error');
   }
 
   // Strip spaces — Gmail app passwords are sometimes copied with spaces between groups
-  const pass = rawPass.replace(/\s/g, '');
+  const pass = String(rawPass).trim().replace(/^['\"]|['\"]$/g, '').replace(/\s/g, '');
+
+  const host = String(process.env.SMTP_HOST || '').trim();
+  const port = Number(process.env.SMTP_PORT || 587);
+  const secure = String(process.env.SMTP_SECURE || 'false').toLowerCase() === 'true';
+
+  if (host) {
+    return nodemailer.createTransport({
+      host,
+      port,
+      secure,
+      auth: { user, pass },
+    });
+  }
 
   return nodemailer.createTransport({
     service: 'gmail',
@@ -27,7 +46,7 @@ function createTransporter() {
  */
 function resolveFromAddress() {
   const fromName = process.env.EMAIL_FROM_NAME || 'Placement Tracker Security';
-  const fromEmail = process.env.EMAIL_USER;
+  const fromEmail = process.env.SMTP_USER || process.env.EMAIL_USER;
   return `"${fromName}" <${fromEmail}>`;
 }
 
