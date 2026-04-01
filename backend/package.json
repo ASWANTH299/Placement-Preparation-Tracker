@@ -8,7 +8,8 @@
     "dev": "nodemon server.js",
     "test": "jest",
     "migrate": "node src/migrations/migrate.js",
-    "seed:admin": "node scripts/createAdmin.js",
+    "fix:db": "node scripts/fixDatabase.js",
+    "seed:admin": "npm run fix:db && node scripts/createAdmin.js",
     "seed:questions": "node scripts/seedQuestions.js",
     "seed:mock-interviews": "node scripts/seedMockInterviews.js"
   },

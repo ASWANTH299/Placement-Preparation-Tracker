@@ -1,8 +1,7 @@
 const User = require('../models/User');
-const PasswordResetOtpSession = require('../models/PasswordResetOtpSession');
 const { generateToken } = require('../utils/jwt');
 const jwt = require('jsonwebtoken');
-const { validateEmail, validatePassword, validateName, validatePhoneNumber, normalizePhoneNumber } = require('../utils/validators');
+const { validateEmail, validatePassword, validateName } = require('../utils/validators');
 const { AppError } = require('../utils/errorHandler');
 const { sendPasswordResetEmail } = require('../utils/email');
 const { env } = require('../config/env');
@@ -77,22 +76,54 @@ exports.register = async (req, res, next) => {
 // ─── Login ───────────────────────────────────────────────────────────────────
 exports.login = async (req, res, next) => {
   try {
+    console.log('[Login Flow] Login request started for email:', req.body.email);
+    
     const { email, password } = req.body;
 
     if (!email || !password) {
+      console.warn('[Login Flow] Missing email or password in request');
       return next(new AppError('Email and password are required', 400, 'VALIDATION_ERROR'));
     }
 
+    console.log(`[Login Flow] Fetching user from DB: ${email.toLowerCase()}`);
     const user = await User.findOne({ email: email.toLowerCase() }).select('+password');
 
-    if (!user || !(await user.comparePassword(password))) {
+    if (!user) {
+      console.warn(`[Login Flow] User not found for email: ${email.toLowerCase()}`);
       return next(new AppError('Invalid email or password', 401, 'AUTH_FAILED'));
+    }
+
+    if (!user.password) {
+      console.error(`[Login Flow] User record is severely corrupted (missing password hash) for email: ${user.email}`);
+      return next(new AppError('Invalid account configuration. Please contact admin.', 500, 'SERVER_ERROR'));
+    }
+
+    console.log('[Login Flow] Comparing passwords securely via bcrypt');
+    const bcrypt = require('bcryptjs');
+    const isMatch = await bcrypt.compare(String(password), String(user.password));
+
+    if (!isMatch) {
+      console.warn(`[Login Flow] Password mismatch for user: ${user.email}`);
+      return next(new AppError('Invalid email or password', 401, 'AUTH_FAILED'));
+    }
+
+    if (!process.env.JWT_SECRET) {
+      console.error('[Login Flow] CRITICAL: JWT_SECRET environment variable is missing!');
+      return next(new AppError('Server configuration error', 500, 'SERVER_ERROR'));
+    }
+
+    console.log(`[Login Flow] Password match! Generating token for user ID: ${user._id}, Role: ${user.role}`);
+    
+    // Ensure role validation applies correctly
+    if (user.role === 'admin') {
+      console.log(`[Login Flow] Admin capabilities granted to user: ${user.email}`);
     }
 
     user.lastLogin = new Date();
     await user.save();
 
     const token = generateToken(user._id, user.email, user.role);
+    console.log('[Login Flow] Token generated successfully. Sending response.');
 
     res.status(200).json({
       success: true,
@@ -107,7 +138,8 @@ exports.login = async (req, res, next) => {
       message: 'Login successful'
     });
   } catch (error) {
-    next(error);
+    console.error('[Login Catch Error] Unexpected error during login process:', error);
+    next(new AppError('Internal server error during login', 500, 'SERVER_ERROR'));
   }
 };
 
@@ -180,64 +212,12 @@ exports.forgotPassword = async (req, res, next) => {
   }
 };
 
-// ─── Verify Reset OTP (mobile flow — unchanged) ─────────────────────────────
-exports.verifyResetOtp = async (req, res, next) => {
-  try {
-    const { mobileNumber, otp } = req.body;
-
-    if (!mobileNumber || !otp) {
-      return next(new AppError('Mobile number and OTP are required', 400, 'VALIDATION_ERROR'));
-    }
-
-    if (!validatePhoneNumber(mobileNumber)) {
-      return next(new AppError('Please provide a valid mobile number', 400, 'VALIDATION_ERROR'));
-    }
-
-    const normalizedPhone = normalizePhoneNumber(mobileNumber);
-    const otpSession = await PasswordResetOtpSession.findOne({ phoneNumber: normalizedPhone })
-      .select('+otpHash +otpExpiry +attempts +verifiedTokenHash +verifiedTokenExpiry');
-
-    if (!otpSession || !otpSession.otpHash || !otpSession.otpExpiry || otpSession.otpExpiry <= Date.now()) {
-      return next(new AppError('OTP is invalid or expired', 400, 'OTP_INVALID'));
-    }
-
-    const otpHash = hashValue(String(otp));
-
-    if (otpSession.otpHash !== otpHash) {
-      otpSession.attempts = (otpSession.attempts || 0) + 1;
-      if (otpSession.attempts >= 5) {
-        await PasswordResetOtpSession.deleteOne({ _id: otpSession._id });
-      } else {
-        await otpSession.save({ validateBeforeSave: false });
-      }
-      return next(new AppError('OTP is incorrect', 400, 'OTP_INVALID'));
-    }
-
-    const resetSessionToken = crypto.randomBytes(32).toString('hex');
-    otpSession.verifiedTokenHash = hashValue(resetSessionToken);
-    otpSession.verifiedTokenExpiry = new Date(Date.now() + 15 * 60 * 1000);
-    otpSession.otpHash = null;
-    otpSession.otpExpiry = null;
-    otpSession.attempts = 0;
-    await otpSession.save({ validateBeforeSave: false });
-
-    res.status(200).json({
-      success: true,
-      message: 'OTP verified successfully',
-      data: { resetSessionToken },
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
 // ─── Reset Password (JWT + single-use validation) ───────────────────────────
 exports.resetPassword = async (req, res, next) => {
   try {
-    const { token, resetSessionToken, email, newPassword, confirmPassword } = req.body;
-    const effectiveToken = token || resetSessionToken;
+    const { token, newPassword, confirmPassword } = req.body;
 
-    if (!effectiveToken || !newPassword || !confirmPassword) {
+    if (!token || !newPassword || !confirmPassword) {
       return next(new AppError('Token, new password, and password confirmation are required', 400, 'VALIDATION_ERROR'));
     }
 
@@ -255,50 +235,27 @@ exports.resetPassword = async (req, res, next) => {
 
     let user = null;
 
-    if (token) {
-      // ── JWT-based email reset flow ──────────────────────────────────────
-      let decoded;
-      try {
-        decoded = jwt.verify(token, process.env.JWT_SECRET);
-      } catch (jwtError) {
-        const message = jwtError.name === 'TokenExpiredError'
-          ? 'Reset link has expired. Please request a new one.'
-          : 'Invalid reset link. Please request a new one.';
-        return next(new AppError(message, 400, 'TOKEN_INVALID'));
-      }
+    // ── JWT-based email reset flow ──────────────────────────────────────
+    let decoded;
+    try {
+      decoded = jwt.verify(token, process.env.JWT_SECRET);
+    } catch (jwtError) {
+      const message = jwtError.name === 'TokenExpiredError'
+        ? 'Reset link has expired. Please request a new one.'
+        : 'Invalid reset link. Please request a new one.';
+      return next(new AppError(message, 400, 'TOKEN_INVALID'));
+    }
 
-      // Single-use validation: compare hashed token with DB value
-      const hashedToken = hashValue(token);
-      user = await User.findOne({
-        _id: decoded.id,
-        passwordResetToken: hashedToken,
-        passwordResetExpiry: { $gt: Date.now() },
-      });
+    // Single-use validation: compare hashed token with DB value
+    const hashedToken = hashValue(token);
+    user = await User.findOne({
+      _id: decoded.id,
+      passwordResetToken: hashedToken,
+      passwordResetExpiry: { $gt: Date.now() },
+    });
 
-      if (!user) {
-        return next(new AppError('Reset link has already been used or is invalid', 400, 'TOKEN_INVALID'));
-      }
-    } else {
-      // ── OTP-based mobile reset flow (unchanged) ─────────────────────────
-      if (!email || !validateEmail(email)) {
-        return next(new AppError('Valid account email is required to reset password', 400, 'VALIDATION_ERROR'));
-      }
-
-      const otpSession = await PasswordResetOtpSession.findOne({
-        verifiedTokenHash: hashValue(effectiveToken),
-        verifiedTokenExpiry: { $gt: Date.now() },
-      }).select('+verifiedTokenHash +verifiedTokenExpiry');
-
-      if (!otpSession) {
-        return next(new AppError('Reset session has expired or is invalid', 400, 'TOKEN_EXPIRED'));
-      }
-
-      user = await User.findOne({ email: email.toLowerCase() }).select('+password');
-      if (!user) {
-        return next(new AppError('No account found with this email', 404, 'NOT_FOUND'));
-      }
-
-      await PasswordResetOtpSession.deleteOne({ _id: otpSession._id });
+    if (!user) {
+      return next(new AppError('Reset link has already been used or is invalid', 400, 'TOKEN_INVALID'));
     }
 
     // Update password (bcrypt hashing handled by User pre-save hook)

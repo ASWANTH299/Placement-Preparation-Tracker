@@ -17,11 +17,6 @@ const userSchema = new mongoose.Schema(
       lowercase: true,
       match: [/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/, 'Please provide a valid email']
     },
-    phoneNumber: {
-      type: String,
-      trim: true,
-      default: null,
-    },
     password: {
       type: String,
       required: [true, 'Password is required'],
@@ -104,7 +99,6 @@ const userSchema = new mongoose.Schema(
 
 // Index for email uniqueness and role queries
 userSchema.index({ email: 1 });
-userSchema.index({ phoneNumber: 1 }, { unique: true, sparse: true });
 userSchema.index({ createdAt: -1 });
 userSchema.index({ role: 1 });
 

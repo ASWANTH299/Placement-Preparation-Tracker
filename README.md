@@ -50,7 +50,11 @@ Full-stack Placement Preparation Tracker (React + Vite frontend, Node + Express 
 	- `NODE_ENV=development`
 	- `MONGODB_URI=<your-mongodb-uri>`
 	- `JWT_SECRET=<your-strong-secret>`
-5. Start backend server:
+5. Run database fix (removes legacy indexes and fields):
+	- `npm run fix:db`
+6. Seed admin account:
+	- `npm run seed:admin`
+7. Start backend server:
 	- `npm run start`
 
 Backend runs at:
