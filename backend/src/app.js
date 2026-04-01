@@ -2,7 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
 const path = require('path');
-require('dotenv').config();
+const { env } = require('./config/env');
 
 const authMiddleware = require('./middlewares/authMiddleware');
 const roleMiddleware = require('./middlewares/roleMiddleware');
@@ -26,11 +26,7 @@ app.use('/uploads', express.static(path.resolve('uploads')));
 // Database Connection
 const connectDB = async () => {
   try {
-    const mongoURI = process.env.NODE_ENV === 'production'
-      ? process.env.MONGODB_PROD_URI
-      : process.env.MONGODB_URI;
-
-    await mongoose.connect(mongoURI, {
+    await mongoose.connect(env.MONGODB_URI, {
       useNewUrlParser: true,
       useUnifiedTopology: true
     });

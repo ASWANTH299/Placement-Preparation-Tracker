@@ -5,12 +5,10 @@ const seedDefaultContent = require('../src/utils/seedDefaultContent');
 const CompanyQuestion = require('../src/models/CompanyQuestion');
 
 async function seedQuestions() {
-  const mongoURI = process.env.NODE_ENV === 'production'
-    ? process.env.MONGODB_PROD_URI
-    : process.env.MONGODB_URI;
+  const mongoURI = process.env.MONGODB_URI;
 
   if (!mongoURI) {
-    throw new Error('Missing MongoDB connection string. Set MONGODB_URI (or MONGODB_PROD_URI in production).');
+    throw new Error('Missing MongoDB connection string. Set MONGODB_URI in backend/.env.');
   }
 
   await mongoose.connect(mongoURI, {

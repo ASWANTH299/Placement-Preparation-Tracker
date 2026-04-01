@@ -2,11 +2,11 @@ const nodemailer = require('nodemailer');
 
 /**
  * Create a Nodemailer transporter configured for Gmail.
- * Reads EMAIL_USER / EMAIL_PASS (primary) or SMTP_USER / SMTP_PASS (fallback).
+ * Reads EMAIL_USER / EMAIL_PASS from environment.
  */
 function createTransporter() {
-  const user = process.env.EMAIL_USER || process.env.SMTP_USER;
-  const rawPass = process.env.EMAIL_PASS || process.env.SMTP_PASS;
+  const user = process.env.EMAIL_USER;
+  const rawPass = process.env.EMAIL_PASS;
 
   if (!user || !rawPass) {
     console.error('[email] Email configuration error: EMAIL_USER or EMAIL_PASS is missing in .env');
@@ -27,7 +27,7 @@ function createTransporter() {
  */
 function resolveFromAddress() {
   const fromName = process.env.EMAIL_FROM_NAME || 'Placement Tracker Security';
-  const fromEmail = process.env.EMAIL_USER || process.env.SMTP_USER;
+  const fromEmail = process.env.EMAIL_USER;
   return `"${fromName}" <${fromEmail}>`;
 }
 

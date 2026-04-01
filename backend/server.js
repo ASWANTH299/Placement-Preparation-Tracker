@@ -1,8 +1,8 @@
-require('dotenv').config();
+const { env } = require('./src/config/env');
 const app = require('./src/app');
 
-const PORT = process.env.PORT || 5000;
-const NODE_ENV = process.env.NODE_ENV || 'development';
+const PORT = env.PORT;
+const NODE_ENV = env.NODE_ENV;
 
 const server = app.listen(PORT, () => {
   console.log(`\n========================================`);
@@ -10,7 +10,7 @@ const server = app.listen(PORT, () => {
   console.log(`========================================`);
   console.log(`Port: ${PORT}`);
   console.log(`Environment: ${NODE_ENV}`);
-  console.log(`Database: ${process.env.MONGODB_URI}`);
+  console.log(`Database: configured`);
   console.log(`URL: http://localhost:${PORT}`);
   console.log(`========================================\n`);
 });

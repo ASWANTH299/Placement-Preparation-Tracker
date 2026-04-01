@@ -5,21 +5,16 @@ const jwt = require('jsonwebtoken');
 const { validateEmail, validatePassword, validateName, validatePhoneNumber, normalizePhoneNumber } = require('../utils/validators');
 const { AppError } = require('../utils/errorHandler');
 const { sendPasswordResetEmail } = require('../utils/email');
+const { env } = require('../config/env');
 const crypto = require('crypto');
 
 const hashValue = (value) => crypto.createHash('sha256').update(value).digest('hex');
 
 /**
  * Resolve the client-side base URL for password reset links.
- * Priority: CLIENT_URL → FRONTEND_URL → FRONTEND_PROD_URL → fallback
  */
 const resolveClientUrl = () => {
-  const url =
-    process.env.CLIENT_URL ||
-    process.env.FRONTEND_URL ||
-    process.env.FRONTEND_PROD_URL ||
-    'http://localhost:3000';
-  return url.replace(/\/$/, '');
+  return env.FRONTEND_URL;
 };
 
 const maskEmail = (email = '') => {

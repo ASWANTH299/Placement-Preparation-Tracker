@@ -171,14 +171,8 @@ Configure these variables in `backend/.env`:
 
 ```env
 FRONTEND_URL=http://localhost:5173
-FRONTEND_PROD_URL=https://your-frontend-domain.com
-
-SMTP_HOST=smtp.gmail.com
-SMTP_PORT=587
-SMTP_SECURE=false
-SMTP_USER=your-email@gmail.com
-SMTP_PASS=your-app-password
-SMTP_FROM_EMAIL=your-email@gmail.com
+EMAIL_USER=your-email@gmail.com
+EMAIL_PASS=your-app-password
 EMAIL_FROM_NAME=Placement Tracker
 ```
 
