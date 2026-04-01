@@ -9,7 +9,9 @@ const navItems = [
   { label: 'Manage Users', to: '/admin-users' },
   { label: 'Manage Questions', to: '/admin-company-questions' },
   { label: 'Learn Concepts with YouTube', to: '/admin-concept-videos' },
+  { label: 'HR Interview Preparation', to: '/admin-hr-interview' },
   { label: 'Manage Daily Tasks', to: '/admin-daily-task' },
+  { label: 'Student Profile', to: '/admin-student-profile' },
   { label: 'Manage Profiles', to: '/admin-profiles' },
   { label: 'Manage Learning Paths', to: '/admin-learning-path' },
 

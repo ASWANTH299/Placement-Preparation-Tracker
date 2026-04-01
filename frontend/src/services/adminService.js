@@ -29,6 +29,12 @@ export const createAdminConceptVideo = (payload) => api.post('/admin/concept-vid
 export const updateAdminConceptVideo = (videoId, payload) => api.put(`/admin/concept-videos/${videoId}`, payload)
 export const deleteAdminConceptVideo = (videoId) => api.delete(`/admin/concept-videos/${videoId}`)
 
+export const getAdminHRInterviewQuestions = (params) => api.get('/admin/hr-interview-questions', { params })
+export const getAdminHRInterviewQuestionById = (questionId) => api.get(`/admin/hr-interview-questions/${questionId}`)
+export const createAdminHRInterviewQuestion = (payload) => api.post('/admin/hr-interview-questions', payload)
+export const updateAdminHRInterviewQuestion = (questionId, payload) => api.put(`/admin/hr-interview-questions/${questionId}`, payload)
+export const deleteAdminHRInterviewQuestion = (questionId) => api.delete(`/admin/hr-interview-questions/${questionId}`)
+
 export const getAdminProfiles = (params) => api.get('/admin/profiles', { params })
 export const getAdminProfileById = (userId) => api.get(`/admin/profiles/${userId}`)
 export const createAdminProfile = (payload) => api.post('/admin/profiles', payload)

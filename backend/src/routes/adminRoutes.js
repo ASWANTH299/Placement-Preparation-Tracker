@@ -38,6 +38,13 @@ router.post('/concept-videos', adminController.createConceptVideo);
 router.put('/concept-videos/:videoId', adminController.updateConceptVideo);
 router.delete('/concept-videos/:videoId', adminController.deleteConceptVideo);
 
+// HR Interview Preparation Management
+router.get('/hr-interview-questions', adminController.getHRInterviewQuestions);
+router.get('/hr-interview-questions/:questionId', adminController.getHRInterviewQuestionById);
+router.post('/hr-interview-questions', adminController.createHRInterviewQuestion);
+router.put('/hr-interview-questions/:questionId', adminController.updateHRInterviewQuestion);
+router.delete('/hr-interview-questions/:questionId', adminController.deleteHRInterviewQuestion);
+
 // Student Profiles Management
 router.get('/profiles', adminController.getAllProfiles);
 router.get('/profiles/:userId', adminController.getProfileById);
