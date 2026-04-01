@@ -17,13 +17,17 @@ const server = app.listen(PORT, () => {
 
 // Handle unhandled promise rejections
 process.on('unhandledRejection', (err) => {
-  console.error('Unhandled Rejection:', err);
+  console.error('\n🚨 CRITICAL: Unhandled Promise Rejection Detected!');
+  console.error('This means an async function threw an error without a try/catch block. Check your async code flows.');
+  console.error('Error Details:', err);
   server.close(() => process.exit(1));
 });
 
 // Handle uncaught exceptions
 process.on('uncaughtException', (err) => {
-  console.error('Uncaught Exception:', err);
+  console.error('\n🚨 CRITICAL: Uncaught Exception Detected!');
+  console.error('The Node process encountered a fatal error and is being forced to shut down.');
+  console.error('Error Details:', err);
   server.close(() => process.exit(1));
 });
 

@@ -22,6 +22,11 @@ let hasTriggeredSessionRedirect = false
 api.interceptors.response.use(
   (response) => response,
   (error) => {
+    // Check if the error completely lacks a response object (meaning the backend is dead/unreachable)
+    if (!error.response && error.message === 'Network Error') {
+      console.error('🚨 CRITICAL: Cannot reach the backend API. Did you forget to start the Node server on PORT 5000? MONGODB might also not be running.');
+    }
+
     const status = error?.response?.status
     const errorCode = error?.response?.data?.errorCode
     const hasToken = Boolean(localStorage.getItem('token'))

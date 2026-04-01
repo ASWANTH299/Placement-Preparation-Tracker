@@ -1,140 +1,63 @@
 # Placement-Preparation-Tracker
 
-Full-stack Placement Preparation Tracker (React + Vite frontend, Node + Express backend, MongoDB database).
+A full-stack Placement Preparation Tracker (React + Vite frontend, Node + Express backend, MongoDB database) optimized for seamless multi-developer collaboration.
 
-## Project Structure
+## 🚀 Quick Setup (4 Steps)
 
-- `frontend/` - React + Vite + Tailwind frontend app
-- `backend/` - Node.js + Express + MongoDB API server
-- `frontend_prd.md` - frontend product requirements
-- `backend_prd.md` - backend product requirements
-- `frontend_task_checklist.md` - implementation audit tracker
-
-## Prerequisites
-
-- Node.js 18+ and npm
-- MongoDB (local installation or MongoDB Atlas)
-- Git
-
-## 1) Clone and Open
-
-1. Clone the repository.
-2. Open the project root folder:
-	- `Placement-Preparation-Tracker`
-3. Install root dependencies (for one-command start):
-	- `npm install`
-
-## 2) Database Setup (MongoDB)
-
-### Option A: Local MongoDB
-
-1. Start MongoDB service on your machine.
-2. Use this URI in backend `.env`:
-	- `MONGODB_URI=mongodb://localhost:27017/placement_tracker`
-
-### Option B: MongoDB Atlas
-
-1. Create a cluster and database user in Atlas.
-2. Get connection string and set in backend `.env`:
-	- `MONGODB_URI=<your-atlas-uri>`
-
-## 3) Backend Setup
-
-1. Open terminal in `backend`.
-2. Install dependencies:
-	- `npm install`
-3. Create `.env` (copy from `.env.example`):
-	- Windows PowerShell: `Copy-Item .env.example .env`
-4. Update required `.env` values:
-	- `PORT=5000`
-	- `NODE_ENV=development`
-	- `MONGODB_URI=<your-mongodb-uri>`
-	- `JWT_SECRET=<your-strong-secret>`
-5. Run database fix (removes legacy indexes and fields):
-	- `npm run fix:db`
-6. Seed admin account:
-	- `npm run seed:admin`
-7. Start backend server:
-	- `npm run start`
-
-Backend runs at:
-- `http://localhost:5000`
-- Health check: `http://localhost:5000/api/v1/health`
-
-## 4) Frontend Setup
-
-1. Open terminal in `frontend`.
-2. Install dependencies:
-	- `npm install`
-3. Run development server:
-	- `npm run dev`
-4. Build production bundle:
-	- `npm run build`
-
-Frontend runs at:
-- `http://localhost:5173` (default Vite port)
-
-## Environment
-
-- API base URL is configured in `frontend/src/services/api.js`.
-- Default base URL: `http://localhost:5000/api/v1`.
-
-## 5) First Run Verification
-
-1. Confirm backend health:
-	- `GET http://localhost:5000/api/v1/health`
-2. Open frontend app and test:
-	- Register as Student or Admin
-	- Login with selected role
-	- Verify dashboard loads after login
-
-## 6) Useful Commands
-
-### Backend
-- `npm run start` - start backend server
-- `npm run dev` - start backend with nodemon
-
-### Frontend
-- `npm run dev` - start frontend dev server
-- `npm run build` - production build
-
-## 7) Quick Start (2 Terminals)
-
-Use this when you want to run the full stack quickly.
-
-### Terminal 1 (Backend)
-
-```powershell
-Set-Location backend
-if (-not (Test-Path ".env")) { Copy-Item .env.example .env }
-npm install
-npm run start
+### 1️⃣ Clone the Repository
+```bash
+git clone https://github.com/ASWANTH299/Placement-Preparation-Tracker.git
+cd Placement-Preparation-Tracker
 ```
 
-### Terminal 2 (Frontend)
-
-```powershell
-Set-Location frontend
-npm install
-npm run dev
+### 2️⃣ Install Dependencies Natively
+Ensure you have **Node v24+** installed. Install both frontend and backend dependencies using the deterministic lockfiles:
+```bash
+cd backend && npm ci
+cd ../frontend && npm ci
 ```
 
-Open:
-- Frontend: `http://localhost:5173`
-- Backend Health: `http://localhost:5000/api/v1/health`
+### 3️⃣ Setup Environment Secrets (`.env`)
+You must construct the secure environment files out of the safe `.example` templates.
+- **Backend (.env)**
+  ```bash
+  cd ../backend
+  cp .env.example .env
+  ```
+  Open `backend/.env` and insert your **`MONGODB_URI`** connection string (either Localhost `mongodb://localhost:27017/placement_tracker` or Atlas Cluster) and a strong **`JWT_SECRET`**.
 
-## 8) Quick Start (Single Command)
+- **Frontend (.env)**
+  ```bash
+  cd ../frontend
+  cp .env.example .env
+  ```
+  Open `frontend/.env` and ensure `VITE_API_BASE_URL` correctly targets your local node server port (`http://localhost:5000/api/v1`).
 
-After running `npm install` in project root, use:
+### 4️⃣ Boot the Platform 
 
-```powershell
-npm run dev:all:
+**Terminal 1 (Backend Initialization & Server)**:
+```bash
+cd backend
+npm run fix:db       # Destroys legacy schema models
+npm run seed:admin   # Seeds the highest-level Admin payload natively (Requires MONGODB_URI)
+npm start            # Starts the Node Server (Port 5000)
 ```
 
-Additional root scripts:
-- `npm run dev:backend` - run backend only
-- `npm run dev:frontend` - run frontend only
+**Terminal 2 (Frontend Interface)**:
+```bash
+cd frontend
+npm run dev          # Fires up Vite Native Server (Port 5173)
+```
 
-## Deployment Readiness
+Done! You can verify backend compilation is healthy by navigating to [http://localhost:5000/api/v1/health](http://localhost:5000/api/v1/health). The main application interface lives at [http://localhost:5173](http://localhost:5173).
 
-Use the deployment checklist in `frontend/DEPLOYMENT_CHECKLIST.md` before publishing.
+---
+## 📦 Project Structure overview
+
+- `frontend/` - React + Vite + Tailwind frontend application
+- `backend/` - Node.js + Express + MongoDB securely locked API
+- `frontend_prd.md` / `backend_prd.md` - Product requirements trackers
+- `frontend_task_checklist.md` - Implementation progression tracker
+- `.nvmrc` - Native node-version locking
+
+*Ensure you consult `frontend/DEPLOYMENT_CHECKLIST.md` before physically publishing any production builds to Vercel/Render!*

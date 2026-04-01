@@ -36,7 +36,9 @@ const connectDB = async () => {
 
     console.log('MongoDB connected successfully');
   } catch (error) {
-    console.error('Database connection error:', error);
+    console.error('❌ CRITICAL: MongoDB Connection Failed!');
+    console.error('Please ensure your local MongoDB instance is running, or that your MONGODB_URI in backend/.env is correctly formatted.');
+    console.error('Raw Error:', error.message);
     process.exit(1);
   }
 };
