@@ -24,6 +24,20 @@ router.post('/company-questions', adminController.createQuestion);
 router.put('/company-questions/:questionId', adminController.updateQuestion);
 router.delete('/company-questions/:questionId', adminController.deleteQuestion);
 
+// Daily Tasks Management
+router.get('/daily-tasks', adminController.getDailyTasks);
+router.get('/daily-tasks/:taskId', adminController.getDailyTaskById);
+router.post('/daily-tasks', adminController.createDailyTask);
+router.put('/daily-tasks/:taskId', adminController.updateDailyTask);
+router.delete('/daily-tasks/:taskId', adminController.deleteDailyTask);
+
+// Student Profiles Management
+router.get('/profiles', adminController.getAllProfiles);
+router.get('/profiles/:userId', adminController.getProfileById);
+router.post('/profiles', adminController.createProfile);
+router.put('/profiles/:userId', adminController.updateProfile);
+router.delete('/profiles/:userId', adminController.deleteProfile);
+
 // Mock Interviews Management
 router.get('/mock-interviews', adminController.getAllMockInterviews);
 router.post('/mock-interviews', adminController.createMockInterview);

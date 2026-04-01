@@ -6,6 +6,7 @@ const QuestionProgress = require('../models/QuestionProgress');
 const MockInterview = require('../models/MockInterview');
 const Resume = require('../models/Resume');
 const Note = require('../models/Note');
+const DailyTask = require('../models/DailyTask');
 const { AppError } = require('../utils/errorHandler');
 const { logAdminAudit } = require('../utils/adminAuditLogger');
 
@@ -580,6 +581,358 @@ exports.deleteMockInterview = async (req, res, next) => {
     res.status(200).json({
       success: true,
       message: 'Mock interview deleted successfully'
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Daily task management
+exports.getDailyTasks = async (req, res, next) => {
+  try {
+    const { page = 1, limit = 25, search, platform, difficulty, isActive } = req.query;
+
+    const query = {};
+    if (search) {
+      query.$or = [
+        { title: { $regex: search, $options: 'i' } },
+        { company: { $regex: search, $options: 'i' } },
+        { tags: { $elemMatch: { $regex: search, $options: 'i' } } }
+      ];
+    }
+    if (platform && platform !== 'All') query.platform = platform;
+    if (difficulty && difficulty !== 'All') query.difficulty = difficulty;
+    if (isActive === 'true') query.isActive = true;
+    if (isActive === 'false') query.isActive = false;
+
+    const safePage = parseInt(page, 10);
+    const safeLimit = parseInt(limit, 10);
+    const skip = (safePage - 1) * safeLimit;
+
+    const [rows, total] = await Promise.all([
+      DailyTask.find(query).sort({ createdAt: -1 }).skip(skip).limit(safeLimit),
+      DailyTask.countDocuments(query)
+    ]);
+
+    res.status(200).json({
+      success: true,
+      data: rows,
+      pagination: {
+        page: safePage,
+        limit: safeLimit,
+        total,
+        pages: Math.ceil(total / safeLimit)
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.getDailyTaskById = async (req, res, next) => {
+  try {
+    const { taskId } = req.params;
+    const task = await DailyTask.findById(taskId);
+
+    if (!task) {
+      return next(new AppError('Daily task not found', 404, 'NOT_FOUND'));
+    }
+
+    res.status(200).json({
+      success: true,
+      data: task
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.createDailyTask = async (req, res, next) => {
+  try {
+    const payload = {
+      ...req.body,
+      tags: Array.isArray(req.body.tags)
+        ? req.body.tags.map((tag) => String(tag).trim()).filter(Boolean)
+        : []
+    };
+
+    const task = await DailyTask.create(payload);
+
+    await logAdminAudit(req, {
+      action: 'CREATE_DAILY_TASK',
+      targetType: 'DailyTask',
+      targetId: task._id,
+      status: 'SUCCESS'
+    });
+
+    res.status(201).json({
+      success: true,
+      data: task,
+      message: 'Daily task created successfully'
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.updateDailyTask = async (req, res, next) => {
+  try {
+    const { taskId } = req.params;
+    const payload = {
+      ...req.body,
+      tags: Array.isArray(req.body.tags)
+        ? req.body.tags.map((tag) => String(tag).trim()).filter(Boolean)
+        : req.body.tags
+    };
+
+    const task = await DailyTask.findByIdAndUpdate(taskId, payload, {
+      new: true,
+      runValidators: true
+    });
+
+    if (!task) {
+      return next(new AppError('Daily task not found', 404, 'NOT_FOUND'));
+    }
+
+    await logAdminAudit(req, {
+      action: 'UPDATE_DAILY_TASK',
+      targetType: 'DailyTask',
+      targetId: taskId,
+      status: 'SUCCESS'
+    });
+
+    res.status(200).json({
+      success: true,
+      data: task,
+      message: 'Daily task updated successfully'
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.deleteDailyTask = async (req, res, next) => {
+  try {
+    const { taskId } = req.params;
+    const task = await DailyTask.findByIdAndDelete(taskId);
+
+    if (!task) {
+      return next(new AppError('Daily task not found', 404, 'NOT_FOUND'));
+    }
+
+    await logAdminAudit(req, {
+      action: 'DELETE_DAILY_TASK',
+      targetType: 'DailyTask',
+      targetId: taskId,
+      status: 'SUCCESS'
+    });
+
+    res.status(200).json({
+      success: true,
+      message: 'Daily task deleted successfully'
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Profile management
+exports.getAllProfiles = async (req, res, next) => {
+  try {
+    const { page = 1, limit = 25, search } = req.query;
+    const query = { role: 'student' };
+
+    if (search) {
+      query.$or = [
+        { name: { $regex: search, $options: 'i' } },
+        { email: { $regex: search, $options: 'i' } },
+        { university: { $regex: search, $options: 'i' } },
+        { department: { $regex: search, $options: 'i' } }
+      ];
+    }
+
+    const safePage = parseInt(page, 10);
+    const safeLimit = parseInt(limit, 10);
+    const skip = (safePage - 1) * safeLimit;
+
+    const [profiles, total] = await Promise.all([
+      User.find(query)
+        .select('-password')
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(safeLimit),
+      User.countDocuments(query)
+    ]);
+
+    res.status(200).json({
+      success: true,
+      data: profiles,
+      pagination: {
+        page: safePage,
+        limit: safeLimit,
+        total,
+        pages: Math.ceil(total / safeLimit)
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.getProfileById = async (req, res, next) => {
+  try {
+    const { userId } = req.params;
+    const profile = await User.findOne({ _id: userId, role: 'student' }).select('-password');
+
+    if (!profile) {
+      return next(new AppError('Profile not found', 404, 'NOT_FOUND'));
+    }
+
+    res.status(200).json({
+      success: true,
+      data: profile
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.createProfile = async (req, res, next) => {
+  try {
+    const {
+      name,
+      email,
+      password,
+      bio = '',
+      avatar = null,
+      university = '',
+      graduationYear = null,
+      department = '',
+      githubProfile = null,
+      linkedinProfile = null,
+      portfolioLink = null,
+      isActive = true
+    } = req.body;
+
+    if (!name || !email) {
+      return next(new AppError('Name and email are required', 400, 'VALIDATION_ERROR'));
+    }
+
+    const normalizedEmail = String(email).toLowerCase().trim();
+    const existing = await User.findOne({ email: normalizedEmail });
+    if (existing) {
+      return next(new AppError('Email already exists', 409, 'EMAIL_EXISTS'));
+    }
+
+    const temporaryPassword = password || buildTempPassword();
+    const profile = await User.create({
+      name: String(name).trim(),
+      email: normalizedEmail,
+      password: temporaryPassword,
+      role: 'student',
+      bio,
+      avatar,
+      university,
+      graduationYear,
+      department,
+      githubProfile,
+      linkedinProfile,
+      portfolioLink,
+      isActive,
+      mustResetPassword: true
+    });
+
+    await logAdminAudit(req, {
+      action: 'CREATE_PROFILE',
+      targetType: 'User',
+      targetId: profile._id,
+      status: 'SUCCESS'
+    });
+
+    res.status(201).json({
+      success: true,
+      data: {
+        ...profile.toJSON(),
+        temporaryPassword
+      },
+      message: 'Profile created successfully'
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.updateProfile = async (req, res, next) => {
+  try {
+    const { userId } = req.params;
+    const updateData = { ...req.body };
+
+    delete updateData.password;
+    delete updateData.role;
+
+    if (updateData.email) {
+      const normalizedEmail = String(updateData.email).toLowerCase().trim();
+      const exists = await User.findOne({ email: normalizedEmail, _id: { $ne: userId } });
+      if (exists) {
+        return next(new AppError('Email already exists', 409, 'EMAIL_EXISTS'));
+      }
+      updateData.email = normalizedEmail;
+    }
+
+    const profile = await User.findOneAndUpdate(
+      { _id: userId, role: 'student' },
+      updateData,
+      { new: true, runValidators: true }
+    ).select('-password');
+
+    if (!profile) {
+      return next(new AppError('Profile not found', 404, 'NOT_FOUND'));
+    }
+
+    await logAdminAudit(req, {
+      action: 'UPDATE_PROFILE',
+      targetType: 'User',
+      targetId: userId,
+      status: 'SUCCESS'
+    });
+
+    res.status(200).json({
+      success: true,
+      data: profile,
+      message: 'Profile updated successfully'
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.deleteProfile = async (req, res, next) => {
+  try {
+    const { userId } = req.params;
+
+    const profile = await User.findOneAndDelete({ _id: userId, role: 'student' });
+    if (!profile) {
+      return next(new AppError('Profile not found', 404, 'NOT_FOUND'));
+    }
+
+    await Promise.all([
+      StudentProgress.deleteMany({ studentId: userId }),
+      QuestionProgress.deleteMany({ studentId: userId }),
+      MockInterview.deleteMany({ studentId: userId }),
+      Resume.deleteMany({ studentId: userId }),
+      Note.deleteMany({ studentId: userId })
+    ]);
+
+    await logAdminAudit(req, {
+      action: 'DELETE_PROFILE',
+      targetType: 'User',
+      targetId: userId,
+      status: 'SUCCESS'
+    });
+
+    res.status(200).json({
+      success: true,
+      message: 'Profile deleted successfully'
     });
   } catch (error) {
     next(error);

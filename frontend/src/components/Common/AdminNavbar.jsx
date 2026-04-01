@@ -7,8 +7,10 @@ import ptLogo from '../../assets/pt-logo.svg'
 const navItems = [
   { label: 'Admin Overview', to: '/admin-dashboard' },
   { label: 'Manage Users', to: '/admin-users' },
+  { label: 'Manage Profiles', to: '/admin-profiles' },
   { label: 'Manage Learning Paths', to: '/admin-learning-path' },
   { label: 'Manage Questions', to: '/admin-company-questions' },
+  { label: 'Manage Daily Tasks', to: '/admin-daily-task' },
 
   // Admin access to platform modules
   { label: 'Manage Resume Data', to: '/resume-tracker' },
