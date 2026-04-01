@@ -15,6 +15,7 @@ const path = require('path');
 require('dotenv').config({ path: path.resolve(__dirname, '..', '.env') });
 
 const mongoose = require('mongoose');
+const { validateEmail, validatePassword, validateName } = require('../src/utils/validators');
 
 // ─── Configuration ───────────────────────────────────────────────────────────
 const ADMIN_NAME = process.env.ADMIN_NAME;
@@ -26,6 +27,21 @@ const MONGODB_URI = process.env.MONGODB_URI;
 if (!ADMIN_NAME || !ADMIN_EMAIL || !ADMIN_PASSWORD) {
   console.error('\n❌  Missing required environment variables.');
   console.error('   Ensure ADMIN_NAME, ADMIN_EMAIL, and ADMIN_PASSWORD are set in .env\n');
+  process.exit(1);
+}
+
+if (!validateName(ADMIN_NAME)) {
+  console.error('\n❌  ADMIN_NAME must be between 2 and 100 characters.\n');
+  process.exit(1);
+}
+
+if (!validateEmail(ADMIN_EMAIL)) {
+  console.error('\n❌  ADMIN_EMAIL must be a valid email address.\n');
+  process.exit(1);
+}
+
+if (!validatePassword(ADMIN_PASSWORD)) {
+  console.error('\n❌  ADMIN_PASSWORD must include at least one uppercase letter and one special character.\n');
   process.exit(1);
 }
 
@@ -73,6 +89,7 @@ async function createAdmin() {
       password: ADMIN_PASSWORD,
       role: 'admin',
       isActive: true,
+      mustResetPassword: false,
     });
 
     console.log('✅  Admin user created successfully!');

@@ -59,6 +59,25 @@ npm start
 
 Server will run on `http://localhost:5000` by default.
 
+## Admin Provisioning
+
+Admin access is database-driven using `User.role = "admin"`.
+
+1. Set admin seed values in `backend/.env`:
+  - `ADMIN_NAME`
+  - `ADMIN_EMAIL`
+  - `ADMIN_PASSWORD`
+2. Run:
+
+```bash
+npm run seed:admin
+```
+
+Notes:
+- This script is idempotent: if the admin email already exists with role `admin`, it does not create a duplicate.
+- Admin is not auto-created on server startup.
+- Runtime admin authorization is enforced by role checks, not by `.env` email comparison.
+
 ## Project Structure
 
 ```
