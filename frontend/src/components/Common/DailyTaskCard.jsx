@@ -182,6 +182,7 @@ export default function DailyTaskCard({ user, period = 'Today', className = '' }
   const [isCompleted, setIsCompleted] = useState(false)
   const [isValidatingSubmission, setIsValidatingSubmission] = useState(false)
   const [completionError, setCompletionError] = useState('')
+  const [isStarred, setIsStarred] = useState(false)
 
   const userSeed = user?.id || user?._id || user?.email || user?.name || 'guest-user'
   const dateKey = useMemo(() => getLocalDateKey(now), [now])
@@ -190,6 +191,7 @@ export default function DailyTaskCard({ user, period = 'Today', className = '' }
 
   const completionStorageKey = useMemo(() => `daily-task:${userSeed}:${dateKey}:${question.id}`, [userSeed, dateKey, question.id])
   const submissionStorageKey = useMemo(() => `daily-task:submission:${userSeed}:${dateKey}:${question.id}`, [userSeed, dateKey, question.id])
+  const starredStorageKey = useMemo(() => `daily-task:starred:${userSeed}`, [userSeed])
 
   useEffect(() => {
     const timerId = window.setInterval(() => {
@@ -217,6 +219,16 @@ export default function DailyTaskCard({ user, period = 'Today', className = '' }
       setIsCompleted(false)
     }
   }, [completionStorageKey, submissionStorageKey])
+
+  useEffect(() => {
+    try {
+      const stored = JSON.parse(window.localStorage.getItem(starredStorageKey) || '[]')
+      const list = Array.isArray(stored) ? stored : []
+      setIsStarred(list.some((row) => row.id === question.id))
+    } catch {
+      setIsStarred(false)
+    }
+  }, [starredStorageKey, question.id])
 
   const remainingMs = useMemo(() => {
     const tomorrow = new Date(now)
@@ -322,6 +334,40 @@ export default function DailyTaskCard({ user, period = 'Today', className = '' }
     }
   }
 
+  const toggleStar = () => {
+    try {
+      const stored = JSON.parse(window.localStorage.getItem(starredStorageKey) || '[]')
+      const list = Array.isArray(stored) ? stored : []
+      const exists = list.some((row) => row.id === question.id)
+
+      const next = exists
+        ? list.filter((row) => row.id !== question.id)
+        : [
+            {
+              id: question.id,
+              title: question.title,
+              platform: question.platform,
+              difficulty: question.difficulty,
+              company: question.company,
+              time: question.time,
+              prompt: question.prompt,
+              tags: question.tags,
+              practiceUrl: question.practiceUrl,
+              dateKey,
+              starredAt: new Date().toISOString(),
+              plannedTime: '',
+              timerMinutes: '',
+            },
+            ...list,
+          ]
+
+      window.localStorage.setItem(starredStorageKey, JSON.stringify(next))
+      setIsStarred(!exists)
+    } catch {
+      setIsStarred(false)
+    }
+  }
+
   return (
     <article className={`ui-card p-5 sm:p-6 ${className}`.trim()}>
       <div className="flex items-center justify-between gap-3">
@@ -329,9 +375,18 @@ export default function DailyTaskCard({ user, period = 'Today', className = '' }
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-cyan-600 dark:text-cyan-300">Daily Challenge</p>
           <h3 className="mt-1 text-xl font-bold text-slate-900 dark:text-slate-100">DAILY TASK</h3>
         </div>
-        <span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-medium text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300">
-          {period}
-        </span>
+        <div className="flex items-center gap-2">
+          <span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-medium text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300">
+            {period}
+          </span>
+          <button
+            type="button"
+            onClick={toggleStar}
+            className={`rounded-full px-2.5 py-1 text-xs font-medium ${isStarred ? 'bg-amber-100 text-amber-800 dark:bg-amber-950/40 dark:text-amber-300' : 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300'}`}
+          >
+            {isStarred ? 'Starred' : 'Star Task'}
+          </button>
+        </div>
       </div>
 
       <div className="daily-task-question-panel mt-4 rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-gradient-to-br dark:from-slate-900 dark:to-slate-800">

@@ -9,6 +9,7 @@ import Navbar from './components/Common/Navbar'
 import CompanyQuestionsPage from './pages/CompanyQuestionsPage'
 import DashboardPage from './pages/DashboardPage'
 import DailyTaskPage from './pages/DailyTaskPage'
+import TaskPlannerPage from './pages/TaskPlannerPage'
 import ForgotPasswordPage from './pages/ForgotPasswordPage'
 import ForumPage from './pages/ForumPage'
 import HRInterviewPage from './pages/HRInterviewPage'
@@ -33,19 +34,19 @@ import ResetPasswordPage from './pages/ResetPasswordPage'
 import ResumeTrackerPage from './pages/ResumeTrackerPage'
 import ServerErrorPage from './pages/ServerErrorPage'
 import SettingsPage from './pages/SettingsPage'
+import StudentOverviewPage from './pages/StudentOverviewPage'
 import UnauthorizedPage from './pages/UnauthorizedPage'
 import AdminUsersPage from './pages/AdminUsersPage'
 import AdminLearningPathPage from './pages/AdminLearningPathPage'
 import AdminCompanyQuestionsPage from './pages/AdminCompanyQuestionsPage'
 import AdminDailyTaskPage from './pages/AdminDailyTaskPage'
-import AdminProfilesPage from './pages/AdminProfilesPage'
 import AdminStudentProfilePage from './pages/AdminStudentProfilePage'
 import AdminConceptVideosPage from './pages/AdminConceptVideosPage'
 import AdminHRInterviewPage from './pages/AdminHRInterviewPage'
 import QuizPage from './pages/QuizPage'
 
 const authRoutes = ['/login', '/register', '/forgot-password', '/reset-password']
-const adminRoutes = ['/admin-dashboard', '/admin-users', '/admin-learning-path', '/admin-company-questions', '/admin-daily-task', '/admin-profiles', '/admin-student-profile', '/admin-concept-videos', '/admin-hr-interview']
+const adminRoutes = ['/admin-dashboard', '/admin-users', '/admin-learning-path', '/admin-company-questions', '/admin-daily-task', '/admin-profile', '/admin-concept-videos', '/admin-hr-interview']
 
 function ProtectedRoute({ children }) {
   const token = useSelector((state) => state.auth.token)
@@ -91,6 +92,7 @@ function AppLayout() {
 
           <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
           <Route path="/daily-task" element={<ProtectedRoute><DailyTaskPage /></ProtectedRoute>} />
+          <Route path="/task-planner" element={<ProtectedRoute><TaskPlannerPage /></ProtectedRoute>} />
           <Route path="/learning-path" element={<ProtectedRoute><LearningPathPage /></ProtectedRoute>} />
           <Route path="/learning-path/:topicId" element={<ProtectedRoute><LearningPathDetailPage /></ProtectedRoute>} />
           <Route path="/company-questions" element={<ProtectedRoute><CompanyQuestionsPage /></ProtectedRoute>} />
@@ -110,6 +112,7 @@ function AppLayout() {
           <Route path="/forum" element={<ProtectedRoute><ForumPage /></ProtectedRoute>} />
           <Route path="/hr-interview" element={<ProtectedRoute><HRInterviewPage /></ProtectedRoute>} />
           <Route path="/leaderboard" element={<ProtectedRoute><LeaderboardPage /></ProtectedRoute>} />
+          <Route path="/students/:studentId/overview" element={<ProtectedRoute><StudentOverviewPage /></ProtectedRoute>} />
           <Route path="/coding-profiles" element={<ProtectedRoute><CodingProfilesPage /></ProtectedRoute>} />
           <Route path="/concept-learning" element={<ProtectedRoute><ConceptLearningPage /></ProtectedRoute>} />
           <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
@@ -121,8 +124,7 @@ function AppLayout() {
           <Route path="/admin-learning-path" element={<AdminRoute><AdminLearningPathPage /></AdminRoute>} />
           <Route path="/admin-company-questions" element={<AdminRoute><AdminCompanyQuestionsPage /></AdminRoute>} />
           <Route path="/admin-daily-task" element={<AdminRoute><AdminDailyTaskPage /></AdminRoute>} />
-          <Route path="/admin-profiles" element={<AdminRoute><AdminProfilesPage /></AdminRoute>} />
-          <Route path="/admin-student-profile" element={<AdminRoute><AdminStudentProfilePage /></AdminRoute>} />
+          <Route path="/admin-profile" element={<AdminRoute><AdminStudentProfilePage /></AdminRoute>} />
           <Route path="/admin-concept-videos" element={<AdminRoute><AdminConceptVideosPage /></AdminRoute>} />
           <Route path="/admin-hr-interview" element={<AdminRoute><AdminHRInterviewPage /></AdminRoute>} />
 

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { getLeaderboard } from '../../services/leaderboardService'
 
 const fallbackRows = [
@@ -20,6 +21,7 @@ const getMomentum = (row) => {
 }
 
 export default function LeaderboardView() {
+  const navigate = useNavigate()
   const [period, setPeriod] = useState('All Time')
   const [rows, setRows] = useState(fallbackRows)
   const [loading, setLoading] = useState(false)
@@ -39,6 +41,7 @@ export default function LeaderboardView() {
 
         const normalized = list.map((row, index) => ({
           rank: Number(row.rank ?? index + 1),
+          studentId: row.studentId ?? row._id ?? null,
           name: row.name ?? row.studentName ?? 'Student',
           progress: Number(row.progress ?? 0),
           questions: Number(row.questions ?? row.questionCount ?? 0),
@@ -130,7 +133,7 @@ export default function LeaderboardView() {
           </div>
           <div className="mt-4 space-y-3">
             {podiumRows.map((row) => (
-              <PodiumCard key={`${row.rank}-${row.name}`} row={row} />
+              <PodiumCard key={`${row.rank}-${row.name}`} row={row} onOpenStudent={(studentId) => navigate(`/students/${studentId}/overview`)} />
             ))}
           </div>
         </article>
@@ -187,7 +190,19 @@ export default function LeaderboardView() {
                       <td className="py-3 pr-2">
                         <span className="rounded-full bg-slate-100 px-2.5 py-1 font-medium text-slate-700 dark:bg-slate-800 dark:text-slate-200">#{row.rank}</span>
                       </td>
-                      <td className="py-3 pr-2 font-medium text-slate-900 dark:text-slate-100">{row.name}</td>
+                      <td className="py-3 pr-2 font-medium text-slate-900 dark:text-slate-100">
+                        {row.studentId ? (
+                          <button
+                            type="button"
+                            onClick={() => navigate(`/students/${row.studentId}/overview`)}
+                            className="rounded px-1 text-left text-blue-700 underline-offset-2 hover:underline focus:outline-none focus:ring-2 focus:ring-blue-300 dark:text-blue-300"
+                          >
+                            {row.name}
+                          </button>
+                        ) : (
+                          row.name
+                        )}
+                      </td>
                       <td className="py-3 pr-2">
                         <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${momentum.tone}`}>{momentum.label}</span>
                       </td>
@@ -228,7 +243,7 @@ function InsightCard({ label, value }) {
   )
 }
 
-function PodiumCard({ row }) {
+function PodiumCard({ row, onOpenStudent }) {
   const tone =
     row.rank === 1
       ? 'border-yellow-300/70 bg-yellow-50/60 dark:border-yellow-900/60 dark:bg-yellow-950/30'
@@ -239,7 +254,20 @@ function PodiumCard({ row }) {
   return (
     <article className={`rounded-xl border p-4 ${tone}`}>
       <div className="flex items-center justify-between gap-3">
-        <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">#{row.rank} {row.name}</p>
+        <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+          #{row.rank}{' '}
+          {row.studentId ? (
+            <button
+              type="button"
+              onClick={() => onOpenStudent(row.studentId)}
+              className="rounded text-left text-blue-700 underline-offset-2 hover:underline focus:outline-none focus:ring-2 focus:ring-blue-300 dark:text-blue-300"
+            >
+              {row.name}
+            </button>
+          ) : (
+            row.name
+          )}
+        </p>
         <span className="text-sm font-bold text-slate-900 dark:text-slate-100">{row.score} pts</span>
       </div>
       <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">{row.questions} questions solved • {row.progress}% progress</p>

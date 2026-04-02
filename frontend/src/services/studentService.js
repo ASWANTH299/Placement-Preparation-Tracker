@@ -6,6 +6,7 @@ export const getTodayActivity = (studentId) => api.get(`/students/${studentId}/a
 export const logTodayActivity = (studentId, payload) => api.post(`/students/${studentId}/activity`, payload)
 export const getCurrentLearningPath = (studentId) => api.get(`/students/${studentId}/learning-path`)
 export const getStudentProfile = (studentId) => api.get(`/students/${studentId}/profile`)
+export const getStudentPublicOverview = (studentId) => api.get(`/students/${studentId}/public-overview`)
 export const updateStudentProfile = (studentId, payload) => api.put(`/students/${studentId}/profile`, payload)
 export const uploadStudentAvatar = (studentId, formData) =>
 	api.post(`/students/${studentId}/profile/avatar`, formData, {

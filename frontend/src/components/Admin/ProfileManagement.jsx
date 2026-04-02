@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import {
   createAdminProfile,
   deleteAdminProfile,
@@ -45,6 +46,8 @@ const toPayload = (form, isCreateMode) => {
 }
 
 export default function ProfileManagement() {
+  const [searchParams, setSearchParams] = useSearchParams()
+  const hasOpenedFromQueryRef = useRef(false)
   const [search, setSearch] = useState('')
   const [profiles, setProfiles] = useState([])
   const [loading, setLoading] = useState(false)
@@ -88,6 +91,25 @@ export default function ProfileManagement() {
       active = false
     }
   }, [page, search])
+
+  useEffect(() => {
+    const studentId = searchParams.get('studentId')
+    if (!studentId || hasOpenedFromQueryRef.current) return
+
+    hasOpenedFromQueryRef.current = true
+
+    const openRequestedProfile = async () => {
+      try {
+        await openEdit(studentId)
+      } finally {
+        const next = new URLSearchParams(searchParams)
+        next.delete('studentId')
+        setSearchParams(next, { replace: true })
+      }
+    }
+
+    openRequestedProfile()
+  }, [searchParams, setSearchParams])
 
   const closeModal = () => {
     setCreateOpen(false)

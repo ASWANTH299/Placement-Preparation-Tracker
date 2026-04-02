@@ -4,6 +4,7 @@ const QuestionProgress = require('../models/QuestionProgress');
 const MockInterview = require('../models/MockInterview');
 const StudyActivity = require('../models/StudyActivity');
 const LearningPath = require('../models/LearningPath');
+const DailyTask = require('../models/DailyTask');
 const { AppError } = require('../utils/errorHandler');
 const { validateEmail, validatePassword, validateName, validateUrl } = require('../utils/validators');
 
@@ -443,6 +444,115 @@ exports.uploadProfileAvatar = async (req, res, next) => {
       success: true,
       data: { avatar: avatarUrl },
       message: 'Profile picture uploaded successfully'
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Public overview for any student (available to authenticated users)
+exports.getStudentPublicOverview = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+
+    const student = await User.findById(id).select(
+      'name bio avatar university graduationYear department githubProfile linkedinProfile portfolioLink createdAt role'
+    );
+
+    if (!student || student.role !== 'student') {
+      return next(new AppError('Student not found', 404, 'USER_NOT_FOUND'));
+    }
+
+    const [
+      totalLearningPaths,
+      progressRows,
+      solvedCount,
+      attemptedCount,
+      bookmarkedCount,
+      totalAttempts,
+      interviews,
+      tasksCompleted,
+      activeTasks,
+      recentSolvedQuestions,
+    ] = await Promise.all([
+      LearningPath.countDocuments({ status: 'Active' }),
+      StudentProgress.find({ studentId: id }).select('status completionPercentage completedProblemIndexes').lean(),
+      QuestionProgress.countDocuments({ studentId: id, isSolved: true }),
+      QuestionProgress.countDocuments({ studentId: id, status: 'Attempted' }),
+      QuestionProgress.countDocuments({ studentId: id, isBookmarked: true }),
+      QuestionProgress.aggregate([
+        { $match: { studentId: student._id } },
+        { $group: { _id: null, total: { $sum: '$attemptCount' } } },
+      ]),
+      MockInterview.find({ studentId: id }).select('score').lean(),
+      StudyActivity.countDocuments({ studentId: id, activityType: 'task_completed' }),
+      DailyTask.find({ isActive: true }).sort({ createdAt: -1 }).limit(6).select('title platform difficulty company estimatedTime practiceUrl').lean(),
+      QuestionProgress.find({ studentId: id, isSolved: true })
+        .sort({ solvedDate: -1, updatedAt: -1 })
+        .limit(8)
+        .populate('questionId', 'title company difficulty')
+        .select('solvedDate questionId')
+        .lean(),
+    ]);
+
+    const completedTopics = progressRows.filter((row) => row.status === 'Completed').length;
+    const overallProgressPercentage = totalLearningPaths > 0
+      ? Math.round((completedTopics / totalLearningPaths) * 100)
+      : 0;
+
+    const completedProblems = progressRows.reduce((sum, row) => sum + (row.completedProblemIndexes?.length || 0), 0);
+    const avgMockScore = interviews.length
+      ? Math.round((interviews.reduce((sum, row) => sum + (row.score || 0), 0) / interviews.length) * 10) / 10
+      : 0;
+
+    const solvedQuestions = recentSolvedQuestions
+      .filter((row) => row.questionId)
+      .map((row) => ({
+        id: row.questionId._id,
+        title: row.questionId.title,
+        company: row.questionId.company,
+        difficulty: row.questionId.difficulty,
+        solvedDate: row.solvedDate || row.updatedAt,
+      }));
+
+    res.status(200).json({
+      success: true,
+      data: {
+        profile: {
+          id: student._id,
+          name: student.name,
+          bio: student.bio,
+          avatar: student.avatar,
+          university: student.university,
+          graduationYear: student.graduationYear,
+          department: student.department,
+          githubProfile: student.githubProfile,
+          linkedinProfile: student.linkedinProfile,
+          portfolioLink: student.portfolioLink,
+          joinedAt: student.createdAt,
+        },
+        coding: {
+          solvedCount,
+          attemptedCount,
+          bookmarkedCount,
+          totalAttempts: totalAttempts[0]?.total || 0,
+          recentSolvedQuestions: solvedQuestions,
+        },
+        learning: {
+          completedTopics,
+          totalTopics: totalLearningPaths,
+          completedProblems,
+          overallProgressPercentage,
+        },
+        tasks: {
+          completedCount: tasksCompleted,
+          activeTasks,
+        },
+        interviews: {
+          completedCount: interviews.length,
+          averageScore: avgMockScore,
+        },
+      },
     });
   } catch (error) {
     next(error);

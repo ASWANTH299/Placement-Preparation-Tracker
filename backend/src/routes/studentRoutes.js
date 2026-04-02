@@ -82,6 +82,7 @@ const avatarUpload = multer({
 
 // Student Profile Routes
 router.get('/students/:id/profile', studentController.getProfile);
+router.get('/students/:id/public-overview', studentController.getStudentPublicOverview);
 router.put('/students/:id/profile', studentController.updateProfile);
 router.post('/students/:id/profile/avatar', avatarUpload.single('avatar'), studentController.uploadProfileAvatar);
 router.post('/students/:id/change-password', studentController.changePassword);
