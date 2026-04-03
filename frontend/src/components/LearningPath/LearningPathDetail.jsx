@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useSelector } from 'react-redux'
-import { useParams } from 'react-router-dom'
+import { useParams, useSearchParams } from 'react-router-dom'
 import { getLearningPathByTopic, updateTopicProblemProgress } from '../../services/learningPathService'
 import { getErrorMessage } from '../../utils/errorHandler'
 
@@ -68,6 +68,11 @@ const normalizeLines = (text) =>
     .map((line) => line.trim())
     .filter(Boolean)
 
+const parsePhaseNumber = (value) => {
+  const parsed = Number.parseInt(String(value || ''), 10)
+  return Number.isNaN(parsed) ? null : parsed
+}
+
 const resourceTone = {
   article: 'bg-blue-100 text-blue-800 dark:bg-blue-950/40 dark:text-blue-300',
   video: 'bg-rose-100 text-rose-800 dark:bg-rose-950/40 dark:text-rose-300',
@@ -76,15 +81,18 @@ const resourceTone = {
 
 export default function LearningPathDetail() {
   const { topicId } = useParams()
+  const [searchParams, setSearchParams] = useSearchParams()
   const studentId = useSelector((state) => state.auth.user?.id)
   const [topic, setTopic] = useState(null)
   const [updatingIndex, setUpdatingIndex] = useState(-1)
   const [error, setError] = useState('')
   const [activeTab, setActiveTab] = useState('overview')
+  const [activePhaseIndex, setActivePhaseIndex] = useState(0)
   const [expandedProblem, setExpandedProblem] = useState(0)
   const [focusMinutes, setFocusMinutes] = useState(25)
   const [focusEndsAt, setFocusEndsAt] = useState(0)
   const [nowTs, setNowTs] = useState(Date.now())
+  const phaseStorageKey = useMemo(() => `learning-path-active-phase:${topicId || 'fallback-topic'}`, [topicId])
 
   useEffect(() => {
     let active = true
@@ -145,27 +153,90 @@ export default function LearningPathDetail() {
     const completedRatio = completedProblems / total
     return [
       {
+        id: 'foundation',
         title: 'Foundation',
         detail: 'Understand core definitions, constraints, and base templates.',
+        checklist: [
+          'Explain the brute force approach and baseline complexity.',
+          'Identify input constraints and edge-case categories.',
+          'Build a clean starter template in Java before optimization.',
+        ],
         status: completedRatio >= 0.25 ? 'done' : 'current',
       },
       {
+        id: 'pattern-mapping',
         title: 'Pattern Mapping',
         detail: 'Map problem statements to known solution patterns quickly.',
+        checklist: [
+          'Classify each new problem by pattern in under 60 seconds.',
+          'Write why this pattern fits and alternatives do not.',
+          'Reuse a proven template and adapt only variable parts.',
+        ],
         status: completedRatio >= 0.5 ? 'done' : completedRatio >= 0.25 ? 'current' : 'upcoming',
       },
       {
+        id: 'optimization',
         title: 'Optimization',
         detail: 'Improve time/space complexity with refined strategy choices.',
+        checklist: [
+          'Move from brute force to target complexity using constraints.',
+          'Track invariants and update logic to avoid regressions.',
+          'Compare trade-offs between memory and execution speed.',
+        ],
         status: completedRatio >= 0.75 ? 'done' : completedRatio >= 0.5 ? 'current' : 'upcoming',
       },
       {
+        id: 'interview-simulation',
         title: 'Interview Simulation',
         detail: 'Solve under time pressure with verbal reasoning and clean code.',
+        checklist: [
+          'Solve one timed medium problem with narration.',
+          'Validate dry-run and edge cases before final answer.',
+          'Summarize complexity and justify final implementation.',
+        ],
         status: completedRatio >= 1 ? 'done' : completedRatio >= 0.75 ? 'current' : 'upcoming',
       },
     ]
   }, [completedProblems, totalProblems])
+
+  useEffect(() => {
+    if (activePhaseIndex >= phases.length) {
+      setActivePhaseIndex(0)
+    }
+  }, [activePhaseIndex, phases.length])
+
+  useEffect(() => {
+    const phaseFromQuery = parsePhaseNumber(searchParams.get('phase'))
+    const phaseFromStorage = typeof window === 'undefined'
+      ? null
+      : parsePhaseNumber(window.localStorage.getItem(phaseStorageKey))
+
+    const preferredPhase = phaseFromQuery || phaseFromStorage
+    if (!preferredPhase) return
+
+    const preferredIndex = preferredPhase - 1
+    if (preferredIndex >= 0 && preferredIndex < phases.length && preferredIndex !== activePhaseIndex) {
+      setActivePhaseIndex(preferredIndex)
+    }
+  }, [searchParams, phaseStorageKey, phases.length, activePhaseIndex])
+
+  useEffect(() => {
+    if (!phases.length) return
+
+    const phaseNumber = activePhaseIndex + 1
+    const currentQueryPhase = parsePhaseNumber(searchParams.get('phase'))
+    if (currentQueryPhase !== phaseNumber) {
+      const nextParams = new URLSearchParams(searchParams)
+      nextParams.set('phase', String(phaseNumber))
+      setSearchParams(nextParams, { replace: true })
+    }
+
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem(phaseStorageKey, String(phaseNumber))
+    }
+  }, [activePhaseIndex, phases.length, searchParams, setSearchParams, phaseStorageKey])
+
+  const selectedPhase = phases[activePhaseIndex] || phases[0]
 
   const resources = useMemo(() => {
     if (Array.isArray(topicData.resources) && topicData.resources.length > 0) return topicData.resources
@@ -247,13 +318,38 @@ export default function LearningPathDetail() {
           </div>
           <div className="mt-4 grid gap-3 sm:grid-cols-2">
             {phases.map((phase, index) => (
-              <div key={phase.title} className={`rounded-xl border p-3 ${statusTone(phase.status)}`}>
+              <button
+                key={phase.title}
+                type="button"
+                onClick={() => setActivePhaseIndex(index)}
+                className={`rounded-xl border p-3 text-left transition hover:brightness-105 ${statusTone(phase.status)} ${activePhaseIndex === index ? 'ring-2 ring-blue-400/80' : ''}`}
+              >
                 <p className="text-[11px] font-semibold uppercase tracking-[0.14em]">Phase {index + 1}</p>
                 <p className="mt-1 font-semibold">{phase.title}</p>
                 <p className="mt-1 text-sm">{phase.detail}</p>
-              </div>
+              </button>
             ))}
           </div>
+          {selectedPhase && (
+            <div className="mt-4 rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-900/40">
+              <div className="flex items-center justify-between gap-3">
+                <h3 className="text-sm font-semibold uppercase tracking-[0.15em] text-slate-600 dark:text-slate-300">
+                  Active: {selectedPhase.title}
+                </h3>
+                <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${selectedPhase.status === 'done' ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300' : selectedPhase.status === 'current' ? 'bg-blue-100 text-blue-800 dark:bg-blue-950/40 dark:text-blue-300' : 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300'}`}>
+                  {selectedPhase.status === 'done' ? 'Completed' : selectedPhase.status === 'current' ? 'In Progress' : 'Upcoming'}
+                </span>
+              </div>
+              <p className="mt-2 text-sm text-slate-700 dark:text-slate-200">{selectedPhase.detail}</p>
+              <div className="mt-3 space-y-2">
+                {selectedPhase.checklist.map((item, idx) => (
+                  <p key={`${selectedPhase.id}-${idx}`} className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
+                    {idx + 1}. {item}
+                  </p>
+                ))}
+              </div>
+            </div>
+          )}
         </article>
 
         <article className="ui-card p-5 sm:p-6">
