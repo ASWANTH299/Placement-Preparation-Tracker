@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { getQuestionDetail, markQuestionSolved, toggleQuestionBookmark } from '../../services/questionService'
 import { getErrorMessage } from '../../utils/errorHandler'
+import PracticeWorkspace from './PracticeWorkspace'
 
 const isValidObjectId = (value) => /^[0-9a-fA-F]{24}$/.test(String(value || ''))
 
@@ -193,6 +194,16 @@ export default function QuestionDetail() {
           Practice
         </button>
       </div>
+
+      <article className="mt-6 rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-transparent">
+        <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100">Live Compiler</h2>
+        <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
+          Practice this exact question in real time using language-specific compiler/runtime support.
+        </p>
+        <div className="mt-4">
+          <PracticeWorkspace questionId={questionId} embedded showProblemStatement={false} />
+        </div>
+      </article>
     </section>
   )
 }

@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useParams } from 'react-router-dom'
+import Editor from '@monaco-editor/react'
 import { getPracticeToolchains, getQuestionDetail, runPracticeCode, submitPracticeCode } from '../../services/questionService'
 import { getErrorMessage } from '../../utils/errorHandler'
 
@@ -16,6 +17,19 @@ const starterCodeByLanguage = {
   Go: 'package main\n\nimport "fmt"\n\nfunc main() {\n  // Write your solution here\n  fmt.Println("Hello")\n}',
   Rust: 'fn main() {\n  // Write your solution here\n  println!("Hello");\n}',
   Kotlin: 'fun main() {\n  // Write your solution here\n  println("Hello")\n}'
+}
+
+const monacoLanguageByLabel = {
+  Java: 'java',
+  Python: 'python',
+  JavaScript: 'javascript',
+  TypeScript: 'typescript',
+  C: 'c',
+  'C++': 'cpp',
+  'C#': 'csharp',
+  Go: 'go',
+  Rust: 'rust',
+  Kotlin: 'kotlin'
 }
 
 const isValidObjectId = (value) => /^[0-9a-fA-F]{24}$/.test(String(value || ''))
@@ -212,8 +226,9 @@ const validateByLanguage = (sourceCode, selectedLanguage) => {
   return Array.from(new Set(errors))
 }
 
-export default function PracticeWorkspace() {
-  const { questionId } = useParams()
+export default function PracticeWorkspace({ questionId: questionIdProp = '', embedded = false, showProblemStatement = true }) {
+  const params = useParams()
+  const questionId = questionIdProp || params.questionId || ''
   const [question, setQuestion] = useState(null)
   const [language, setLanguage] = useState('Java')
   const [code, setCode] = useState(starterCodeByLanguage.Java)
@@ -223,6 +238,9 @@ export default function PracticeWorkspace() {
   const [testInput, setTestInput] = useState('')
   const [error, setError] = useState('')
   const [toolchainMap, setToolchainMap] = useState({})
+  const [isRunning, setIsRunning] = useState(false)
+  const [autoRun, setAutoRun] = useState(true)
+  const [lastRunMeta, setLastRunMeta] = useState(null)
 
   const inputFormat = question?.inputFormat || 'Read values exactly as shown in sample input and parse according to the problem statement.'
   const outputFormat = question?.outputFormat || 'Return or print output exactly in the expected format.'
@@ -323,23 +341,30 @@ export default function PracticeWorkspace() {
     return currentExample?.output || 'No sample output available for this test case.'
   }
 
-  const runCode = async () => {
+  const runCode = useCallback(async (trigger = 'manual') => {
+    if (isRunning) return
+
     setError('')
 
     const selectedToolchain = toolchainMap[language]
     if (selectedToolchain && !selectedToolchain.available) {
-      setOutputType('error')
-      setOutput(`Selected language toolchain is not available on server: ${language}`)
+      if (trigger === 'manual') {
+        setOutputType('error')
+        setOutput(`Selected language toolchain is not available on server: ${language}`)
+      }
       return
     }
 
     if (!hasMeaningfulCode(code)) {
-      setOutputType('error')
-      setOutput('Run failed: Add your solution code before running simulation.')
+      if (trigger === 'manual') {
+        setOutputType('error')
+        setOutput('Run failed: Add your solution code before running simulation.')
+      }
       return
     }
 
     localStorage.setItem(`practice_draft_${questionId}_${language}`, code)
+    setIsRunning(true)
 
     try {
       const response = await runPracticeCode({
@@ -353,29 +378,51 @@ export default function PracticeWorkspace() {
       if (result.success) {
         setOutputType('success')
         setOutput((result.stdout || '').trim() || getRunSummary())
+        setLastRunMeta({ trigger, at: new Date().toISOString() })
         return
       }
 
       setOutputType('error')
       setOutput(formatExecutionResult(`Strict compiler errors (${language}):`, result))
+      setLastRunMeta({ trigger, at: new Date().toISOString() })
     } catch (requestError) {
       if (isRouteUnavailableError(requestError)) {
         const validationErrors = validateByLanguage(code, language)
         if (validationErrors.length > 0) {
           setOutputType('error')
           setOutput(formatErrorList(`Strict compiler checks failed (${language}) [local fallback]:`, validationErrors))
+          setLastRunMeta({ trigger, at: new Date().toISOString() })
           return
         }
 
         setOutputType('success')
         setOutput(getRunSummary())
+        setLastRunMeta({ trigger, at: new Date().toISOString() })
         return
       }
 
-      setOutputType('error')
-      setOutput(`Compiler request failed: ${getErrorMessage(requestError)}`)
+      if (trigger === 'manual') {
+        setOutputType('error')
+        setOutput(`Compiler request failed: ${getErrorMessage(requestError)}`)
+      }
+    } finally {
+      setIsRunning(false)
     }
-  }
+  }, [code, getRunSummary, isRunning, language, questionId, testInput, toolchainMap])
+
+  useEffect(() => {
+    if (!autoRun) return undefined
+    if (!hasMeaningfulCode(code)) return undefined
+
+    const selectedToolchain = toolchainMap[language]
+    if (selectedToolchain && !selectedToolchain.available) return undefined
+
+    const timer = window.setTimeout(() => {
+      runCode('auto')
+    }, 900)
+
+    return () => window.clearTimeout(timer)
+  }, [autoRun, code, language, questionId, runCode, selectedSampleIndex, testInput, toolchainMap])
 
   const submitCode = async () => {
     setError('')
@@ -441,14 +488,21 @@ export default function PracticeWorkspace() {
     }
   }
 
+  const compilerStatusText = useMemo(() => {
+    if (isRunning) return 'Running...'
+    if (!lastRunMeta) return autoRun ? 'Auto-run enabled' : 'Manual run mode'
+    return `${lastRunMeta.trigger === 'auto' ? 'Auto-run' : 'Manual run'} completed`
+  }, [autoRun, isRunning, lastRunMeta])
+
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900/90">
-      <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Practice Problem</h1>
-      <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">Run and Submit use strict backend compiler/runtime checks with line-level errors.</p>
+    <section className={`${embedded ? 'rounded-xl border border-slate-200 bg-white/95 p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900/70' : 'rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900/90'}`}>
+      {!embedded && <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Practice Problem</h1>}
+      <p className={`${embedded ? 'text-xs' : 'mt-1 text-sm'} text-slate-600 dark:text-slate-400`}>Run and Submit use strict backend compiler/runtime checks with line-level errors.</p>
       {error && <p className="mt-3 rounded border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
 
       <div className="mt-4 grid gap-4 lg:grid-cols-2">
-        <article className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-transparent">
+        {showProblemStatement && (
+          <article className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-transparent">
           <h2 className="font-semibold text-slate-900 dark:text-slate-100">{question?.title || 'Loading problem...'}</h2>
           <h3 className="mt-3 text-sm font-semibold text-slate-900 dark:text-slate-100">Description</h3>
           <p className="mt-1 whitespace-pre-wrap text-sm leading-6 text-slate-700 dark:text-slate-200">{question?.description || 'Problem statement will appear here.'}</p>
@@ -484,24 +538,36 @@ export default function PracticeWorkspace() {
               </div>
             ))}
           </div>
-        </article>
+          </article>
+        )}
 
         <article className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-transparent">
-          <div className="mb-2 flex items-center justify-between gap-2">
+          <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
             <label className="text-sm font-medium text-slate-700 dark:text-slate-200">Language</label>
-            <select
-              value={language}
-              onChange={(event) => {
-                const selectedLanguage = event.target.value
-                setLanguage(selectedLanguage)
-                setCode(starterCodeByLanguage[selectedLanguage] || starterCodeByLanguage.Java)
-              }}
-              className="rounded border border-slate-300 bg-white px-2 py-1 text-sm text-slate-900 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
-            >
-              {languageOptions.map((option) => (
-                <option key={option} value={option}>{option}</option>
-              ))}
-            </select>
+            <div className="flex flex-wrap items-center gap-2">
+              <select
+                value={language}
+                onChange={(event) => {
+                  const selectedLanguage = event.target.value
+                  setLanguage(selectedLanguage)
+                  setCode(starterCodeByLanguage[selectedLanguage] || starterCodeByLanguage.Java)
+                }}
+                className="rounded border border-slate-300 bg-white px-2 py-1 text-sm text-slate-900 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+              >
+                {languageOptions.map((option) => (
+                  <option key={option} value={option}>{option}</option>
+                ))}
+              </select>
+              <label className="inline-flex items-center gap-2 text-xs font-medium text-slate-700 dark:text-slate-300">
+                <input
+                  type="checkbox"
+                  checked={autoRun}
+                  onChange={(event) => setAutoRun(event.target.checked)}
+                  className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                />
+                Real-time run
+              </label>
+            </div>
           </div>
 
           {toolchainMap[language] && !toolchainMap[language].available && (
@@ -510,11 +576,25 @@ export default function PracticeWorkspace() {
             </p>
           )}
 
-          <textarea
-            value={code}
-            onChange={(event) => setCode(event.target.value)}
-            className="h-64 w-full rounded border border-slate-300 bg-slate-100 p-3 font-mono text-xs text-slate-800 dark:bg-slate-950 dark:text-slate-100"
-          />
+          <div className="overflow-hidden rounded-lg border border-slate-300 dark:border-slate-700">
+            <Editor
+              height="360px"
+              theme="vs-dark"
+              language={monacoLanguageByLabel[language] || 'plaintext'}
+              value={code}
+              onChange={(value) => setCode(value || '')}
+              options={{
+                minimap: { enabled: false },
+                fontSize: 14,
+                smoothScrolling: true,
+                scrollBeyondLastLine: false,
+                wordWrap: 'on',
+                tabSize: 2,
+                automaticLayout: true,
+                padding: { top: 14, bottom: 14 }
+              }}
+            />
+          </div>
 
           <div className="mt-4 space-y-3 rounded-lg border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-700 dark:bg-transparent">
             <div className="flex flex-wrap items-center justify-between gap-3">
@@ -528,7 +608,7 @@ export default function PracticeWorkspace() {
                 ))}
               </select>
               <div className="flex flex-wrap gap-2">
-                <button type="button" onClick={runCode} className="rounded-full bg-blue-600 px-5 py-2 text-sm font-semibold text-white">Run Code</button>
+                <button type="button" onClick={() => runCode('manual')} disabled={isRunning} className="rounded-full bg-blue-600 px-5 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60">Run Code</button>
                 <button type="button" onClick={submitCode} className="rounded-full bg-green-600 px-5 py-2 text-sm font-semibold text-white">Submit Code</button>
               </div>
             </div>
@@ -541,9 +621,12 @@ export default function PracticeWorkspace() {
             />
 
             <div>
-              <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">
                 Output {outputType === 'success' ? ' (Passed)' : outputType === 'error' ? ' (Error)' : ''}
-              </p>
+                </p>
+                <span className="text-xs text-slate-500 dark:text-slate-400">{compilerStatusText}</span>
+              </div>
               <pre
                 className={`mt-2 min-h-20 whitespace-pre-wrap rounded-lg border px-3 py-2 text-sm ${
                   outputType === 'success'

@@ -211,14 +211,14 @@ export default function LearningPathDetail() {
       ? null
       : parsePhaseNumber(window.localStorage.getItem(phaseStorageKey))
 
-    const preferredPhase = phaseFromQuery || phaseFromStorage
+    const preferredPhase = phaseFromQuery ?? phaseFromStorage
     if (!preferredPhase) return
 
     const preferredIndex = preferredPhase - 1
-    if (preferredIndex >= 0 && preferredIndex < phases.length && preferredIndex !== activePhaseIndex) {
-      setActivePhaseIndex(preferredIndex)
+    if (preferredIndex >= 0 && preferredIndex < phases.length) {
+      setActivePhaseIndex((currentIndex) => (currentIndex === preferredIndex ? currentIndex : preferredIndex))
     }
-  }, [searchParams, phaseStorageKey, phases.length, activePhaseIndex])
+  }, [searchParams, phaseStorageKey, phases.length])
 
   useEffect(() => {
     if (!phases.length) return

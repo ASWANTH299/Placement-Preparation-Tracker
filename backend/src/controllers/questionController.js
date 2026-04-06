@@ -398,7 +398,7 @@ exports.runCode = async (req, res, next) => {
       language,
       code,
       input,
-      timeoutMs: 7000
+      timeoutMs: 20000
     });
 
     res.status(200).json({
@@ -430,7 +430,7 @@ exports.submitCode = async (req, res, next) => {
       language,
       code,
       input,
-      timeoutMs: 7000
+      timeoutMs: 20000
     });
 
     let attemptMarked = false;

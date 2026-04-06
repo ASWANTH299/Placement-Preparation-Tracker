@@ -7,7 +7,6 @@ const directNavItems = [
   { label: 'Dashboard', to: '/dashboard' },
   { label: 'Leaderboard', to: '/leaderboard' },
   { label: 'Daily Task', to: '/daily-task' },
-  { label: 'Task Planner', to: '/task-planner' },
 ]
 
 const megaSections = [

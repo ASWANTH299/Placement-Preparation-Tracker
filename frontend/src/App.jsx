@@ -9,7 +9,6 @@ import Navbar from './components/Common/Navbar'
 import CompanyQuestionsPage from './pages/CompanyQuestionsPage'
 import DashboardPage from './pages/DashboardPage'
 import DailyTaskPage from './pages/DailyTaskPage'
-import TaskPlannerPage from './pages/TaskPlannerPage'
 import ForgotPasswordPage from './pages/ForgotPasswordPage'
 import ForumPage from './pages/ForumPage'
 import HRInterviewPage from './pages/HRInterviewPage'
@@ -92,7 +91,6 @@ function AppLayout() {
 
           <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
           <Route path="/daily-task" element={<ProtectedRoute><DailyTaskPage /></ProtectedRoute>} />
-          <Route path="/task-planner" element={<ProtectedRoute><TaskPlannerPage /></ProtectedRoute>} />
           <Route path="/learning-path" element={<ProtectedRoute><LearningPathPage /></ProtectedRoute>} />
           <Route path="/learning-path/:topicId" element={<ProtectedRoute><LearningPathDetailPage /></ProtectedRoute>} />
           <Route path="/company-questions" element={<ProtectedRoute><CompanyQuestionsPage /></ProtectedRoute>} />
