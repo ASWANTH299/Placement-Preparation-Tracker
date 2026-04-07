@@ -187,8 +187,23 @@ const getWinlibsBinPath = () => {
     const winlibsPackage = fsSync.readdirSync(packagesRoot).find((entry) => entry.startsWith('BrechtSanders.WinLibs.POSIX.UCRT.LLVM_'));
     if (!winlibsPackage) return null;
 
-    const binPath = path.join(packagesRoot, winlibsPackage, 'mingw64', 'bin');
-    return fsSync.existsSync(binPath) ? binPath : null;
+    const packageRoot = path.join(packagesRoot, winlibsPackage, 'mingw64');
+    const binPath = path.join(packageRoot, 'bin');
+    if (!fsSync.existsSync(binPath)) return null;
+
+    // Some WinLibs builds are missing stdlib internals (e.g., bits/error_constants.h).
+    // Skip these broken toolchains so we can fall back to a healthy compiler.
+    const cppIncludeRoot = path.join(packageRoot, 'include', 'c++');
+    if (fsSync.existsSync(cppIncludeRoot)) {
+      const versions = fsSync.readdirSync(cppIncludeRoot, { withFileTypes: true })
+        .filter((entry) => entry.isDirectory())
+        .map((entry) => entry.name);
+
+      const hasRequiredHeader = versions.some((versionDir) => fsSync.existsSync(path.join(cppIncludeRoot, versionDir, 'bits', 'error_constants.h')));
+      if (!hasRequiredHeader) return null;
+    }
+
+    return binPath;
   } catch {
     return null;
   }
@@ -350,6 +365,58 @@ const hasCommand = (candidate) => {
   });
 
   return !probe.error;
+};
+
+const isUsableCppCompiler = (candidate) => {
+  if (!candidate?.command) return false;
+
+  const probe = spawnSync(candidate.command, ['-x', 'c++', '-std=c++17', '-fsyntax-only', '-'], {
+    input: '#include <system_error>\nint main(){return 0;}\n',
+    stdio: ['pipe', 'ignore', 'ignore'],
+    shell: false,
+    timeout: 5000
+  });
+
+  return !probe.error && probe.status === 0;
+};
+
+const isUsablePythonRuntime = (candidate) => {
+  if (!candidate?.command) return false;
+
+  const lowered = String(candidate.command || '').toLowerCase();
+  const probeArgs = lowered === 'py'
+    ? ['-3', '-c', 'print("ok")']
+    : ['-c', 'print("ok")'];
+
+  const probe = spawnSync(candidate.command, probeArgs, {
+    stdio: 'ignore',
+    shell: false,
+    timeout: 5000
+  });
+
+  return !probe.error && probe.status === 0;
+};
+
+const pickCompileCommand = (language, candidates = []) => {
+  if (language !== 'C++') return pickCommand(candidates);
+
+  for (const candidate of candidates) {
+    if (!hasCommand(candidate)) continue;
+    if (isUsableCppCompiler(candidate)) return candidate;
+  }
+
+  return null;
+};
+
+const pickRunCommand = (language, candidates = []) => {
+  if (language !== 'Python') return pickCommand(candidates);
+
+  for (const candidate of candidates) {
+    if (!hasCommand(candidate)) continue;
+    if (isUsablePythonRuntime(candidate)) return candidate;
+  }
+
+  return null;
 };
 
 const pickCommand = (candidates = []) => {
@@ -563,8 +630,8 @@ const getBinaryPath = (tempDir, baseName) => path.join(tempDir, process.platform
 const getAvailableToolchains = () => {
   return SUPPORTED_LANGUAGES.map((language) => {
     const profile = getResolvedProfile(language);
-    const compile = pickCommand(profile.compile || []);
-    const run = pickCommand(profile.run || []);
+    const compile = pickCompileCommand(language, profile.compile || []);
+    const run = pickRunCommand(language, profile.run || []);
     const directRun = pickCommand(profile.directRun || []);
 
     const compileRequired = Array.isArray(profile.compile) && profile.compile.length > 0;
@@ -679,7 +746,7 @@ const executeCode = async ({ language, code, input = '', timeoutMs = 6000 }) => 
     }
 
     if (language === 'Python') {
-      const runner = pickCommand(commandProfiles.Python.run);
+      const runner = pickRunCommand(language, commandProfiles.Python.run);
       if (!runner) {
         return missingToolchainResult('run', 'Python runtime not found on server.');
       }
@@ -893,7 +960,7 @@ const executeCode = async ({ language, code, input = '', timeoutMs = 6000 }) => 
     }
 
     if (language === 'C++') {
-      const compileCandidate = pickCommand(getCppCompileCandidates());
+      const compileCandidate = pickCompileCommand(language, getCppCompileCandidates());
       if (!compileCandidate) {
         return resolveToolchainOrCloud({
           language,
@@ -910,8 +977,9 @@ const executeCode = async ({ language, code, input = '', timeoutMs = 6000 }) => 
       await fs.writeFile(sourceFile, code, 'utf8');
 
       const cppHasMain = hasCppMain(code);
+      const cppThreadLinkArgs = process.platform === 'win32' && cppHasMain ? ['-pthread'] : [];
       const compileArgs = cppHasMain
-        ? [sourceFile, '-O2', '-std=c++17', '-o', outFile]
+        ? [sourceFile, '-O2', '-std=c++17', ...cppThreadLinkArgs, '-o', outFile]
         : [sourceFile, '-O2', '-std=c++17', '-c', '-o', path.join(tempDir, 'main_cpp.o')];
 
       const compile = await runProcess({

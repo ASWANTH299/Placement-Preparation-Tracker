@@ -4,6 +4,13 @@ import { getQuestions } from '../../services/questionService'
 import { getErrorMessage } from '../../utils/errorHandler'
 import Toast from '../Common/Toast'
 
+const allLanguageOptions = ['Java', 'Python', 'JavaScript', 'TypeScript', 'C', 'C++', 'C#']
+
+const normalizeSupportedLanguages = (value) => {
+  if (!Array.isArray(value)) return []
+  return value.filter((item, index, list) => allLanguageOptions.includes(item) && list.indexOf(item) === index)
+}
+
 export default function QuestionManagement() {
   const [title, setTitle] = useState('')
   const [search, setSearch] = useState('')
@@ -42,6 +49,7 @@ export default function QuestionManagement() {
       company: 'Custom',
       topics: ['General'],
       difficulty: 'Medium',
+      supportedLanguages: [],
       status: 'Active',
     }
 
@@ -65,6 +73,7 @@ export default function QuestionManagement() {
         company: editing.company || 'Custom',
         topics: editing.topics?.length ? editing.topics : ['General'],
         difficulty: editing.difficulty || 'Medium',
+        supportedLanguages: normalizeSupportedLanguages(editing.supportedLanguages),
         status: editing.status || 'Active',
       })
       setEditing(null)
@@ -96,6 +105,18 @@ export default function QuestionManagement() {
     if (difficulty === 'Easy') return 'admin-badge-success'
     if (difficulty === 'Hard') return 'admin-badge-danger'
     return 'admin-badge-warning'
+  }
+
+  const supportsAllLanguages = normalizeSupportedLanguages(editing?.supportedLanguages).length === 0
+
+  const toggleSupportedLanguage = (language) => {
+    setEditing((prev) => {
+      const current = normalizeSupportedLanguages(prev?.supportedLanguages)
+      if (current.includes(language)) {
+        return { ...prev, supportedLanguages: current.filter((item) => item !== language) }
+      }
+      return { ...prev, supportedLanguages: [...current, language] }
+    })
   }
 
   return (
@@ -135,7 +156,7 @@ export default function QuestionManagement() {
                 <td className="py-2"><span className={`admin-badge ${question.status === 'Active' ? 'admin-badge-success' : 'admin-badge-muted'}`}>{question.status}</span></td>
                 <td className="py-2 text-right">
                   <div className="inline-flex gap-2">
-                    <button type="button" className="admin-btn admin-btn-ghost" onClick={() => setEditing({ ...question })}>Edit</button>
+                    <button type="button" className="admin-btn admin-btn-ghost" onClick={() => setEditing({ ...question, supportedLanguages: normalizeSupportedLanguages(question.supportedLanguages) })}>Edit</button>
                     <button type="button" className="admin-btn admin-btn-danger" onClick={() => removeQuestion(question._id)}>Delete</button>
                   </div>
                 </td>
@@ -158,6 +179,33 @@ export default function QuestionManagement() {
                 <option>Medium</option>
                 <option>Hard</option>
               </select>
+            </div>
+            <div className="mt-3 rounded border border-slate-200 p-3">
+              <label className="inline-flex items-center gap-2 text-sm text-slate-700">
+                <input
+                  type="checkbox"
+                  checked={supportsAllLanguages}
+                  onChange={(event) => setEditing((prev) => ({ ...prev, supportedLanguages: event.target.checked ? [] : ['Java'] }))}
+                />
+                Supports all languages
+              </label>
+              {!supportsAllLanguages && (
+                <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3">
+                  {allLanguageOptions.map((option) => {
+                    const selected = normalizeSupportedLanguages(editing.supportedLanguages).includes(option)
+                    return (
+                      <label key={option} className="inline-flex items-center gap-2 text-xs text-slate-700">
+                        <input
+                          type="checkbox"
+                          checked={selected}
+                          onChange={() => toggleSupportedLanguage(option)}
+                        />
+                        {option}
+                      </label>
+                    )
+                  })}
+                </div>
+              )}
             </div>
             <div className="admin-modal-actions mt-4">
               <button type="button" className="admin-btn admin-btn-ghost" onClick={() => setEditing(null)}>Cancel</button>

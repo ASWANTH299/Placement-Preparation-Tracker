@@ -3,6 +3,16 @@ const QuestionProgress = require('../models/QuestionProgress');
 const { AppError } = require('../utils/errorHandler');
 const { executeCode, SUPPORTED_LANGUAGES, getAvailableToolchains } = require('../utils/codeExecutor');
 
+const ACTIVE_WEBSITE_LANGUAGES = ['Java', 'Python', 'JavaScript', 'TypeScript', 'C', 'C++', 'C#'];
+
+const getQuestionAllowedLanguages = (questionDoc) => {
+  const configured = Array.isArray(questionDoc?.supportedLanguages)
+    ? questionDoc.supportedLanguages.filter((item) => ACTIVE_WEBSITE_LANGUAGES.includes(item))
+    : [];
+
+  return configured.length > 0 ? configured : ACTIVE_WEBSITE_LANGUAGES;
+};
+
 const normalizeHost = (host = '') => String(host || '').trim().toLowerCase().replace(/^www\./, '');
 
 const extractLeetCodeSlug = (value = '') => {
@@ -384,14 +394,30 @@ exports.toggleBookmark = async (req, res, next) => {
 // Compile and run code
 exports.runCode = async (req, res, next) => {
   try {
-    const { language, code, input = '' } = req.body;
+    const { questionId, language, code, input = '' } = req.body;
 
     if (!language || !code) {
       return next(new AppError('language and code are required', 400, 'VALIDATION_ERROR'));
     }
 
-    if (!SUPPORTED_LANGUAGES.includes(language)) {
-      return next(new AppError(`Unsupported language. Use one of: ${SUPPORTED_LANGUAGES.join(', ')}`, 400, 'VALIDATION_ERROR'));
+    if (!ACTIVE_WEBSITE_LANGUAGES.includes(language)) {
+      return next(new AppError(`Unsupported language. Use one of: ${ACTIVE_WEBSITE_LANGUAGES.join(', ')}`, 400, 'VALIDATION_ERROR'));
+    }
+
+    if (questionId) {
+      if (!/^[0-9a-fA-F]{24}$/.test(String(questionId))) {
+        return next(new AppError('Invalid questionId format', 400, 'VALIDATION_ERROR'));
+      }
+
+      const question = await CompanyQuestion.findById(questionId).select('supportedLanguages');
+      if (!question) {
+        return next(new AppError('Question not found', 404, 'NOT_FOUND'));
+      }
+
+      const allowedLanguages = getQuestionAllowedLanguages(question);
+      if (!allowedLanguages.includes(language)) {
+        return next(new AppError(`Language ${language} is not supported for this question. Use one of: ${allowedLanguages.join(', ')}`, 400, 'VALIDATION_ERROR'));
+      }
     }
 
     const result = await executeCode({
@@ -422,8 +448,24 @@ exports.submitCode = async (req, res, next) => {
       return next(new AppError('language and code are required', 400, 'VALIDATION_ERROR'));
     }
 
-    if (!SUPPORTED_LANGUAGES.includes(language)) {
-      return next(new AppError(`Unsupported language. Use one of: ${SUPPORTED_LANGUAGES.join(', ')}`, 400, 'VALIDATION_ERROR'));
+    if (!ACTIVE_WEBSITE_LANGUAGES.includes(language)) {
+      return next(new AppError(`Unsupported language. Use one of: ${ACTIVE_WEBSITE_LANGUAGES.join(', ')}`, 400, 'VALIDATION_ERROR'));
+    }
+
+    if (questionId) {
+      if (!/^[0-9a-fA-F]{24}$/.test(String(questionId))) {
+        return next(new AppError('Invalid questionId format', 400, 'VALIDATION_ERROR'));
+      }
+
+      const question = await CompanyQuestion.findById(questionId).select('supportedLanguages');
+      if (!question) {
+        return next(new AppError('Question not found', 404, 'NOT_FOUND'));
+      }
+
+      const allowedLanguages = getQuestionAllowedLanguages(question);
+      if (!allowedLanguages.includes(language)) {
+        return next(new AppError(`Language ${language} is not supported for this question. Use one of: ${allowedLanguages.join(', ')}`, 400, 'VALIDATION_ERROR'));
+      }
     }
 
     const result = await executeCode({

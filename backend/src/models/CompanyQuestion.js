@@ -1,5 +1,7 @@
 const mongoose = require('mongoose');
 
+const SUPPORTED_PRACTICE_LANGUAGES = ['Java', 'Python', 'JavaScript', 'TypeScript', 'C', 'C++', 'C#'];
+
 const companyQuestionSchema = new mongoose.Schema(
   {
     title: {
@@ -45,6 +47,11 @@ const companyQuestionSchema = new mongoose.Schema(
     solutionApproach: String,
     solutionCode: String,
     tags: [String],
+    supportedLanguages: {
+      type: [String],
+      enum: SUPPORTED_PRACTICE_LANGUAGES,
+      default: []
+    },
     status: {
       type: String,
       enum: ['Active', 'Archived'],

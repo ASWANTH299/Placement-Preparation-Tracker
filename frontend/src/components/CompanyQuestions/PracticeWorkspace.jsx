@@ -4,7 +4,7 @@ import Editor from '@monaco-editor/react'
 import { getPracticeToolchains, getQuestionDetail, runPracticeCode, submitPracticeCode } from '../../services/questionService'
 import { getErrorMessage } from '../../utils/errorHandler'
 
-const languageOptions = ['Java', 'Python', 'JavaScript', 'TypeScript', 'C', 'C++', 'C#', 'Go', 'Rust', 'Kotlin']
+const allLanguageOptions = ['Java', 'Python', 'JavaScript', 'TypeScript', 'C', 'C++', 'C#']
 
 const starterCodeByLanguage = {
   Java: 'class Solution {\n  public static void main(String[] args) {\n    // Write your solution here\n  }\n}',
@@ -134,6 +134,14 @@ const isRouteUnavailableError = (requestError) => {
   return status === 404 || message.includes('route not found') || message.includes('not found')
 }
 
+const getSupportedLanguagesForQuestion = (question) => {
+  const configured = Array.isArray(question?.supportedLanguages)
+    ? question.supportedLanguages.filter((item, index, list) => allLanguageOptions.includes(item) && list.indexOf(item) === index)
+    : []
+
+  return configured.length ? configured : allLanguageOptions
+}
+
 const validateBalancedPairs = (sourceCode) => {
   const stack = []
   const errors = []
@@ -239,8 +247,9 @@ export default function PracticeWorkspace({ questionId: questionIdProp = '', emb
   const [error, setError] = useState('')
   const [toolchainMap, setToolchainMap] = useState({})
   const [isRunning, setIsRunning] = useState(false)
-  const [autoRun, setAutoRun] = useState(true)
   const [lastRunMeta, setLastRunMeta] = useState(null)
+
+  const languageOptions = useMemo(() => getSupportedLanguagesForQuestion(question), [question])
 
   const inputFormat = question?.inputFormat || 'Read values exactly as shown in sample input and parse according to the problem statement.'
   const outputFormat = question?.outputFormat || 'Return or print output exactly in the expected format.'
@@ -329,6 +338,12 @@ export default function PracticeWorkspace({ questionId: questionIdProp = '', emb
     setCode(starterCodeByLanguage[language] || starterCodeByLanguage.Java)
   }, [questionId, language])
 
+  useEffect(() => {
+    if (!languageOptions.length) return
+    if (languageOptions.includes(language)) return
+    setLanguage(languageOptions[0])
+  }, [language, languageOptions])
+
   const hasMeaningfulCode = (value) => {
     const trimmed = String(value || '').trim()
     if (!trimmed) return false
@@ -341,25 +356,21 @@ export default function PracticeWorkspace({ questionId: questionIdProp = '', emb
     return currentExample?.output || 'No sample output available for this test case.'
   }
 
-  const runCode = useCallback(async (trigger = 'manual') => {
+  const runCode = useCallback(async () => {
     if (isRunning) return
 
     setError('')
 
     const selectedToolchain = toolchainMap[language]
     if (selectedToolchain && !selectedToolchain.available) {
-      if (trigger === 'manual') {
-        setOutputType('error')
-        setOutput(`Selected language toolchain is not available on server: ${language}`)
-      }
+      setOutputType('error')
+      setOutput(`Selected language toolchain is not available on server: ${language}`)
       return
     }
 
     if (!hasMeaningfulCode(code)) {
-      if (trigger === 'manual') {
-        setOutputType('error')
-        setOutput('Run failed: Add your solution code before running simulation.')
-      }
+      setOutputType('error')
+      setOutput('Run failed: Add your solution code before running simulation.')
       return
     }
 
@@ -378,51 +389,35 @@ export default function PracticeWorkspace({ questionId: questionIdProp = '', emb
       if (result.success) {
         setOutputType('success')
         setOutput((result.stdout || '').trim() || getRunSummary())
-        setLastRunMeta({ trigger, at: new Date().toISOString() })
+        setLastRunMeta({ at: new Date().toISOString() })
         return
       }
 
       setOutputType('error')
       setOutput(formatExecutionResult(`Strict compiler errors (${language}):`, result))
-      setLastRunMeta({ trigger, at: new Date().toISOString() })
+      setLastRunMeta({ at: new Date().toISOString() })
     } catch (requestError) {
       if (isRouteUnavailableError(requestError)) {
         const validationErrors = validateByLanguage(code, language)
         if (validationErrors.length > 0) {
           setOutputType('error')
           setOutput(formatErrorList(`Strict compiler checks failed (${language}) [local fallback]:`, validationErrors))
-          setLastRunMeta({ trigger, at: new Date().toISOString() })
+          setLastRunMeta({ at: new Date().toISOString() })
           return
         }
 
         setOutputType('success')
         setOutput(getRunSummary())
-        setLastRunMeta({ trigger, at: new Date().toISOString() })
+        setLastRunMeta({ at: new Date().toISOString() })
         return
       }
 
-      if (trigger === 'manual') {
-        setOutputType('error')
-        setOutput(`Compiler request failed: ${getErrorMessage(requestError)}`)
-      }
+      setOutputType('error')
+      setOutput(`Compiler request failed: ${getErrorMessage(requestError)}`)
     } finally {
       setIsRunning(false)
     }
   }, [code, getRunSummary, isRunning, language, questionId, testInput, toolchainMap])
-
-  useEffect(() => {
-    if (!autoRun) return undefined
-    if (!hasMeaningfulCode(code)) return undefined
-
-    const selectedToolchain = toolchainMap[language]
-    if (selectedToolchain && !selectedToolchain.available) return undefined
-
-    const timer = window.setTimeout(() => {
-      runCode('auto')
-    }, 900)
-
-    return () => window.clearTimeout(timer)
-  }, [autoRun, code, language, questionId, runCode, selectedSampleIndex, testInput, toolchainMap])
 
   const submitCode = async () => {
     setError('')
@@ -490,14 +485,17 @@ export default function PracticeWorkspace({ questionId: questionIdProp = '', emb
 
   const compilerStatusText = useMemo(() => {
     if (isRunning) return 'Running...'
-    if (!lastRunMeta) return autoRun ? 'Auto-run enabled' : 'Manual run mode'
-    return `${lastRunMeta.trigger === 'auto' ? 'Auto-run' : 'Manual run'} completed`
-  }, [autoRun, isRunning, lastRunMeta])
+    if (!lastRunMeta) return 'Ready'
+    return 'Manual run completed'
+  }, [isRunning, lastRunMeta])
 
   return (
     <section className={`${embedded ? 'rounded-xl border border-slate-200 bg-white/95 p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900/70' : 'rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900/90'}`}>
       {!embedded && <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Practice Problem</h1>}
       <p className={`${embedded ? 'text-xs' : 'mt-1 text-sm'} text-slate-600 dark:text-slate-400`}>Run and Submit use strict backend compiler/runtime checks with line-level errors.</p>
+      <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+        Supported languages: {languageOptions.join(', ')}
+      </p>
       {error && <p className="mt-3 rounded border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
 
       <div className="mt-4 grid gap-4 lg:grid-cols-2">
@@ -558,15 +556,6 @@ export default function PracticeWorkspace({ questionId: questionIdProp = '', emb
                   <option key={option} value={option}>{option}</option>
                 ))}
               </select>
-              <label className="inline-flex items-center gap-2 text-xs font-medium text-slate-700 dark:text-slate-300">
-                <input
-                  type="checkbox"
-                  checked={autoRun}
-                  onChange={(event) => setAutoRun(event.target.checked)}
-                  className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
-                />
-                Real-time run
-              </label>
             </div>
           </div>
 
@@ -608,7 +597,7 @@ export default function PracticeWorkspace({ questionId: questionIdProp = '', emb
                 ))}
               </select>
               <div className="flex flex-wrap gap-2">
-                <button type="button" onClick={() => runCode('manual')} disabled={isRunning} className="rounded-full bg-blue-600 px-5 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60">Run Code</button>
+                <button type="button" onClick={runCode} disabled={isRunning} className="rounded-full bg-blue-600 px-5 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60">Run Code</button>
                 <button type="button" onClick={submitCode} className="rounded-full bg-green-600 px-5 py-2 text-sm font-semibold text-white">Submit Code</button>
               </div>
             </div>
