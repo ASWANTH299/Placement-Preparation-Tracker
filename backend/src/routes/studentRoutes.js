@@ -9,6 +9,7 @@ const leaderboardController = require('../controllers/leaderboardController');
 const codingProfileController = require('../controllers/codingProfileController');
 const projectController = require('../controllers/projectController');
 const forumController = require('../controllers/forumController');
+const codeExecutionRateLimit = require('../middlewares/codeExecutionRateLimit');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
@@ -113,8 +114,8 @@ router.post('/students/:id/learning-progress/:weekId', learningPathController.up
 // Company Questions Routes (specific routes before generic ones)
 router.get('/company-questions', questionController.getQuestions);
 router.get('/practice/toolchains', questionController.getPracticeToolchains);
-router.post('/practice/run-code', questionController.runCode);
-router.post('/practice/submit-code', questionController.submitCode);
+router.post('/practice/run-code', codeExecutionRateLimit, questionController.runCode);
+router.post('/practice/submit-code', codeExecutionRateLimit, questionController.submitCode);
 router.post('/practice/validate-submission-link', questionController.validateDailySubmissionLink);
 router.post('/company-questions/:questionId/mark-solved', questionController.markSolved);
 router.post('/company-questions/:questionId/mark-attempted', questionController.markAttempted);

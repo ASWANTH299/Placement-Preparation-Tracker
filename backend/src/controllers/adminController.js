@@ -1,3 +1,5 @@
+const fs = require('fs').promises;
+const path = require('path');
 const User = require('../models/User');
 const LearningPath = require('../models/LearningPath');
 const CompanyQuestion = require('../models/CompanyQuestion');
@@ -9,6 +11,10 @@ const Note = require('../models/Note');
 const DailyTask = require('../models/DailyTask');
 const ConceptVideo = require('../models/ConceptVideo');
 const HRInterviewQuestion = require('../models/HRInterviewQuestion');
+const CodingProfile = require('../models/CodingProfile');
+const StudentProject = require('../models/StudentProject');
+const StudyActivity = require('../models/StudyActivity');
+const ForumMessage = require('../models/ForumMessage');
 const { AppError } = require('../utils/errorHandler');
 const { logAdminAudit } = require('../utils/adminAuditLogger');
 
@@ -314,13 +320,53 @@ exports.deleteUser = async (req, res, next) => {
       return next(new AppError('Confirmation required to delete user', 400, 'VALIDATION_ERROR'));
     }
 
-    // Delete user and related data
+    // 1. Delete user
     await User.findByIdAndDelete(userId);
+
+    // 2. Delete progress, mock interviews, notes, activities, and profiles
     await StudentProgress.deleteMany({ studentId: userId });
     await QuestionProgress.deleteMany({ studentId: userId });
     await MockInterview.deleteMany({ studentId: userId });
-    await Resume.deleteMany({ studentId: userId });
     await Note.deleteMany({ studentId: userId });
+    await StudyActivity.deleteMany({ studentId: userId });
+    await CodingProfile.deleteMany({ studentId: userId });
+
+    // 3. Delete Resumes and clean up physical files from disk
+    const resumes = await Resume.find({ studentId: userId });
+    await Promise.all(
+      resumes.map(async (resume) => {
+        if (resume.filePath) {
+          try {
+            await fs.unlink(path.resolve(resume.filePath));
+          } catch (fileErr) {
+            console.warn('Resume file cleanup warning during user delete:', fileErr.message);
+          }
+        }
+      })
+    );
+    await Resume.deleteMany({ studentId: userId });
+
+    // 4. Delete Student Projects and clean up project files from disk
+    const projects = await StudentProject.find({ studentId: userId });
+    await Promise.all(
+      projects.map(async (project) => {
+        await Promise.all(
+          (project.files || []).map(async (file) => {
+            if (file.filePath) {
+              try {
+                await fs.unlink(path.resolve(file.filePath));
+              } catch (fileErr) {
+                console.warn('Project file cleanup warning during user delete:', fileErr.message);
+              }
+            }
+          })
+        );
+      })
+    );
+    await StudentProject.deleteMany({ studentId: userId });
+
+    // 5. Delete forum messages authored by user
+    await ForumMessage.deleteMany({ userId });
 
     await logAdminAudit(req, {
       action: 'DELETE_USER',
@@ -398,6 +444,9 @@ exports.deleteLearningPath = async (req, res, next) => {
     if (!path) {
       return next(new AppError('Learning path not found', 404, 'NOT_FOUND'));
     }
+
+    // Cascade delete related progress records
+    await StudentProgress.deleteMany({ topicId });
 
     await logAdminAudit(req, {
       action: 'DELETE_LEARNING_PATH',

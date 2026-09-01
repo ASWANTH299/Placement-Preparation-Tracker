@@ -74,23 +74,16 @@ const userSchema = new mongoose.Schema(
       type: Date,
       default: null
     },
-    passwordResetOtpHash: {
+    passwordResetToken: {
       type: String,
       default: null,
-      select: false,
+      select: false
     },
-    passwordResetOtpExpiry: {
+    passwordResetExpiry: {
       type: Date,
       default: null,
-      select: false,
-    },
-    passwordResetOtpAttempts: {
-      type: Number,
-      default: 0,
-      select: false,
-    },
-    passwordResetToken: String,
-    passwordResetExpiry: Date
+      select: false
+    }
   },
   {
     timestamps: true
@@ -124,9 +117,6 @@ userSchema.methods.comparePassword = async function (enteredPassword) {
 userSchema.methods.toJSON = function () {
   const user = this.toObject();
   delete user.password;
-  delete user.passwordResetOtpHash;
-  delete user.passwordResetOtpExpiry;
-  delete user.passwordResetOtpAttempts;
   delete user.passwordResetToken;
   delete user.passwordResetExpiry;
   return user;

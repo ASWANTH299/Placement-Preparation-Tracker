@@ -76,54 +76,37 @@ exports.register = async (req, res, next) => {
 // ─── Login ───────────────────────────────────────────────────────────────────
 exports.login = async (req, res, next) => {
   try {
-    console.log('[Login Flow] Login request started for email:', req.body.email);
-    
     const { email, password } = req.body;
 
     if (!email || !password) {
-      console.warn('[Login Flow] Missing email or password in request');
       return next(new AppError('Email and password are required', 400, 'VALIDATION_ERROR'));
     }
 
-    console.log(`[Login Flow] Fetching user from DB: ${email.toLowerCase()}`);
-    const user = await User.findOne({ email: email.toLowerCase() }).select('+password');
+    const user = await User.findOne({ email: String(email).toLowerCase().trim() }).select('+password');
 
     if (!user) {
-      console.warn(`[Login Flow] User not found for email: ${email.toLowerCase()}`);
       return next(new AppError('Invalid email or password', 401, 'AUTH_FAILED'));
     }
 
     if (!user.password) {
-      console.error(`[Login Flow] User record is severely corrupted (missing password hash) for email: ${user.email}`);
       return next(new AppError('Invalid account configuration. Please contact admin.', 500, 'SERVER_ERROR'));
     }
 
-    console.log('[Login Flow] Comparing passwords securely via bcrypt');
     const bcrypt = require('bcryptjs');
     const isMatch = await bcrypt.compare(String(password), String(user.password));
 
     if (!isMatch) {
-      console.warn(`[Login Flow] Password mismatch for user: ${user.email}`);
       return next(new AppError('Invalid email or password', 401, 'AUTH_FAILED'));
     }
 
     if (!process.env.JWT_SECRET) {
-      console.error('[Login Flow] CRITICAL: JWT_SECRET environment variable is missing!');
       return next(new AppError('Server configuration error', 500, 'SERVER_ERROR'));
-    }
-
-    console.log(`[Login Flow] Password match! Generating token for user ID: ${user._id}, Role: ${user.role}`);
-    
-    // Ensure role validation applies correctly
-    if (user.role === 'admin') {
-      console.log(`[Login Flow] Admin capabilities granted to user: ${user.email}`);
     }
 
     user.lastLogin = new Date();
     await user.save();
 
     const token = generateToken(user._id, user.email, user.role);
-    console.log('[Login Flow] Token generated successfully. Sending response.');
 
     res.status(200).json({
       success: true,
@@ -138,7 +121,6 @@ exports.login = async (req, res, next) => {
       message: 'Login successful'
     });
   } catch (error) {
-    console.error('[Login Catch Error] Unexpected error during login process:', error);
     next(new AppError('Internal server error during login', 500, 'SERVER_ERROR'));
   }
 };

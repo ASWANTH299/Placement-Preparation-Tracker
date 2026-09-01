@@ -283,9 +283,9 @@ exports.deleteResume = async (req, res, next) => {
 
     // Delete file from storage
     try {
-      await fs.unlink(resume.filePath);
+      await fs.unlink(path.resolve(resume.filePath));
     } catch (err) {
-      console.log('File deletion error:', err);
+      console.warn('Resume file deletion warning:', err.message);
     }
 
     res.status(200).json({

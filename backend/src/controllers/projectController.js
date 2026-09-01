@@ -71,14 +71,21 @@ exports.uploadProject = async (req, res, next) => {
     const description = String(req.body?.description || '').trim();
     const technologyStack = normalizeTechnologyStack(req.body?.technology_stack || req.body?.technologyStack);
 
-    const projectFiles = uploadedFiles.map((file) => ({
-      originalName: file.originalname,
-      storedName: file.filename,
-      filePath: file.path,
-      relativePath: String(file.originalname || '').replace(/\\/g, '/'),
-      size: file.size || 0,
-      mimeType: file.mimetype || 'application/octet-stream'
-    }));
+    const projectFiles = uploadedFiles.map((file) => {
+      const sanitizedRelative = path.normalize(String(file.originalname || 'file'))
+        .replace(/^(\.\.[\/\\])+/, '')
+        .replace(/^[\\\/]+/, '')
+        .replace(/\\/g, '/');
+
+      return {
+        originalName: file.originalname,
+        storedName: file.filename,
+        filePath: file.path,
+        relativePath: sanitizedRelative,
+        size: file.size || 0,
+        mimeType: file.mimetype || 'application/octet-stream'
+      };
+    });
 
     const project = new StudentProject({
       studentId: targetStudentId,
@@ -254,8 +261,12 @@ exports.downloadProject = async (req, res, next) => {
       const absolutePath = path.resolve(file.filePath);
       try {
         await fs.access(absolutePath);
-        const entryName = String(file.relativePath || file.originalName || 'file').replace(/^\/+/, '');
-        archive.file(absolutePath, { name: entryName });
+        const rawEntry = String(file.relativePath || file.originalName || 'file');
+        const entryName = path.normalize(rawEntry)
+          .replace(/^(\.\.[\/\\])+/, '')
+          .replace(/^[\\\/]+/, '')
+          .replace(/\\/g, '/');
+        archive.file(absolutePath, { name: entryName || 'file' });
       } catch {
         continue;
       }

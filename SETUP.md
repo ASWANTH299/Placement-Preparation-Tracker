@@ -37,7 +37,7 @@ npm run dev:all
 
 - **Frontend App:** [http://localhost:5173](http://localhost:5173)
 - **Backend API:** [http://localhost:5000/api/v1](http://localhost:5000/api/v1)
-- **Admin Login:** `admin@placementtracker.dev` | `ChangeThisStrongPassword123!`
+- **Admin Login:** `admin@placementtracker.dev` | `<ADMIN_PASSWORD_FROM_ENV>` (configured in `backend/.env`)
 
 ---
 
@@ -125,7 +125,7 @@ cd ..
 #### Default Credentials:
 | Role | Email | Password |
 | :--- | :--- | :--- |
-| **Admin** | `admin@placementtracker.dev` | `ChangeThisStrongPassword123!` |
+| **Admin** | `admin@placementtracker.dev` | Value set in `ADMIN_PASSWORD` in `backend/.env` |
 | **Student** | Create a new account via the UI `/register` | User-defined |
 
 ---

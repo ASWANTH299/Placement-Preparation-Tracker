@@ -50,7 +50,7 @@ exports.getNotes = async (req, res, next) => {
     // Add isOwnNote flag
     const enrichedNotes = notes.map(note => ({
       ...note.toObject(),
-      isOwnNote: note.studentId ? note.studentId._id.toString() === req.user._id.toString() : false
+      isOwnNote: note.studentId ? String(note.studentId._id || note.studentId) === req.user._id.toString() : false
     }));
 
     res.status(200).json({
@@ -84,7 +84,8 @@ exports.getNote = async (req, res, next) => {
     }
 
     // Check visibility
-    if (note.visibility === 'Private' && note.studentId._id.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
+    const noteOwnerId = note.studentId?._id ? note.studentId._id.toString() : (note.studentId ? note.studentId.toString() : null);
+    if (note.visibility === 'Private' && noteOwnerId !== req.user._id.toString() && req.user.role !== 'admin') {
       return next(new AppError('You do not have permission to view this note', 403, 'UNAUTHORIZED'));
     }
 

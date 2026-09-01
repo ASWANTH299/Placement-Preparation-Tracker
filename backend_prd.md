@@ -1,5 +1,20 @@
 # PLACEMENT PREPARATION TRACKER - BACKEND PRD
-## Version 1.0 | FAANG-Quality Implementation Guide
+## Version 2.0 | Production Release Synchronized Specification
+
+---
+
+## Document Revision & Delta Log (v2.0 Sync)
+
+| Section | Key Updates & New Endpoints |
+| :--- | :--- |
+| **Compiler Runner & Sandbox** | Documented `/api/v1/practice/run-code`, `submit-code`, `toolchains` with 10-language sandbox + Piston cloud fallback. |
+| **Project Portfolio & ZIP** | Documented `/api/v1/students/:id/projects` CRUD & on-the-fly streaming ZIP exporter. |
+| **Resume ATS Analyzer** | Documented `/api/v1/students/:id/resumes/:resumeId/review` parsing plain text via `pdf-parse` / `mammoth`. |
+| **Daily Tasks & Submissions** | Documented `/api/v1/admin/daily-tasks` and `/api/v1/practice/validate-submission-link`. |
+| **Concept Videos & HR Prep** | Documented `/api/v1/admin/concept-videos` and `/api/v1/admin/hr-interview-questions`. |
+| **Peer Community Forum** | Documented `/api/v1/forum/messages` threaded messaging system. |
+| **Security & Rate Limiting** | Documented `authRateLimit` (20/15m), `passwordResetRateLimit` (5/15m), `codeExecutionRateLimit` (15/1m), and `adminRateLimit` (120/15m). |
+| **Database Schemas** | Synchronized all 15 Mongoose models with compound indexes, `{ select: false }` fields, and full cascade deletions. |
 
 ---
 
@@ -2685,8 +2700,8 @@ PORT=5000
 NODE_ENV=development
 
 # Database
-MONGODB_URI=mongodb://localhost:27017/placement_tracker
-MONGODB_PROD_URI=mongodb+srv://user:password@cluster.mongodb.net/placement_tracker
+MONGODB_URI=mongodb://127.0.0.1:27017/placement_tracker
+MONGODB_PROD_URI=mongodb+srv://<DB_USER>:<DB_PASSWORD>@<CLUSTER_URL>/placement_tracker
 
 # JWT
 JWT_SECRET=your_super_secret_key_min_32_chars
