@@ -5,7 +5,24 @@ import './QuizPage.css'
 const HISTORY_KEY = 'quiz-history-v1'
 const BEST_SCORE_KEY = 'quiz-best-score-v1'
 const QUIZ_BANK_KEY = 'quiz-question-bank-v1'
-const TIME_PER_QUESTION = 45
+const QUIZ_SETTINGS_KEY = 'quiz-settings-v1'
+const DEFAULT_TIME_PER_QUESTION = 45
+const DEFAULT_MAX_SELECTABLE = 30
+
+const getStoredQuizSettings = () => {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(QUIZ_SETTINGS_KEY) || '{}')
+    return {
+      timePerQuestion: Number(parsed.timePerQuestion) || DEFAULT_TIME_PER_QUESTION,
+      maxSelectable: Number(parsed.maxSelectable) || DEFAULT_MAX_SELECTABLE,
+    }
+  } catch {
+    return {
+      timePerQuestion: DEFAULT_TIME_PER_QUESTION,
+      maxSelectable: DEFAULT_MAX_SELECTABLE,
+    }
+  }
+}
 
 const defaultQuestionBank = [
   {
@@ -606,7 +623,7 @@ const getStoredQuestionBank = () => {
   }
 }
 
-const buildAnalytics = (questions, answers, maxStreak) => {
+const buildAnalytics = (questions, answers, maxStreak, timePerQuestion) => {
   const categoryStats = {}
   const difficultyStats = {}
   let correct = 0
@@ -623,7 +640,7 @@ const buildAnalytics = (questions, answers, maxStreak) => {
     if (attemptedQuestion) attempted += 1
     if (isCorrect) correct += 1
     if (wasTimedOut) timedOut += 1
-    totalTime += answer?.timeSpent ?? TIME_PER_QUESTION
+    totalTime += answer?.timeSpent ?? timePerQuestion
 
     if (!categoryStats[question.category]) {
       categoryStats[question.category] = { total: 0, correct: 0 }
@@ -665,6 +682,7 @@ export default function QuizPage() {
   const role = useSelector((state) => state.auth.role)
   const isAdmin = role === 'admin'
   const [quizBank, setQuizBank] = useState(getStoredQuestionBank)
+  const [quizSettings, setQuizSettings] = useState(getStoredQuizSettings)
   const [phase, setPhase] = useState('setup')
   const [selectedCategory, setSelectedCategory] = useState('All')
   const [selectedDifficulty, setSelectedDifficulty] = useState('All')
@@ -672,7 +690,7 @@ export default function QuizPage() {
   const [questions, setQuestions] = useState([])
   const [currentIndex, setCurrentIndex] = useState(0)
   const [selectedOption, setSelectedOption] = useState(null)
-  const [timeLeft, setTimeLeft] = useState(TIME_PER_QUESTION)
+  const [timeLeft, setTimeLeft] = useState(quizSettings.timePerQuestion)
   const [questionStartAt, setQuestionStartAt] = useState(Date.now())
   const [answers, setAnswers] = useState({})
   const [streak, setStreak] = useState(0)
@@ -695,6 +713,10 @@ export default function QuizPage() {
     localStorage.setItem(QUIZ_BANK_KEY, JSON.stringify(quizBank))
   }, [quizBank])
 
+  useEffect(() => {
+    localStorage.setItem(QUIZ_SETTINGS_KEY, JSON.stringify(quizSettings))
+  }, [quizSettings])
+
   const categories = useMemo(
     () => ['All', ...Array.from(new Set(quizBank.map((q) => q.category)))],
     [quizBank],
@@ -714,7 +736,7 @@ export default function QuizPage() {
       ),
     [selectedCategory, selectedDifficulty, quizBank],
   )
-  const maxQuestionCount = Math.min(30, quizBank.length)
+  const maxQuestionCount = Math.min(quizSettings.maxSelectable, quizBank.length)
 
   useEffect(() => {
     setQuestionCount(Math.min(10, maxQuestionCount))
@@ -732,7 +754,7 @@ export default function QuizPage() {
 
   const finalizeAttempt = useCallback(
     (nextAnswers, finalMaxStreak) => {
-      const analytics = buildAnalytics(questions, nextAnswers, finalMaxStreak)
+      const analytics = buildAnalytics(questions, nextAnswers, finalMaxStreak, quizSettings.timePerQuestion)
       const nextHistory = [
         {
           id: `${Date.now()}`,
@@ -770,10 +792,10 @@ export default function QuizPage() {
       }
       setCurrentIndex((value) => value + 1)
       setSelectedOption(null)
-      setTimeLeft(TIME_PER_QUESTION)
+      setTimeLeft(quizSettings.timePerQuestion)
       setQuestionStartAt(Date.now())
     },
-    [currentIndex, questions.length, finalizeAttempt],
+    [currentIndex, questions.length, finalizeAttempt, quizSettings.timePerQuestion],
   )
 
   const submitAnswer = useCallback(
@@ -784,7 +806,7 @@ export default function QuizPage() {
       const picked = typeof optionIndex === 'number' ? optionIndex : null
       const isCorrect = picked === currentQuestion.answer
       const timeSpent = Math.min(
-        TIME_PER_QUESTION,
+        quizSettings.timePerQuestion,
         Math.max(1, Math.round((Date.now() - questionStartAt) / 1000)),
       )
 
@@ -833,8 +855,8 @@ export default function QuizPage() {
   }, [phase, timeLeft, submitAnswer])
 
   const analytics = useMemo(
-    () => (phase === 'result' ? buildAnalytics(questions, answers, maxStreak) : null),
-    [phase, questions, answers, maxStreak],
+    () => (phase === 'result' ? buildAnalytics(questions, answers, maxStreak, quizSettings.timePerQuestion) : null),
+    [phase, questions, answers, maxStreak, quizSettings.timePerQuestion],
   )
 
   const recentHistory = history.slice(0, 5)
@@ -881,7 +903,7 @@ export default function QuizPage() {
     setQuestions(selectedQuestions)
     setCurrentIndex(0)
     setSelectedOption(null)
-    setTimeLeft(TIME_PER_QUESTION)
+    setTimeLeft(quizSettings.timePerQuestion)
     setQuestionStartAt(Date.now())
     setAnswers({})
     setStreak(0)
@@ -894,10 +916,22 @@ export default function QuizPage() {
     setQuestions([])
     setCurrentIndex(0)
     setSelectedOption(null)
-    setTimeLeft(TIME_PER_QUESTION)
+    setTimeLeft(quizSettings.timePerQuestion)
     setAnswers({})
     setStreak(0)
     setMaxStreak(0)
+  }
+
+  const updateQuizSetting = (key, value) => {
+    setQuizSettings((prev) => ({
+      ...prev,
+      [key]: value,
+    }))
+  }
+
+  const resetBestScore = () => {
+    setBestScore(0)
+    localStorage.setItem(BEST_SCORE_KEY, '0')
   }
 
   const openCreateEditor = () => {
@@ -1038,7 +1072,7 @@ export default function QuizPage() {
 
             <div className="qp-meta-row">
               <span>Pool Size: {filteredPool.length}</span>
-              <span>Time per Question: {TIME_PER_QUESTION}s</span>
+              <span>Time per Question: {quizSettings.timePerQuestion}s</span>
               <span>Best Score: {bestScore}%</span>
               <span>Maximum selectable: {maxQuestionCount}</span>
             </div>
@@ -1074,6 +1108,53 @@ export default function QuizPage() {
             {isAdmin && (
               <div className="qp-admin-panel">
                 <div className="qp-admin-panel-head">
+                  <h3>Admin Quiz Controls</h3>
+                </div>
+
+                <div className="qp-admin-form" style={{ marginTop: '16px' }}>
+                  <label>
+                    Time per Question (seconds)
+                    <input
+                      type="number"
+                      min="10"
+                      max="180"
+                      value={quizSettings.timePerQuestion}
+                      onChange={(event) => updateQuizSetting('timePerQuestion', Math.max(10, Math.min(180, Number(event.target.value) || 10)))}
+                    />
+                  </label>
+
+                  <label>
+                    Maximum Selectable Questions
+                    <input
+                      type="number"
+                      min="1"
+                      max="100"
+                      value={quizSettings.maxSelectable}
+                      onChange={(event) => updateQuizSetting('maxSelectable', Math.max(1, Math.min(100, Number(event.target.value) || 1)))}
+                    />
+                  </label>
+
+                  <label>
+                    Best Score (%)
+                    <input
+                      type="number"
+                      min="0"
+                      max="100"
+                      value={bestScore}
+                      onChange={(event) => {
+                        const nextValue = Math.max(0, Math.min(100, Number(event.target.value) || 0))
+                        setBestScore(nextValue)
+                        localStorage.setItem(BEST_SCORE_KEY, String(nextValue))
+                      }}
+                    />
+                  </label>
+
+                  <button type="button" className="qp-primary-btn" onClick={resetBestScore} style={{ marginTop: '10px' }}>
+                    Reset Best Score
+                  </button>
+                </div>
+
+                <div className="qp-admin-panel-head" style={{ marginTop: '24px' }}>
                   <h3>Admin Quiz Question Management</h3>
                   <button type="button" className="qp-primary-btn" onClick={openCreateEditor}>Add Question</button>
                 </div>
